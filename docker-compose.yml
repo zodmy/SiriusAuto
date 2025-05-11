@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres
+    container_name: database
+    environment:
+      POSTGRES_USER: sirius_auto_admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: sirius_auto_database
+    ports:
+      - '5432:5432'
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: sirius@auto.com
+      PGADMIN_DEFAULT_PASSWORD: 123456
+      PGADMIN_LISTEN_PORT: 8080
+    ports:
+      - '8080:8080'
+    depends_on:
+      - postgres
