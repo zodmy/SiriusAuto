@@ -60,7 +60,7 @@ model CarMake {
   id            Int                           @id @default(autoincrement())
   name          String                        @unique
   models        CarModel[]
-  compatibility ProductVehicleCompatibility[] 
+  compatibility ProductVehicleCompatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -137,7 +137,7 @@ model CarModification {
 }
 
 model ProductVehicleCompatibility {
-  id                Int              @id @default(autoincrement()) // Виправлено: додано поле id
+  id                Int              @id @default(autoincrement())
   productId         Int
   product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   carModificationId Int?
@@ -153,7 +153,7 @@ model ProductVehicleCompatibility {
   carMakeId         Int?
   carMake           CarMake?         @relation(fields: [carMakeId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, carModificationId, carBodyTypeId, carEngineId, carYearId, carModelId, carMakeId], name: "product_vehicle_unique_idx") // Додано ім'я для унікального обмеження
+  @@unique([productId, carModificationId, carBodyTypeId, carEngineId, carYearId, carModelId, carMakeId], name: "product_vehicle_unique_idx")
   @@map("product_vehicle_compatibility")
 }
 
