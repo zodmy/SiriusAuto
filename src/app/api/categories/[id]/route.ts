@@ -1,23 +1,12 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-
-async function isAdmin(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get('token')?.value;
-  if (!token) return false;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    return decoded?.role === 'admin';
-  } catch (error) {
-    console.error('Помилка верифікації токена:', error);
-    return false;
-  }
-}
+import { isAdmin } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request, context: { params: { id: string } }) {
 
-  const { id } = await context.params;
-  const parsedId = parseInt(id, 10);
+  const { id: rawId } = await context.params;
+  const parsedId = parseInt(rawId, 10);
 
   if (isNaN(parsedId)) {
     return NextResponse.json({ error: 'Невалідний ID категорії' }, { status: 400 });
@@ -49,7 +38,12 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const id = parseInt(context.params.id, 10);
+  const { id: rawId } = await context.params;
+  const id = parseInt(rawId, 10);
+
+  if (isNaN(id)) {
+    return NextResponse.json({ error: 'Невалідний ID категорії' }, { status: 400 });
+  }
 
   try {
     const { name, parentId } = await request.json();
@@ -57,7 +51,7 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
       where: { id },
       data: {
         name: name || undefined,
-        parentId: parentId !== undefined ? Number(parentId) : null,
+        parentId: parentId !== undefined ? Number(parentId) : (parentId === null ? null : undefined),
       },
       include: {
         parent: { select: { id: true, name: true } },
@@ -68,6 +62,15 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     return NextResponse.json(updatedCategory);
   } catch (error) {
     console.error(`Не вдалося оновити категорію з ID ${id}:`, error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      const target = error.meta?.target;
+      if (error.code === 'P2002' && ((Array.isArray(target) && target.includes('name')) || (typeof target === 'string' && target.includes('name')))) {
+        return NextResponse.json({ error: 'Категорія з такою назвою вже існує' }, { status: 409 });
+      }
+      if (error.code === 'P2025') {
+        return NextResponse.json({ error: `Категорію з ID ${id} не знайдено для оновлення` }, { status: 404 });
+      }
+    }
     return NextResponse.json({ error: `Не вдалося оновити категорію з ID ${id}` }, { status: 500 });
   }
 }
@@ -77,15 +80,38 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const id = parseInt(context.params.id, 10);
+  const { id: rawId } = await context.params;
+  const id = parseInt(rawId, 10);
+
+  if (isNaN(id)) {
+    return NextResponse.json({ error: 'Невалідний ID категорії' }, { status: 400 });
+  }
 
   try {
+    const categoryWithChildren = await prisma.category.findUnique({
+      where: { id },
+      include: { children: { select: { id: true } } },
+    });
+
+    if (!categoryWithChildren) {
+      return NextResponse.json({ error: `Категорію з ID ${id} не знайдено` }, { status: 404 });
+    }
+
+    if (categoryWithChildren.children && categoryWithChildren.children.length > 0) {
+      return NextResponse.json({ error: `Не вдалося видалити категорію з ID ${id}, оскільки вона має дочірні категорії.` }, { status: 409 });
+    }
+
     await prisma.category.delete({
       where: { id },
     });
     return NextResponse.json({ message: `Категорію з ID ${id} видалено` }, { status: 200 });
   } catch (error) {
     console.error(`Не вдалося видалити категорію з ID ${id}:`, error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2003') {
+        return NextResponse.json({ error: `Не вдалося видалити категорію з ID ${id}. Можливо, вона використовується іншими записами (наприклад, товарами).` }, { status: 409 });
+      }
+    }
     return NextResponse.json({ error: `Не вдалося видалити категорію з ID ${id}` }, { status: 500 });
   }
 }

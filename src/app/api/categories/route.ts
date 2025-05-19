@@ -1,25 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-
-interface PrismaError extends Error {
-  code?: string;
-  meta?: {
-    target?: string[];
-  };
-}
-
-async function isAdmin(req: NextRequest): Promise<boolean> {
-  const token = req.cookies.get('token')?.value;
-  if (!token) return false;
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    return decoded?.role === 'admin';
-  } catch (error) {
-    console.error('Помилка верифікації токена:', error);
-    return false;
-  }
-}
+import { isAdmin } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -50,34 +31,68 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { name, parentId } = await request.json();
+    const body = await request.json();
+    const categoriesData = Array.isArray(body) ? body : [body];
 
-    if (!name) {
-      return NextResponse.json({ error: 'Потрібно вказати назву категорії' }, { status: 400 });
+    if (categoriesData.some(cat => !cat.name)) {
+      return NextResponse.json({ error: 'Для всіх категорій потрібно вказати назву' }, { status: 400 });
     }
 
-    const newCategory = await prisma.category.create({
-      data: {
-        name,
-        parentId: parentId !== undefined ? Number(parentId) : null,
-      },
-      include: {
-        parent: {
-          select: {
-            id: true,
-            name: true,
+    const createdCategories = await prisma.$transaction(async (tx) => {
+      return Promise.all(categoriesData.map(async (categoryData) => {
+        const { name, parentName } = categoryData;
+        let parentIdToSet: number | null = null;
+
+        if (parentName && typeof parentName === 'string') {
+          const parentCategory = await tx.category.findUnique({
+            where: { name: parentName },
+            select: { id: true }
+          });
+          if (!parentCategory) {
+            throw new Error(`Батьківську категорію з назвою '${parentName}' не знайдено для створення підкатегорії '${name}'.`);
+          }
+          parentIdToSet = parentCategory.id;
+        } else if (parentName !== undefined && parentName !== null) {
+          throw new Error(`Некоректне значення для parentName для категорії '${name}'. Очікується рядок.`);
+        }
+
+        return tx.category.create({
+          data: {
+            name,
+            parentId: parentIdToSet,
           },
-        },
-        children: true,
-      },
+          include: {
+            parent: {
+              select: { id: true, name: true },
+            },
+            children: true,
+          },
+        });
+      }));
     });
-    return NextResponse.json(newCategory, { status: 201 });
-  } catch (error) {
-    const err = error as PrismaError;
-    console.error('Помилка створення категорії:', err);
-    if (err.code === 'P2002' && err.meta?.target?.includes('name')) {
-      return NextResponse.json({ error: 'Категорія з такою назвою вже існує' }, { status: 409 });
+
+    return NextResponse.json(Array.isArray(body) ? createdCategories : createdCategories[0], { status: 201 });
+  } catch (error: unknown) {
+    console.error('Помилка створення категорії(й):', error);
+
+    if (error instanceof Error && (error.message.startsWith('Батьківську категорію з назвою') || error.message.startsWith('Некоректне значення для parentName'))) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    return NextResponse.json({ error: 'Не вдалося створити категорію' }, { status: 500 });
+
+    if (typeof error === 'object' && error !== null) {
+      const potentialErrorObject = error as {
+        code?: string;
+        meta?: { target?: string[]; field_name?: string };
+      };
+
+      if (potentialErrorObject.code === 'P2002' && potentialErrorObject.meta?.target?.includes('name')) {
+        return NextResponse.json({ error: 'Категорія(ї) з такою назвою вже існує' }, { status: 409 });
+      }
+
+      if (potentialErrorObject.code === 'P2003' && potentialErrorObject.meta?.field_name === 'parentId') {
+        return NextResponse.json({ error: 'Не вдалося створити категорію(ї): вказано неіснуючу батьківську категорію (parentId). Це не повинно було статися при використанні parentName.' }, { status: 500 });
+      }
+    }
+    return NextResponse.json({ error: 'Не вдалося створити категорію(ї)' }, { status: 500 });
   }
 }
