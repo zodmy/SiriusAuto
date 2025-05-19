@@ -6,9 +6,6 @@ import bcrypt from 'bcrypt';
 export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json();
-    console.log('HASH:', process.env.ADMIN_PASSWORD_HASH);
-    console.log('LENGTH:', process.env.ADMIN_PASSWORD_HASH?.length);
-
     const storedHashedPassword = process.env.ADMIN_PASSWORD_HASH;
 
     if (!storedHashedPassword) {

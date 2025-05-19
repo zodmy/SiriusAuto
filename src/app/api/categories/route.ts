@@ -1,8 +1,27 @@
-// app/api/categories/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/app/lib/prisma'; // Переконайтеся, що шлях правильний
+import { NextResponse, NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
-export async function GET(request: Request) {
+interface PrismaError extends Error {
+  code?: string;
+  meta?: {
+    target?: string[];
+  };
+}
+
+async function isAdmin(req: NextRequest): Promise<boolean> {
+  const token = req.cookies.get('token')?.value;
+  if (!token) return false;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    return decoded?.role === 'admin';
+  } catch (error) {
+    console.error('Помилка верифікації токена:', error);
+    return false;
+  }
+}
+
+export async function GET() {
   try {
     const categories = await prisma.category.findMany({
       include: {
@@ -18,7 +37,6 @@ export async function GET(request: Request) {
         name: 'asc',
       },
     });
-
     return NextResponse.json(categories, { status: 200 });
   } catch (error) {
     console.error('Помилка отримання категорій:', error);
@@ -26,7 +44,11 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!await isAdmin(request)) {
+    return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
+  }
+
   try {
     const { name, parentId } = await request.json();
 
@@ -49,11 +71,11 @@ export async function POST(request: Request) {
         children: true,
       },
     });
-
     return NextResponse.json(newCategory, { status: 201 });
   } catch (error) {
-    console.error('Помилка створення категорії:', error);
-    if (error.code === '23505' && error.meta?.target?.includes('name')) {
+    const err = error as PrismaError;
+    console.error('Помилка створення категорії:', err);
+    if (err.code === 'P2002' && err.meta?.target?.includes('name')) {
       return NextResponse.json({ error: 'Категорія з такою назвою вже існує' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Не вдалося створити категорію' }, { status: 500 });
