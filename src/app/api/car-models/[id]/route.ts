@@ -38,13 +38,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   try {
     const body = await request.json();
-    const { name, carMakeId: makeId } = body; // Corrected: makeId from body
+    const { name, carMakeId: makeId } = body;
 
-    if (!name || makeId === undefined) { // Corrected: use makeId
+    if (!name || makeId === undefined) {
       return NextResponse.json({ error: 'Назва моделі та ID марки автомобіля є обов\'язковими' }, { status: 400 });
     }
 
-    if (typeof makeId !== 'number' || isNaN(makeId)) { // Corrected: use makeId
+    if (typeof makeId !== 'number' || isNaN(makeId)) {
       return NextResponse.json({ error: 'ID марки автомобіля має бути числом' }, { status: 400 });
     }
 
@@ -52,7 +52,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       where: { id: carModelId },
       data: {
         name,
-        makeId, // Corrected: use makeId for the field name
+        makeId,
       },
     });
 
@@ -64,16 +64,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       if (prismaError.code === 'P2025') {
         return NextResponse.json({ message: `Модель автомобіля з ID ${carModelId} не знайдено` }, { status: 404 });
       } else if (prismaError.code === 'P2002') {
-        // Assuming 'name' and 'makeId' might be part of a unique constraint.
-        // Adjust if the unique constraint involves other fields or is different.
-        if (prismaError.meta?.target?.includes('name') || prismaError.meta?.target?.includes('makeId')) { // Corrected: use makeId
+        if (prismaError.meta?.target?.includes('name') || prismaError.meta?.target?.includes('makeId')) {
           return NextResponse.json({ error: 'Модель автомобіля з такою назвою та маркою вже існує' }, { status: 409 });
         }
-      } else if (prismaError.code === 'P2003') { // Foreign key constraint failed
-        // Corrected: Check for 'makeId' in the foreign key constraint violation
+      } else if (prismaError.code === 'P2003') {
         if (prismaError.meta?.target?.includes('makeId')) {
-          // Access makeId from body for the error message
-          const body = await request.json().catch(() => ({})); // Re-parse or use a stored value if available
+          const body = await request.json().catch(() => ({}));
           return NextResponse.json({ error: `Марка автомобіля з ID ${body.carMakeId} не існує` }, { status: 400 });
         }
       }
