@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isAdmin } from '@/lib/auth';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   const carMakeId = parseInt(params.id, 10);
@@ -24,7 +25,11 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  if (!await isAdmin(request)) {
+    return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
+  }
+
   const carMakeId = parseInt(params.id, 10);
 
   if (isNaN(carMakeId)) {
@@ -61,7 +66,11 @@ export async function PUT(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  if (!await isAdmin(request)) {
+    return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
+  }
+
   const carMakeId = parseInt(params.id, 10);
 
   if (isNaN(carMakeId)) {

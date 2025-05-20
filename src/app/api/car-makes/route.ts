@@ -1,5 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { isAdmin } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -11,7 +12,10 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  if (!await isAdmin(request)) {
+    return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
+  }
   try {
     const body = await request.json();
     const { name } = body;
