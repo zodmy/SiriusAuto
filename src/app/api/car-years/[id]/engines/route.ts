@@ -5,7 +5,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   try {
     const carYearId = parseInt(params.id, 10);
     if (isNaN(carYearId)) {
-      return NextResponse.json({ error: 'Invalid car year ID' }, { status: 400 });
+      return NextResponse.json({ error: 'Невалідний ID року випуску автомобіля' }, { status: 400 });
     }
 
     const carYear = await prisma.carYear.findUnique({
@@ -16,12 +16,12 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     });
 
     if (!carYear) {
-      return NextResponse.json({ error: 'Car year not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Рік випуску автомобіля не знайдено' }, { status: 404 });
     }
 
     return NextResponse.json(carYear.engines);
   } catch (error) {
-    console.error('Error fetching car engines:', error);
-    return NextResponse.json({ error: 'Failed to fetch car engines' }, { status: 500 });
+    console.error('Помилка отримання двигунів автомобілів:', error);
+    return NextResponse.json({ error: 'Не вдалося отримати двигуни автомобілів' }, { status: 500 });
   }
 }
