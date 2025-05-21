@@ -106,7 +106,7 @@ CREATE TABLE "car_modifications" (
 );
 
 -- CreateTable
-CREATE TABLE "product_vehicle_compatibility" (
+CREATE TABLE "compatibility" (
     "id" SERIAL NOT NULL,
     "productId" INTEGER NOT NULL,
     "carModificationId" INTEGER,
@@ -116,7 +116,7 @@ CREATE TABLE "product_vehicle_compatibility" (
     "carModelId" INTEGER,
     "carMakeId" INTEGER,
 
-    CONSTRAINT "product_vehicle_compatibility_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "compatibility_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -207,7 +207,7 @@ CREATE UNIQUE INDEX "car_body_types_engineId_name_key" ON "car_body_types"("engi
 CREATE UNIQUE INDEX "car_modifications_bodyTypeId_name_key" ON "car_modifications"("bodyTypeId", "name");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "product_vehicle_compatibility_productId_carModificationId_c_key" ON "product_vehicle_compatibility"("productId", "carModificationId", "carBodyTypeId", "carEngineId", "carYearId", "carModelId", "carMakeId");
+CREATE UNIQUE INDEX "compatibility_productId_carModificationId_carBodyTypeId_car_key" ON "compatibility"("productId", "carModificationId", "carBodyTypeId", "carEngineId", "carYearId", "carModelId", "carMakeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_telegramId_key" ON "users"("telegramId");
@@ -249,25 +249,25 @@ ALTER TABLE "car_body_types" ADD CONSTRAINT "car_body_types_engineId_fkey" FOREI
 ALTER TABLE "car_modifications" ADD CONSTRAINT "car_modifications_bodyTypeId_fkey" FOREIGN KEY ("bodyTypeId") REFERENCES "car_body_types"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_productId_fkey" FOREIGN KEY ("productId") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_carModificationId_fkey" FOREIGN KEY ("carModificationId") REFERENCES "car_modifications"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_carModificationId_fkey" FOREIGN KEY ("carModificationId") REFERENCES "car_modifications"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_carBodyTypeId_fkey" FOREIGN KEY ("carBodyTypeId") REFERENCES "car_body_types"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_carBodyTypeId_fkey" FOREIGN KEY ("carBodyTypeId") REFERENCES "car_body_types"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_carEngineId_fkey" FOREIGN KEY ("carEngineId") REFERENCES "car_engines"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_carEngineId_fkey" FOREIGN KEY ("carEngineId") REFERENCES "car_engines"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_carYearId_fkey" FOREIGN KEY ("carYearId") REFERENCES "car_years"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_carYearId_fkey" FOREIGN KEY ("carYearId") REFERENCES "car_years"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_carModelId_fkey" FOREIGN KEY ("carModelId") REFERENCES "car_models"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_carModelId_fkey" FOREIGN KEY ("carModelId") REFERENCES "car_models"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "product_vehicle_compatibility" ADD CONSTRAINT "product_vehicle_compatibility_carMakeId_fkey" FOREIGN KEY ("carMakeId") REFERENCES "car_makes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "compatibility" ADD CONSTRAINT "compatibility_carMakeId_fkey" FOREIGN KEY ("carMakeId") REFERENCES "car_makes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
