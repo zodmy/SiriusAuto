@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest, { params }: { params: { productId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const productId = parseInt(params.productId, 10);
+    const id = parseInt(params.id, 10);
 
-    if (isNaN(productId)) {
+    if (isNaN(id)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
     }
 
     const compatibilities = await prisma.compatibility.findMany({
-      where: { productId },
+      where: { productId: id },
     });
 
     return NextResponse.json(compatibilities);
