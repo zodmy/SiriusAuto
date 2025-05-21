@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { productId: string } }) {
   try {
-    const id = parseInt(params.id, 10);
+    const id = parseInt(params.productId, 10);
 
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
