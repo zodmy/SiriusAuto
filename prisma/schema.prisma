@@ -42,7 +42,7 @@ model Product {
   manufacturerId     Int
   manufacturer       Manufacturer                  @relation(fields: [manufacturerId], references: [id])
   orderItems         OrderItem[]
-  compatibleVehicles ProductVehicleCompatibility[]
+  compatibleVehicles Compatibility[]
   productOptions     ProductOption[]
   isVariant          Boolean
   baseProductId      Int?
@@ -60,7 +60,7 @@ model CarMake {
   id            Int                           @id @default(autoincrement())
   name          String                        @unique
   models        CarModel[]
-  compatibility ProductVehicleCompatibility[]
+  compatibility Compatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -73,7 +73,7 @@ model CarModel {
   make          CarMake                       @relation(fields: [makeId], references: [id])
   name          String
   years         CarYear[]
-  compatibility ProductVehicleCompatibility[]
+  compatibility Compatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -87,7 +87,7 @@ model CarYear {
   model         CarModel                      @relation(fields: [modelId], references: [id])
   year          Int
   engines       CarEngine[]
-  compatibility ProductVehicleCompatibility[]
+  compatibility Compatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -101,7 +101,7 @@ model CarEngine {
   year          CarYear                       @relation(fields: [yearId], references: [id])
   name          String // Наприклад, "1.6L Petrol", "2.0L Diesel"
   bodyTypes     CarBodyType[]
-  compatibility ProductVehicleCompatibility[]
+  compatibility Compatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -115,7 +115,7 @@ model CarBodyType {
   engine        CarEngine                     @relation(fields: [engineId], references: [id])
   name          String // Наприклад, "Sedan", "Hatchback", "SUV"
   modifications CarModification[]
-  compatibility ProductVehicleCompatibility[]
+  compatibility Compatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -128,7 +128,7 @@ model CarModification {
   bodyTypeId    Int
   bodyType      CarBodyType                   @relation(fields: [bodyTypeId], references: [id])
   name          String? // Наприклад, "Base", "Sport", "Luxury" (може бути необов'язковим)
-  compatibility ProductVehicleCompatibility[]
+  compatibility Compatibility[]
   createdAt     DateTime                      @default(now())
   updatedAt     DateTime                      @updatedAt
 
@@ -136,7 +136,7 @@ model CarModification {
   @@map("car_modifications")
 }
 
-model ProductVehicleCompatibility {
+model Compatibility {
   id                Int              @id @default(autoincrement())
   productId         Int
   product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -153,8 +153,8 @@ model ProductVehicleCompatibility {
   carMakeId         Int?
   carMake           CarMake?         @relation(fields: [carMakeId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, carModificationId, carBodyTypeId, carEngineId, carYearId, carModelId, carMakeId], name: "product_vehicle_unique_idx")
-  @@map("product_vehicle_compatibility")
+  @@unique([productId, carModificationId, carBodyTypeId, carEngineId, carYearId, carModelId, carMakeId], name: "compatibility_unique_idx")
+  @@map("compatibility")
 }
 
 model User {
