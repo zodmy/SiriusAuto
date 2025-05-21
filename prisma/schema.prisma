@@ -32,105 +32,105 @@ model Manufacturer {
 }
 
 model Product {
-  id                 Int                           @id @default(autoincrement())
+  id                 Int             @id @default(autoincrement())
   name               String
   description        String?
   price              Decimal
   stockQuantity      Int
   categoryId         Int
-  category           Category                      @relation(fields: [categoryId], references: [id])
+  category           Category        @relation(fields: [categoryId], references: [id])
   manufacturerId     Int
-  manufacturer       Manufacturer                  @relation(fields: [manufacturerId], references: [id])
+  manufacturer       Manufacturer    @relation(fields: [manufacturerId], references: [id])
   orderItems         OrderItem[]
   compatibleVehicles Compatibility[]
   productOptions     ProductOption[]
   isVariant          Boolean
   baseProductId      Int?
-  baseProduct        Product?                      @relation("BaseProductToVariants", fields: [baseProductId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  variants           Product[]                     @relation("BaseProductToVariants")
+  baseProduct        Product?        @relation("BaseProductToVariants", fields: [baseProductId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  variants           Product[]       @relation("BaseProductToVariants")
   reviews            Review[]
-  averageRating      Float?                        @default(0.0)
-  createdAt          DateTime                      @default(now())
-  updatedAt          DateTime                      @updatedAt
+  averageRating      Float?          @default(0.0)
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
 
   @@map("products")
 }
 
 model CarMake {
-  id            Int                           @id @default(autoincrement())
-  name          String                        @unique
+  id            Int             @id @default(autoincrement())
+  name          String          @unique
   models        CarModel[]
   compatibility Compatibility[]
-  createdAt     DateTime                      @default(now())
-  updatedAt     DateTime                      @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@map("car_makes")
 }
 
 model CarModel {
-  id            Int                           @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   makeId        Int
-  make          CarMake                       @relation(fields: [makeId], references: [id])
+  make          CarMake         @relation(fields: [makeId], references: [id])
   name          String
   years         CarYear[]
   compatibility Compatibility[]
-  createdAt     DateTime                      @default(now())
-  updatedAt     DateTime                      @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([makeId, name])
   @@map("car_models")
 }
 
 model CarYear {
-  id            Int                           @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   modelId       Int
-  model         CarModel                      @relation(fields: [modelId], references: [id])
+  model         CarModel        @relation(fields: [modelId], references: [id])
   year          Int
   engines       CarEngine[]
   compatibility Compatibility[]
-  createdAt     DateTime                      @default(now())
-  updatedAt     DateTime                      @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([modelId, year])
   @@map("car_years")
 }
 
 model CarEngine {
-  id            Int                           @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   yearId        Int
-  year          CarYear                       @relation(fields: [yearId], references: [id])
+  year          CarYear         @relation(fields: [yearId], references: [id])
   name          String // Наприклад, "1.6L Petrol", "2.0L Diesel"
   bodyTypes     CarBodyType[]
   compatibility Compatibility[]
-  createdAt     DateTime                      @default(now())
-  updatedAt     DateTime                      @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([yearId, name])
   @@map("car_engines")
 }
 
 model CarBodyType {
-  id            Int                           @id @default(autoincrement())
+  id            Int               @id @default(autoincrement())
   engineId      Int
-  engine        CarEngine                     @relation(fields: [engineId], references: [id])
+  engine        CarEngine         @relation(fields: [engineId], references: [id])
   name          String // Наприклад, "Sedan", "Hatchback", "SUV"
   modifications CarModification[]
   compatibility Compatibility[]
-  createdAt     DateTime                      @default(now())
-  updatedAt     DateTime                      @updatedAt
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
   @@unique([engineId, name])
   @@map("car_body_types")
 }
 
 model CarModification {
-  id            Int                           @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   bodyTypeId    Int
-  bodyType      CarBodyType                   @relation(fields: [bodyTypeId], references: [id])
+  bodyType      CarBodyType     @relation(fields: [bodyTypeId], references: [id])
   name          String? // Наприклад, "Base", "Sport", "Luxury" (може бути необов'язковим)
   compatibility Compatibility[]
-  createdAt     DateTime                      @default(now())
-  updatedAt     DateTime                      @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([bodyTypeId, name])
   @@map("car_modifications")
@@ -158,14 +158,16 @@ model Compatibility {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  telegramId BigInt   @unique
-  firstName  String
-  lastName   String?
-  orders     Order[]
-  reviews    Review[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  telegramId   BigInt?  @unique
+  email        String   @unique
+  passwordHash String
+  firstName    String
+  lastName     String?
+  orders       Order[]
+  reviews      Review[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("users")
 }
