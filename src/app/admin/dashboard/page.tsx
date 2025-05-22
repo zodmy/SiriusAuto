@@ -1,0 +1,44 @@
+import Link from 'next/link';
+import { checkAdmin } from '@/lib/auth';
+
+export default async function AdminDashboard() {
+  await checkAdmin({ redirectOnFail: true });
+
+  const apiEndpoints = [
+    { name: 'Car Body Types', path: '/api/car-body-types' },
+    { name: 'Car Engines', path: '/api/car-engines' },
+    { name: 'Car Makes', path: '/api/car-makes' },
+    { name: 'Car Models', path: '/api/car-models' },
+    { name: 'Car Modifications', path: '/api/car-modifications' },
+    { name: 'Car Years', path: '/api/car-years' },
+    { name: 'Categories', path: '/api/categories' },
+    { name: 'Compatibilities', path: '/api/compatibilities' },
+    { name: 'Manufacturers', path: '/api/manufacturers' },
+    { name: 'Orders', path: '/api/orders' },
+    { name: 'Products', path: '/api/products' },
+    { name: 'Users', path: '/api/users' },
+  ];
+
+  return (
+    <div className='min-h-screen bg-gray-100 p-4'>
+      <main className='bg-white shadow-md rounded-lg p-4'>
+        <h2 className='text-xl font-semibold text-gray-700 mb-4'>Керування API</h2>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+          {apiEndpoints.map((endpoint) => (
+            <div key={endpoint.path} className='bg-gray-50 p-4 rounded-lg shadow hover:shadow-lg transition-shadow'>
+              <h3 className='text-lg font-medium text-gray-800'>{endpoint.name}</h3>
+              <p className='text-sm text-gray-600 mt-1'>
+                Шлях: <code className='bg-gray-200 px-1 rounded'>{endpoint.path}</code>
+              </p>
+              <div className='mt-4'>
+                <Link href={`/admin/dashboard/manage${endpoint.path.replace('/api', '')}`} className='text-indigo-600 hover:text-indigo-900 font-medium'>
+                  Керувати
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+}
