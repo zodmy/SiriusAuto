@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Немає прав доступу' }, { status: 403 });
   }
   const carModificationId = parseInt(params.id, 10);
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Немає прав доступу' }, { status: 403 });
   }
   const carModificationId = parseInt(params.id, 10);

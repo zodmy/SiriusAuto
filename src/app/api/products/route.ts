@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await isAdmin(request))) {
+  if (!(await checkAdmin({ req: request }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
