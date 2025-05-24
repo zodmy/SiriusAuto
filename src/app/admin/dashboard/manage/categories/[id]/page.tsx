@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { checkAdminClient } from '@/lib/auth-client';
 
 interface Category {
   id: number;
@@ -22,16 +23,20 @@ export default function EditCategoryPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    checkAdminClient();
+  }, []);
+
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch('/api/categories');
         if (!res.ok) {
-          throw new Error('Failed to fetch categories');
+          throw new Error('Не вдалося завантажити категорії');
         }
         const data = await res.json();
         setCategories(data.filter((cat: Category) => cat.id !== parseInt(id as string, 10)));
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setError(err instanceof Error ? err.message : 'Сталася невідома помилка');
       }
     };
 
@@ -41,9 +46,9 @@ export default function EditCategoryPage() {
           const res = await fetch(`/api/categories/${id}`);
           if (!res.ok) {
             if (res.status === 404) {
-              setError('Category not found');
+              setError('Категорія не знайдена');
             } else {
-              throw new Error('Failed to fetch category');
+              throw new Error('Не вдалося завантажити категорію');
             }
             setIsLoading(false);
             return;
@@ -53,12 +58,12 @@ export default function EditCategoryPage() {
           setName(data.name);
           setParentId(data.parentId?.toString() || '');
         } catch (err) {
-          setError(err instanceof Error ? err.message : 'An unknown error occurred');
+          setError(err instanceof Error ? err.message : 'Сталася невідома помилка');
         } finally {
           setIsLoading(false);
         }
       } else {
-        setError('No category ID provided');
+        setError('Не вказано ID категорії');
         setIsLoading(false);
       }
     };
@@ -71,7 +76,7 @@ export default function EditCategoryPage() {
     setError('');
 
     if (!name.trim()) {
-      setError('Name is required');
+      setError("Назва є обов'язковою");
       return;
     }
 
@@ -86,18 +91,18 @@ export default function EditCategoryPage() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'Failed to update category');
+        throw new Error(errorData.error || 'Не вдалося оновити категорію');
       }
       router.push('/admin/dashboard/manage/categories');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setError(err instanceof Error ? err.message : 'Сталася невідома помилка');
     }
   };
 
   if (isLoading) {
     return (
       <div className='min-h-screen flex items-center justify-center'>
-        <p>Loading...</p>
+        <p>Завантаження...</p>
       </div>
     );
   }
@@ -106,12 +111,12 @@ export default function EditCategoryPage() {
     return (
       <div className='min-h-screen bg-gray-100 p-4'>
         <header className='bg-white shadow-md rounded-lg p-4 mb-4'>
-          <h1 className='text-2xl font-bold text-gray-800'>Edit Category</h1>
+          <h1 className='text-2xl font-bold text-gray-800'>Редагувати</h1>
         </header>
         <main className='bg-white shadow-md rounded-lg p-4'>
           <p className='text-red-500'>{error}</p>
           <button onClick={() => router.push('/admin/dashboard/manage/categories')} className='mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'>
-            Go Back
+            Назад
           </button>
         </main>
       </div>
@@ -121,9 +126,9 @@ export default function EditCategoryPage() {
   return (
     <div className='min-h-screen bg-gray-100 p-4'>
       <header className='bg-white shadow-md rounded-lg p-4 mb-4 flex justify-between items-center'>
-        <h1 className='text-2xl font-bold text-gray-800'>Edit Category: {category?.name}</h1>
+        <h1 className='text-2xl font-bold text-gray-800'>Редагувати: {category?.name}</h1>
         <button onClick={() => router.push('/admin/dashboard/manage/categories')} className='px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400'>
-          Back to Categories
+          Назад до категорій
         </button>
       </header>
       <main className='bg-white shadow-md rounded-lg p-6'>
@@ -131,25 +136,25 @@ export default function EditCategoryPage() {
           {error && <p className='text-red-500 text-sm'>{error}</p>}
           <div>
             <label htmlFor='name' className='block text-sm font-medium text-gray-700'>
-              Name
+              Назва
             </label>
             <input type='text' id='name' value={name} onChange={(e) => setName(e.target.value)} className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900' required />
           </div>
           <div>
             <label htmlFor='parentId' className='block text-sm font-medium text-gray-700'>
-              Parent Category (Optional)
+              Батьківська категорія (необов&#39;язково)
             </label>
             <select id='parentId' value={parentId} onChange={(e) => setParentId(e.target.value)} className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900'>
-              <option value=''>None</option>
+              <option value=''>Немає</option>
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id.toString()}>
                   {cat.name}
                 </option>
               ))}
             </select>
-          </div>
+          </div>{' '}
           <button type='submit' className='w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500'>
-            Save Changes
+            Зберегти зміни
           </button>
         </form>
       </main>

@@ -3,20 +3,19 @@ import { checkAdmin } from '@/lib/auth';
 
 export default async function AdminDashboard() {
   await checkAdmin({ redirectOnFail: true });
-
   const apiEndpoints = [
-    { name: 'Car Body Types', path: '/api/car-body-types' },
-    { name: 'Car Engines', path: '/api/car-engines' },
-    { name: 'Car Makes', path: '/api/car-makes' },
-    { name: 'Car Models', path: '/api/car-models' },
-    { name: 'Car Modifications', path: '/api/car-modifications' },
-    { name: 'Car Years', path: '/api/car-years' },
-    { name: 'Categories', path: '/api/categories' },
-    { name: 'Compatibilities', path: '/api/compatibilities' },
-    { name: 'Manufacturers', path: '/api/manufacturers' },
-    { name: 'Orders', path: '/api/orders' },
-    { name: 'Products', path: '/api/products' },
-    { name: 'Users', path: '/api/users' },
+    { name: 'Типи кузовів автомобілів', path: '/api/car-body-types' },
+    { name: 'Двигуни автомобілів', path: '/api/car-engines' },
+    { name: 'Марки автомобілів', path: '/api/car-makes' },
+    { name: 'Моделі автомобілів', path: '/api/car-models' },
+    { name: 'Модифікації автомобілів', path: '/api/car-modifications' },
+    { name: 'Роки випуску автомобілів', path: '/api/car-years' },
+    { name: 'Категорії', path: '/api/categories' },
+    { name: 'Сумісності', path: '/api/compatibilities' },
+    { name: 'Виробники', path: '/api/manufacturers' },
+    { name: 'Замовлення', path: '/api/orders' },
+    { name: 'Товари', path: '/api/products' },
+    { name: 'Користувачі', path: '/api/users' },
   ];
 
   return (
