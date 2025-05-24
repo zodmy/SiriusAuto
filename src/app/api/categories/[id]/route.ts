@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
 export async function GET(request: Request, context: { params: { id: string } }) {
@@ -34,7 +34,7 @@ export async function GET(request: Request, context: { params: { id: string } })
 }
 
 export async function PUT(request: NextRequest, context: { params: { id: string } }) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
@@ -76,7 +76,7 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
 }
 
 export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 

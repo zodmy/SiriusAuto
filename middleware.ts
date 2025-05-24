@@ -1,48 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt, { JwtPayload } from 'jsonwebtoken';
-
-const adminRoutes = ['/admin/dashboard'];
-const adminApiRoutes = ['/api/categories'];
+import { checkAdmin } from '@/lib/auth';
 
 export async function middleware(req: NextRequest) {
-  const pathname = req.nextUrl.pathname;
-  const token = req.cookies.get('token')?.value;
-
-  if (adminRoutes.includes(pathname)) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/admin', req.url));
+  const pathname = req.nextUrl.pathname.toLowerCase();
+  if (pathname === '/admin' || pathname === '/admin/') {
+    const isAdmin = await checkAdmin({ req });
+    if (isAdmin) {
+      return NextResponse.redirect(new URL('/admin/dashboard', req.url));
     }
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-      if (decoded.role !== 'admin') {
-        return NextResponse.redirect(new URL('/admin', req.url));
-      }
-      return NextResponse.next();
-    } catch (error) {
-      console.error('Помилка верифікації токена:', error);
-      return NextResponse.redirect(new URL('/admin', req.url));
-    }
+    return NextResponse.next();
   }
 
-  if (adminApiRoutes.some((route) => pathname.startsWith(route)) && req.method !== 'GET') {
-    if (!token) {
-      return NextResponse.json({ message: 'Потрібна авторизація' }, { status: 401 });
+  if (pathname.startsWith('/api/admin/login')) {
+    return NextResponse.next();
+  }
+
+  if (pathname.startsWith('/admin')) {
+    const isAdmin = await checkAdmin({ req });
+    if (!isAdmin) {
+      const res = NextResponse.redirect(new URL('/admin', req.url));
+      res.headers.set('X-Auth-Error', '401');
+      return res;
     }
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-      if (decoded.role !== 'admin') {
-        return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 403 });
-      }
-      return NextResponse.next();
-    } catch (error) {
-      console.error('Помилка верифікації токена:', error);
-      return NextResponse.json({ message: 'Недійсний токен' }, { status: 401 });
-    }
+    return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: [...adminRoutes, ...adminApiRoutes.map((route) => `${route}(.*)`)],
+  matcher: [
+    '/admin',
+    '/admin/*',
+    '/api/admin/login',
+  ],
 };

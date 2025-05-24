@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
@@ -27,7 +27,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 }
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  if (!(await isAdmin(request))) {
+  if (!(await checkAdmin({ req: request }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
 
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { name, value } = data;
 
     if (!name || !value) {
-      return NextResponse.json({ error: 'Назва та значення опції є обов\'язковими' }, { status: 400 });
+      return NextResponse.json({ error: "Назва та значення опції є обов'язковими" }, { status: 400 });
     }
 
     const productOption = await prisma.productOption.create({

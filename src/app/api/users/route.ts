@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 import bcrypt from 'bcrypt';
 
 export async function GET(request: NextRequest) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
 

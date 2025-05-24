@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 export async function GET() {
@@ -15,7 +15,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!await isAdmin(request)) {
+  if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Немає прав доступу' }, { status: 403 });
   }
   try {
