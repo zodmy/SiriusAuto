@@ -13,7 +13,6 @@ async function getTokenFromRequestOrCookies(req?: NextRequest): Promise<string |
   }
 }
 
-// Перевіряє токен на роль адміністратора
 export function getAdminStatusFromToken(token?: string): boolean {
   if (!token) return false;
   try {
@@ -24,7 +23,6 @@ export function getAdminStatusFromToken(token?: string): boolean {
   }
 }
 
-// Універсальна перевірка адміністратора для API та серверних компонентів
 export async function checkAdmin({ req, redirectOnFail = false }: { req?: NextRequest, redirectOnFail?: boolean } = {}): Promise<boolean> {
   const token = await getTokenFromRequestOrCookies(req);
   const isAdmin = getAdminStatusFromToken(token);
