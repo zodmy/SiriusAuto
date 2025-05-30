@@ -19,36 +19,31 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json();
-    const { name, carYearId, capacity, horsepower } = body;
 
-    if (!name || typeof name !== 'string' || !carYearId || typeof carYearId !== 'number') {
-      return NextResponse.json({ error: 'Надано невірну назву або ID року випуску автомобіля' }, { status: 400 });
+    const { name, bodyTypeId } = body;
+
+    if (!name || typeof name !== 'string' || name.trim() === '' || bodyTypeId === undefined || typeof bodyTypeId !== 'number') {
+      return NextResponse.json({ error: 'Надано невірну назву або ID типу кузова автомобіля' }, { status: 400 });
     }
 
-    const dataToCreate: {
-      name: string;
-      year: { connect: { id: number } };
-      capacity?: number;
-      horsepower?: number;
-    } = {
-      name,
-      year: { connect: { id: carYearId } },
-    };
-    if (capacity !== undefined && typeof capacity === 'number') {
-      dataToCreate.capacity = capacity;
-    }
-    if (horsepower !== undefined && typeof horsepower === 'number') {
-      dataToCreate.horsepower = horsepower;
+
+    const bodyTypeExists = await prisma.carBodyType.findUnique({ where: { id: bodyTypeId } });
+    if (!bodyTypeExists) {
+      return NextResponse.json({ error: 'Вказаний тип кузова автомобіля не знайдено' }, { status: 404 });
     }
 
     const newCarEngine = await prisma.carEngine.create({
-      data: dataToCreate,
+      data: {
+        name,
+        bodyType: { connect: { id: bodyTypeId } },
+      },
     });
     return NextResponse.json(newCarEngine, { status: 201 });
   } catch (error) {
     console.error('Помилка створення двигуна автомобіля:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return NextResponse.json({ error: 'Двигун автомобіля з такою назвою для вказаного року випуску вже існує' }, { status: 409 });
+
+      return NextResponse.json({ error: 'Двигун з такою назвою для вказаного типу кузова вже існує' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Не вдалося створити двигун автомобіля' }, { status: 500 });
   }

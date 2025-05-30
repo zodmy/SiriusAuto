@@ -8,20 +8,30 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Невалідний ID року випуску автомобіля' }, { status: 400 });
     }
 
-    const carYear = await prisma.carYear.findUnique({
+    const carYearWithDetails = await prisma.carYear.findUnique({
       where: { id: carYearId },
       include: {
-        engines: true,
+        bodyTypes: {
+          include: {
+            engines: true,
+          },
+        },
       },
     });
 
-    if (!carYear) {
+    if (!carYearWithDetails) {
       return NextResponse.json({ error: 'Рік випуску автомобіля не знайдено' }, { status: 404 });
     }
 
-    return NextResponse.json(carYear.engines);
+
+    const allEngines = carYearWithDetails.bodyTypes.flatMap(bodyType => bodyType.engines);
+
+
+    const uniqueEngines = Array.from(new Map(allEngines.map(engine => [engine.id, engine])).values());
+
+    return NextResponse.json(uniqueEngines);
   } catch (error) {
-    console.error('Помилка отримання двигунів автомобілів:', error);
-    return NextResponse.json({ error: 'Не вдалося отримати двигуни автомобілів' }, { status: 500 });
+    console.error('Помилка отримання двигунів автомобілів для року випуску:', error);
+    return NextResponse.json({ error: 'Не вдалося отримати двигуни автомобілів для року випуску' }, { status: 500 });
   }
 }

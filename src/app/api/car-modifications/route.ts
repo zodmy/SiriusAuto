@@ -20,28 +20,29 @@ export async function POST(request: NextRequest) {
   }
   try {
     const body = await request.json();
-    const { name, bodyTypeId } = body;
+    const { name, engineId } = body;
 
-    if (bodyTypeId === undefined || bodyTypeId === null) {
-      return NextResponse.json({ error: "Відсутнє обов'язкове поле bodyTypeId" }, { status: 400 });
+    if (engineId === undefined || engineId === null) {
+      return NextResponse.json({ error: "Відсутнє обов'язкове поле engineId" }, { status: 400 });
     }
-    const parsedBodyTypeId = parseInt(bodyTypeId, 10);
-    if (isNaN(parsedBodyTypeId)) {
-      return NextResponse.json({ error: 'Невалідний ID типу кузова' }, { status: 400 });
+    const parsedEngineId = parseInt(engineId, 10);
+    if (isNaN(parsedEngineId)) {
+      return NextResponse.json({ error: 'Невалідний ID двигуна' }, { status: 400 });
     }
 
-    const carBodyTypeExists = await prisma.carBodyType.findUnique({
-      where: { id: parsedBodyTypeId },
+
+    const carEngineExists = await prisma.carEngine.findUnique({
+      where: { id: parsedEngineId },
     });
 
-    if (!carBodyTypeExists) {
-      return NextResponse.json({ error: `Тип кузова з ID ${parsedBodyTypeId} не знайдено` }, { status: 404 });
+    if (!carEngineExists) {
+      return NextResponse.json({ error: `Двигун з ID ${parsedEngineId} не знайдено` }, { status: 404 });
     }
 
     const newCarModification = await prisma.carModification.create({
       data: {
         name,
-        bodyTypeId: parsedBodyTypeId,
+        engine: { connect: { id: parsedEngineId } },
       },
     });
 
@@ -50,7 +51,8 @@ export async function POST(request: NextRequest) {
     console.error('Помилка створення модифікації автомобіля:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        return NextResponse.json({ error: 'Модифікація з такою назвою для даного типу кузова вже існує або надані дані порушують унікальність.' }, { status: 409 });
+
+        return NextResponse.json({ error: 'Модифікація з такою назвою для даного двигуна вже існує.' }, { status: 409 });
       }
     }
     return NextResponse.json({ error: 'Не вдалося створити модифікацію автомобіля' }, { status: 500 });

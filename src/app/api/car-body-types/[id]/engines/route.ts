@@ -8,21 +8,18 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Невалідний ID типу кузова автомобіля' }, { status: 400 });
     }
 
-    const carBodyTypeExists = await prisma.carBodyType.findUnique({
+    const carBodyTypeWithEngines = await prisma.carBodyType.findUnique({
       where: { id: carBodyTypeId },
+      include: { engines: true },
     });
 
-    if (!carBodyTypeExists) {
+    if (!carBodyTypeWithEngines) {
       return NextResponse.json({ error: 'Тип кузова автомобіля не знайдено' }, { status: 404 });
     }
 
-    const modifications = await prisma.carModification.findMany({
-      where: { bodyTypeId: carBodyTypeId },
-    });
-
-    return NextResponse.json(modifications);
+    return NextResponse.json(carBodyTypeWithEngines.engines);
   } catch (error) {
-    console.error('Помилка отримання модифікацій для типу кузова автомобіля:', error);
-    return NextResponse.json({ error: 'Не вдалося отримати модифікації для типу кузова автомобіля' }, { status: 500 });
+    console.error('Помилка отримання двигунів для типу кузова автомобіля:', error);
+    return NextResponse.json({ error: 'Не вдалося отримати двигуни для типу кузова автомобіля' }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { isAdmin } from '@/lib/auth';
+import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!(await isAdmin(req))) {
+  if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
@@ -36,18 +36,26 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const body = await req.json();
-    const { name, engineId } = body;
+    const { name, yearId } = body;
 
-    if (name !== undefined && typeof name !== 'string') {
-      return NextResponse.json({ error: 'Надано невірну назву' }, { status: 400 });
+    if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
+      return NextResponse.json({ error: 'Надано невірну або порожню назву' }, { status: 400 });
     }
-    if (engineId !== undefined && typeof engineId !== 'number') {
-      return NextResponse.json({ error: 'Надано невірний ID двигуна' }, { status: 400 });
+    if (yearId !== undefined && typeof yearId !== 'number') {
+      return NextResponse.json({ error: 'Надано невірний ID року автомобіля' }, { status: 400 });
     }
 
-    const dataToUpdate: { name?: string; engineId?: number } = {};
+
+    if (yearId !== undefined) {
+      const yearExists = await prisma.carYear.findUnique({ where: { id: yearId } });
+      if (!yearExists) {
+        return NextResponse.json({ error: 'Вказаний рік автомобіля не знайдено' }, { status: 404 });
+      }
+    }
+
+    const dataToUpdate: { name?: string; yearId?: number } = {};
     if (name !== undefined) dataToUpdate.name = name;
-    if (engineId !== undefined) dataToUpdate.engineId = engineId;
+    if (yearId !== undefined) dataToUpdate.yearId = yearId;
 
     if (Object.keys(dataToUpdate).length === 0) {
       return NextResponse.json({ error: 'Немає полів для оновлення' }, { status: 400 });
@@ -62,7 +70,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     console.error('Помилка оновлення типу кузова автомобіля:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        return NextResponse.json({ error: 'Тип кузова з такою назвою для вказаного двигуна вже існує' }, { status: 409 });
+
+        return NextResponse.json({ error: 'Тип кузова з такою назвою для вказаного року вже існує' }, { status: 409 });
       }
       if (error.code === 'P2025') {
         return NextResponse.json({ error: 'Тип кузова автомобіля не знайдено' }, { status: 404 });
@@ -73,7 +82,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!(await isAdmin(req))) {
+  if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {

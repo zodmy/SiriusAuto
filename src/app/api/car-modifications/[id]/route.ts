@@ -39,28 +39,29 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
   try {
     const body = await request.json();
-    const { name, bodyTypeId } = body;
+    const { name, engineId } = body;
 
-    let parsedBodyTypeId: number | undefined = undefined;
-    if (bodyTypeId !== undefined && bodyTypeId !== null) {
-      parsedBodyTypeId = parseInt(bodyTypeId, 10);
-      if (isNaN(parsedBodyTypeId)) {
-        return NextResponse.json({ error: 'Невалідний ID типу кузова' }, { status: 400 });
+    let parsedEngineId: number | undefined = undefined;
+    if (engineId !== undefined && engineId !== null) {
+      parsedEngineId = parseInt(engineId, 10);
+      if (isNaN(parsedEngineId)) {
+        return NextResponse.json({ error: 'Невалідний ID двигуна' }, { status: 400 });
       }
-      const carBodyTypeExists = await prisma.carBodyType.findUnique({
-        where: { id: parsedBodyTypeId },
+
+      const carEngineExists = await prisma.carEngine.findUnique({
+        where: { id: parsedEngineId },
       });
-      if (!carBodyTypeExists) {
-        return NextResponse.json({ error: `Тип кузова з ID ${parsedBodyTypeId} не знайдено` }, { status: 404 });
+      if (!carEngineExists) {
+        return NextResponse.json({ error: `Двигун з ID ${parsedEngineId} не знайдено` }, { status: 404 });
       }
     }
 
-    const dataToUpdate: { name?: string | null; bodyTypeId?: number } = {};
+    const dataToUpdate: { name?: string | null; engineId?: number } = {};
     if (name !== undefined) {
       dataToUpdate.name = name;
     }
-    if (parsedBodyTypeId !== undefined) {
-      dataToUpdate.bodyTypeId = parsedBodyTypeId;
+    if (parsedEngineId !== undefined) {
+      dataToUpdate.engineId = parsedEngineId;
     }
 
     if (Object.keys(dataToUpdate).length === 0) {
@@ -77,7 +78,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     console.error(`Помилка оновлення модифікації автомобіля з ID ${carModificationId}:`, error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        return NextResponse.json({ error: 'Модифікація з такою назвою для даного типу кузова вже існує' }, { status: 409 });
+
+        return NextResponse.json({ error: 'Модифікація з такою назвою для даного двигуна вже існує' }, { status: 409 });
       }
       if (error.code === 'P2025') {
         return NextResponse.json({ message: `Модифікацію автомобіля з ID ${carModificationId} не знайдено` }, { status: 404 });

@@ -19,23 +19,30 @@ export async function POST(req: NextRequest) {
   }
   try {
     const body = await req.json();
-    const { name, engineId } = body;
+    const { name, yearId } = body;
 
-    if (!name || typeof name !== 'string' || !engineId || typeof engineId !== 'number') {
-      return NextResponse.json({ error: 'Надано невірну назву або ID двигуна' }, { status: 400 });
+    if (!name || typeof name !== 'string' || name.trim() === '' || yearId === undefined || typeof yearId !== 'number') {
+      return NextResponse.json({ error: 'Надано невірну назву або ID року автомобіля' }, { status: 400 });
+    }
+
+
+    const carYearExists = await prisma.carYear.findUnique({ where: { id: yearId } });
+    if (!carYearExists) {
+      return NextResponse.json({ error: 'Вказаний рік автомобіля не знайдено' }, { status: 404 });
     }
 
     const newCarBodyType = await prisma.carBodyType.create({
       data: {
         name,
-        engine: { connect: { id: engineId } },
+        year: { connect: { id: yearId } },
       },
     });
     return NextResponse.json(newCarBodyType, { status: 201 });
   } catch (error) {
     console.error('Помилка створення типу кузова автомобіля:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
-      return NextResponse.json({ error: 'Тип кузова з такою назвою для вказаного двигуна вже існує' }, { status: 409 });
+
+      return NextResponse.json({ error: 'Тип кузова з такою назвою для вказаного року вже існує' }, { status: 409 });
     }
     return NextResponse.json({ error: 'Не вдалося створити тип кузова автомобіля' }, { status: 500 });
   }

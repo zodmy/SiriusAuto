@@ -36,26 +36,27 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     const body = await req.json();
-    const { name, capacity, horsepower, carYearId } = body;
 
-    if (name !== undefined && typeof name !== 'string') {
-      return NextResponse.json({ error: 'Надано невірну назву' }, { status: 400 });
+    const { name, bodyTypeId } = body;
+
+    if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {
+      return NextResponse.json({ error: 'Надано невірну або порожню назву' }, { status: 400 });
     }
-    if (capacity !== undefined && typeof capacity !== 'number') {
-      return NextResponse.json({ error: 'Надано невірну ємність' }, { status: 400 });
-    }
-    if (horsepower !== undefined && typeof horsepower !== 'number') {
-      return NextResponse.json({ error: 'Надано невірну потужність' }, { status: 400 });
-    }
-    if (carYearId !== undefined && typeof carYearId !== 'number') {
-      return NextResponse.json({ error: 'Надано невірний ID року випуску автомобіля' }, { status: 400 });
+    if (bodyTypeId !== undefined && typeof bodyTypeId !== 'number') {
+      return NextResponse.json({ error: 'Надано невірний ID типу кузова автомобіля' }, { status: 400 });
     }
 
-    const dataToUpdate: { name?: string; capacity?: number; horsepower?: number; carYearId?: number } = {};
+
+    if (bodyTypeId !== undefined) {
+      const bodyTypeExists = await prisma.carBodyType.findUnique({ where: { id: bodyTypeId } });
+      if (!bodyTypeExists) {
+        return NextResponse.json({ error: 'Вказаний тип кузова автомобіля не знайдено' }, { status: 404 });
+      }
+    }
+
+    const dataToUpdate: { name?: string; bodyTypeId?: number } = {};
     if (name !== undefined) dataToUpdate.name = name;
-    if (capacity !== undefined) dataToUpdate.capacity = capacity;
-    if (horsepower !== undefined) dataToUpdate.horsepower = horsepower;
-    if (carYearId !== undefined) dataToUpdate.carYearId = carYearId;
+    if (bodyTypeId !== undefined) dataToUpdate.bodyTypeId = bodyTypeId;
 
     if (Object.keys(dataToUpdate).length === 0) {
       return NextResponse.json({ error: 'Немає полів для оновлення' }, { status: 400 });
@@ -70,7 +71,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     console.error('Помилка оновлення двигуна автомобіля:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        return NextResponse.json({ error: 'Двигун автомобіля з такою назвою для вказаного року випуску вже існує' }, { status: 409 });
+
+        return NextResponse.json({ error: 'Двигун з такою назвою для вказаного типу кузова вже існує' }, { status: 409 });
       }
       if (error.code === 'P2025') {
         return NextResponse.json({ error: 'Двигун автомобіля не знайдено' }, { status: 404 });

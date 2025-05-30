@@ -8,17 +8,20 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Невалідний ID двигуна автомобіля' }, { status: 400 });
     }
 
-    const carBodyTypes = await prisma.carBodyType.findMany({
-      where: { engineId: carEngineId },
+    const carEngine = await prisma.carEngine.findUnique({
+      where: { id: carEngineId },
+      include: {
+        bodyType: true,
+      },
     });
 
-    if (!carBodyTypes || carBodyTypes.length === 0) {
-      return NextResponse.json({ error: 'Для цього двигуна автомобіля не знайдено типів кузова' }, { status: 404 });
+    if (!carEngine || !carEngine.bodyType) {
+      return NextResponse.json({ error: 'Для цього двигуна автомобіля не знайдено тип кузова' }, { status: 404 });
     }
 
-    return NextResponse.json(carBodyTypes);
+    return NextResponse.json(carEngine.bodyType);
   } catch (error) {
-    console.error('Помилка отримання типів кузовів автомобілів:', error);
-    return NextResponse.json({ error: 'Не вдалося отримати типи кузовів автомобілів' }, { status: 500 });
+    console.error('Помилка отримання типу кузова для двигуна:', error);
+    return NextResponse.json({ error: 'Не вдалося отримати тип кузова для двигуна' }, { status: 500 });
   }
 }
