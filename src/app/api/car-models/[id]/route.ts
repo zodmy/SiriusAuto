@@ -30,7 +30,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const carModelId = parseInt(params.id, 10);
+  const resolvedParams = await params;
+  const carModelId = parseInt(resolvedParams.id, 10);
 
   if (isNaN(carModelId)) {
     return NextResponse.json({ error: 'Невалідний ID моделі автомобіля' }, { status: 400 });
@@ -83,7 +84,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const carModelId = parseInt(params.id, 10);
+  const resolvedParams = await params; // Await params
+  const carModelId = parseInt(resolvedParams.id, 10);
 
   if (isNaN(carModelId)) {
     return NextResponse.json({ error: 'Невалідний ID моделі автомобіля' }, { status: 400 });
