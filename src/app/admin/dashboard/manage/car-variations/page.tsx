@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { HiOutlineCog, HiOutlineSearch, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCheck, HiOutlineX, HiOutlineArrowLeft } from 'react-icons/hi';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
 
@@ -21,6 +21,11 @@ interface CarBodyType {
   id: number;
   name: string;
   yearId: number;
+}
+interface CarEngine {
+  id: number;
+  name: string;
+  bodyTypeId: number;
 }
 
 export default function ManageCarVariationsPage() {
@@ -60,6 +65,18 @@ export default function ManageCarVariationsPage() {
   const [bodyTypeSortDir, setBodyTypeSortDir] = useState<'asc' | 'desc'>('asc');
   const [editingBodyTypeId, setEditingBodyTypeId] = useState<number | null>(null);
   const [editingBodyTypeName, setEditingBodyTypeName] = useState('');
+  const [enginesByBodyType, setEnginesByBodyType] = useState<Record<number, CarEngine[]>>({});
+  const [enginesLoading, setEnginesLoading] = useState<Record<number, boolean>>({});
+  const [enginesError, setEnginesError] = useState<Record<number, string | null>>({});
+  const [newEngineName, setNewEngineName] = useState<Record<number, string>>({});
+  const [editingEngineId, setEditingEngineId] = useState<number | null>(null);
+  const [editingEngineName, setEditingEngineName] = useState('');
+  const [engineError, setEngineError] = useState<Record<number, string | null>>({});
+  const [engineSortDir, setEngineSortDir] = useState<Record<number, 'asc' | 'desc'>>({});
+  const [expandedBodyTypeId, setExpandedBodyTypeId] = useState<number | null>(null);
+  const bodyTypeRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
+  const modelRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
+  const yearRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
 
   useEffect(() => {
     if (isAdmin && !isVerifyingAuth) {
@@ -132,6 +149,18 @@ export default function ManageCarVariationsPage() {
     setExpandedModelId(foundModelId);
     setExpandedYearId(foundYearId);
   }, [debouncedSearch, carMakes, carModels, carYears, carBodyTypes]);
+
+  useEffect(() => {
+    // Auto-fetch engines for all expanded body types in the current year
+    if (expandedYearId !== null) {
+      getSortedBodyTypes(expandedYearId).forEach((bt) => {
+        if (enginesByBodyType[bt.id] === undefined && !enginesLoading[bt.id]) {
+          fetchEnginesForBodyType(bt.id);
+        }
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expandedYearId, carBodyTypes, enginesByBodyType, enginesLoading]);
 
   if (isVerifyingAuth || isAdmin === null) {
     return (
@@ -517,6 +546,112 @@ export default function ManageCarVariationsPage() {
     });
   };
 
+  const fetchEnginesForBodyType = async (bodyTypeId: number) => {
+    setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: true }));
+    setEnginesError((prev) => ({ ...prev, [bodyTypeId]: null }));
+    try {
+      const res = await fetch(`/api/car-body-types/${bodyTypeId}/engines`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setEnginesError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка завантаження двигунів' }));
+        setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
+        return;
+      }
+      const engines: CarEngine[] = await res.json();
+      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: engines }));
+    } catch {
+      setEnginesError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
+    } finally {
+      setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: false }));
+    }
+  };
+
+  const getSortedEngines = (bodyTypeId: number) => {
+    const engines = enginesByBodyType[bodyTypeId] || [];
+    const dir = engineSortDir[bodyTypeId] || 'asc';
+    return [...engines].sort((a, b) => (dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)));
+  };
+
+  const handleAddEngine = async (bodyTypeId: number) => {
+    setEngineError((prev) => ({ ...prev, [bodyTypeId]: null }));
+    const name = (newEngineName[bodyTypeId] || '').trim();
+    if (!name) {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
+      return;
+    }
+    if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase())) {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
+      return;
+    }
+    try {
+      const res = await fetch('/api/car-engines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, bodyTypeId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка створення двигуна' }));
+        return;
+      }
+      setNewEngineName((prev) => ({ ...prev, [bodyTypeId]: '' }));
+      fetchEnginesForBodyType(bodyTypeId);
+    } catch {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+    }
+  };
+
+  const handleEditEngine = (engine: CarEngine) => {
+    setEditingEngineId(engine.id);
+    setEditingEngineName(engine.name);
+    setEngineError((prev) => ({ ...prev, [engine.bodyTypeId]: null }));
+  };
+
+  const handleSaveEditEngine = async (engineId: number, bodyTypeId: number) => {
+    const name = editingEngineName.trim();
+    if (!name) {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
+      return;
+    }
+    if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase() && e.id !== engineId)) {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
+      return;
+    }
+    try {
+      const res = await fetch(`/api/car-engines/${engineId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, bodyTypeId }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка збереження двигуна' }));
+        return;
+      }
+      setEditingEngineId(null);
+      setEditingEngineName('');
+      fetchEnginesForBodyType(bodyTypeId);
+    } catch {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+    }
+  };
+
+  const handleCancelEditEngine = () => {
+    setEditingEngineId(null);
+    setEditingEngineName('');
+  };
+
+  const handleDeleteEngine = async (engineId: number, bodyTypeId: number) => {
+    if (!window.confirm('Видалити цей двигун?')) return;
+    try {
+      await fetch(`/api/car-engines/${engineId}`, { method: 'DELETE' });
+      fetchEnginesForBodyType(bodyTypeId);
+    } catch {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+    }
+  };
+
   function normalizeString(str: string) {
     return str
       .normalize('NFD')
@@ -731,7 +866,7 @@ export default function ManageCarVariationsPage() {
                       <tr>
                         <td colSpan={3} className='p-0'>
                           <div className='bg-blue-50 p-4 border-l-4 border-blue-400 rounded-b-xl'>
-                            <h4 className='text-lg font-bold text-blue-700 mb-3'>Моделі для {make.name}:</h4>
+                            <h4 className='text-lg font-bold text-blue-700 mb-3'>Моделі {make.name}:</h4>
                             <div className='mb-3 flex gap-2'>
                               <input
                                 type='text'
@@ -788,7 +923,24 @@ export default function ManageCarVariationsPage() {
                                 <tbody className='divide-y divide-gray-100 block sm:table-row-group'>
                                   {getSortedModels(make.id).map((model) => (
                                     <React.Fragment key={model.id}>
-                                      <tr className={`group ${expandedModelId === model.id ? 'bg-blue-100' : 'hover:bg-blue-50'} cursor-pointer transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none`} onClick={() => setExpandedModelId(expandedModelId === model.id ? null : model.id)}>
+                                      <tr
+                                        ref={(el) => {
+                                          modelRefs.current[model.id] = el;
+                                        }}
+                                        className={`group ${expandedModelId === model.id ? 'bg-blue-100' : 'hover:bg-blue-50'} cursor-pointer transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none`}
+                                        onClick={() => {
+                                          const newId = expandedModelId === model.id ? null : model.id;
+                                          setExpandedModelId(newId);
+                                          if (newId !== null) {
+                                            setTimeout(() => {
+                                              const el = modelRefs.current[newId];
+                                              if (el) {
+                                                el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                              }
+                                            }, 100);
+                                          }
+                                        }}
+                                      >
                                         <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-800 group-hover:bg-blue-200 group-[.bg-blue-100]:bg-blue-100 transition-colors duration-100 block sm:table-cell'>
                                           <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {model.id}
                                         </td>
@@ -868,7 +1020,7 @@ export default function ManageCarVariationsPage() {
                                           <td colSpan={3} className='p-0'>
                                             <div className='bg-yellow-50 p-4 border-l-4 border-yellow-400 rounded-b-xl'>
                                               <h5 className='text-lg font-bold text-yellow-700 mb-3'>
-                                                Роки для {make.name} {model.name}:
+                                                Роки {make.name} {model.name}:
                                               </h5>
                                               <div className='mb-3 flex gap-2'>
                                                 <input
@@ -905,7 +1057,24 @@ export default function ManageCarVariationsPage() {
                                                   <tbody className='divide-y divide-gray-100 block sm:table-row-group'>
                                                     {getSortedYears(model.id).map((year) => (
                                                       <React.Fragment key={year.id}>
-                                                        <tr className={`group ${expandedYearId === year.id ? 'bg-yellow-200' : 'hover:bg-yellow-100'} cursor-pointer transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none`} onClick={() => setExpandedYearId(expandedYearId === year.id ? null : year.id)}>
+                                                        <tr
+                                                          ref={(el) => {
+                                                            yearRefs.current[year.id] = el;
+                                                          }}
+                                                          className={`group ${expandedYearId === year.id ? 'bg-yellow-200' : 'hover:bg-yellow-100'} cursor-pointer transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none`}
+                                                          onClick={() => {
+                                                            const newId = expandedYearId === year.id ? null : year.id;
+                                                            setExpandedYearId(newId);
+                                                            if (newId !== null) {
+                                                              setTimeout(() => {
+                                                                const el = yearRefs.current[newId];
+                                                                if (el) {
+                                                                  el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                                                }
+                                                              }, 100);
+                                                            }
+                                                          }}
+                                                        >
                                                           <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 group-hover:bg-yellow-300 group-[.bg-yellow-200]:bg-yellow-200 transition-colors duration-100 block sm:table-cell'>
                                                             <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {year.id}
                                                           </td>
@@ -957,7 +1126,7 @@ export default function ManageCarVariationsPage() {
                                                             <td colSpan={3} className='p-0'>
                                                               <div className='bg-green-50 p-4 border-l-4 border-green-400 rounded-b-xl'>
                                                                 <h6 className='text-lg font-bold text-green-700 mb-3'>
-                                                                  Типи кузовів для {make.name} {model.name} {year.year}:
+                                                                  Типи кузовів {make.name} {model.name} {year.year}:
                                                                 </h6>
                                                                 <div className='mb-3 flex gap-2'>
                                                                   <input
@@ -994,53 +1163,173 @@ export default function ManageCarVariationsPage() {
                                                                     </thead>
                                                                     <tbody className='divide-y divide-gray-50 block sm:table-row-group'>
                                                                       {getSortedBodyTypes(year.id).map((bt) => (
-                                                                        <tr key={bt.id} className='hover:bg-green-100 transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none'>
-                                                                          <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 block sm:table-cell'>
-                                                                            <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {bt.id}
-                                                                          </td>
-                                                                          <td className='px-4 py-2 whitespace-nowrap text-base text-gray-900 block sm:table-cell'>
-                                                                            <span className='sm:hidden text-xs text-gray-500 font-semibold'>Назва:</span>
-                                                                            {editingBodyTypeId === bt.id ? (
-                                                                              <input
-                                                                                type='text'
-                                                                                value={editingBodyTypeName}
-                                                                                onChange={(e) => setEditingBodyTypeName(e.target.value)}
-                                                                                className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${bodyTypeError && editingBodyTypeId === bt.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-400 focus:border-green-400`}
-                                                                                autoFocus
-                                                                                placeholder='Введіть тип кузова'
-                                                                                onClick={(e) => e.stopPropagation()}
-                                                                                onKeyDown={(e) => {
-                                                                                  if (e.key === 'Enter') handleSaveEditBodyType(bt.id, year.id);
-                                                                                  if (e.key === 'Escape') handleCancelEditBodyType();
-                                                                                }}
-                                                                              />
-                                                                            ) : (
-                                                                              <span className='block w-full font-semibold text-gray-900'>{bt.name}</span>
-                                                                            )}
-                                                                          </td>
-                                                                          <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
-                                                                            <span className='sm:hidden text-xs text-gray-500 font-semibold'>Дії:</span>
-                                                                            <div className='flex justify-end gap-2'>
+                                                                        <React.Fragment key={bt.id}>
+                                                                          <tr
+                                                                            ref={(el) => {
+                                                                              bodyTypeRefs.current[bt.id] = el;
+                                                                            }}
+                                                                            className={`group ${expandedBodyTypeId === bt.id ? 'bg-green-100' : ''} hover:bg-green-100 transition-colors duration-100 block sm:table-row mb-0 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none hover:cursor-pointer`}
+                                                                            onClick={() => {
+                                                                              const newId = expandedBodyTypeId === bt.id ? null : bt.id;
+                                                                              setExpandedBodyTypeId(newId);
+                                                                              if (newId !== null) {
+                                                                                setTimeout(() => {
+                                                                                  const el = bodyTypeRefs.current[newId];
+                                                                                  if (el) {
+                                                                                    el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+                                                                                  }
+                                                                                }, 100);
+                                                                              }
+                                                                            }}
+                                                                          >
+                                                                            <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 block sm:table-cell'>
+                                                                              <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {bt.id}
+                                                                            </td>
+                                                                            <td className='px-4 py-2 whitespace-nowrap text-base text-gray-900 block sm:table-cell'>
+                                                                              <span className='sm:hidden text-xs text-gray-500 font-semibold'>Назва:</span>
                                                                               {editingBodyTypeId === bt.id ? (
-                                                                                <>
-                                                                                  <button onClick={() => handleSaveEditBodyType(bt.id, year.id)} className='text-green-600 hover:text-green-800 hover:cursor-pointer' title='Зберегти тип кузова'>
-                                                                                    <HiOutlineCheck size={20} />
-                                                                                  </button>
-                                                                                  <button onClick={handleCancelEditBodyType} className='text-gray-600 hover:text-gray-800 hover:cursor-pointer' title='Скасувати'>
-                                                                                    <HiOutlineX size={20} />
-                                                                                  </button>
-                                                                                </>
+                                                                                <input
+                                                                                  type='text'
+                                                                                  value={editingBodyTypeName}
+                                                                                  onChange={(e) => setEditingBodyTypeName(e.target.value)}
+                                                                                  className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${bodyTypeError && editingBodyTypeId === bt.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-400 focus:border-green-400`}
+                                                                                  autoFocus
+                                                                                  placeholder='Введіть тип кузова'
+                                                                                  onClick={(e) => e.stopPropagation()}
+                                                                                  onKeyDown={(e) => {
+                                                                                    if (e.key === 'Enter') handleSaveEditBodyType(bt.id, year.id);
+                                                                                    if (e.key === 'Escape') handleCancelEditBodyType();
+                                                                                  }}
+                                                                                />
                                                                               ) : (
-                                                                                <button onClick={() => handleEditBodyType(bt)} className='text-green-600 hover:text-green-800 hover:cursor-pointer' title='Редагувати тип кузова'>
-                                                                                  <HiOutlinePencil size={20} />
-                                                                                </button>
+                                                                                <span className='block w-full font-semibold text-gray-900'>{bt.name}</span>
                                                                               )}
-                                                                              <button onClick={() => handleDeleteBodyType(bt.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer' title='Видалити тип кузова'>
-                                                                                <HiOutlineTrash size={20} />
-                                                                              </button>
-                                                                            </div>
-                                                                          </td>
-                                                                        </tr>
+                                                                            </td>
+                                                                            <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
+                                                                              <span className='sm:hidden text-xs text-gray-500 font-semibold'>Дії:</span>
+                                                                              <div className='flex justify-end gap-2'>
+                                                                                {editingBodyTypeId === bt.id ? (
+                                                                                  <>
+                                                                                    <button onClick={() => handleSaveEditBodyType(bt.id, year.id)} className='text-green-600 hover:text-green-800 hover:cursor-pointer' title='Зберегти тип кузова'>
+                                                                                      <HiOutlineCheck size={20} />
+                                                                                    </button>
+                                                                                    <button onClick={handleCancelEditBodyType} className='text-gray-600 hover:text-gray-800 hover:cursor-pointer' title='Скасувати'>
+                                                                                      <HiOutlineX size={20} />
+                                                                                    </button>
+                                                                                  </>
+                                                                                ) : (
+                                                                                  <button onClick={() => handleEditBodyType(bt)} className='text-green-600 hover:text-green-800 hover:cursor-pointer' title='Редагувати тип кузова'>
+                                                                                    <HiOutlinePencil size={20} />
+                                                                                  </button>
+                                                                                )}
+                                                                                <button onClick={() => handleDeleteBodyType(bt.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer' title='Видалити тип кузова'>
+                                                                                  <HiOutlineTrash size={20} />
+                                                                                </button>
+                                                                              </div>
+                                                                            </td>
+                                                                          </tr>
+                                                                          {expandedBodyTypeId === bt.id && (
+                                                                            <tr>
+                                                                              <td colSpan={3} className='p-0'>
+                                                                                <div className='bg-teal-50 p-4 border-l-4 border-teal-400 rounded-b-xl'>
+                                                                                  <h6 className='text-base font-bold text-teal-700 mb-3'>
+                                                                                    Двигуни {make.name} {model.name} {year.year} {bt.name}:
+                                                                                  </h6>
+                                                                                  <div className='mb-3 flex gap-2'>
+                                                                                    <input
+                                                                                      type='text'
+                                                                                      value={newEngineName[bt.id] || ''}
+                                                                                      onChange={(event) => setNewEngineName((prev) => ({ ...prev, [bt.id]: event.target.value }))}
+                                                                                      placeholder='Новий двигун'
+                                                                                      className={`border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white ${engineError[bt.id] ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-teal-400 focus:border-teal-400`}
+                                                                                      onKeyDown={(event) => {
+                                                                                        if (event.key === 'Enter') handleAddEngine(bt.id);
+                                                                                      }}
+                                                                                    />
+                                                                                    <button onClick={() => handleAddEngine(bt.id)} className='flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white rounded-lg w-10 h-10 transition-colors shadow hover:cursor-pointer' title='Додати'>
+                                                                                      <HiOutlinePlus size={22} />
+                                                                                    </button>
+                                                                                  </div>
+                                                                                  {engineError[bt.id] && <div className='text-red-500 text-base mt-1'>{engineError[bt.id]}</div>}
+                                                                                  {enginesLoading[bt.id] ? (
+                                                                                    <div className='text-teal-700 text-base'>Завантаження...</div>
+                                                                                  ) : enginesError[bt.id] ? (
+                                                                                    <div className='text-red-500 text-base'>{enginesError[bt.id]}</div>
+                                                                                  ) : (
+                                                                                    <div>
+                                                                                      {getSortedEngines(bt.id).length === 0 ? (
+                                                                                        <p className='text-gray-400 text-base'>Двигунів не знайдено.</p>
+                                                                                      ) : (
+                                                                                        <table className='min-w-full divide-y divide-gray-100 bg-white rounded-xl shadow-xs block sm:table'>
+                                                                                          <thead className='bg-gray-50 hidden sm:table-header-group'>
+                                                                                            <tr>
+                                                                                              <th className='px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-8'>ID</th>
+                                                                                              <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none' onClick={() => setEngineSortDir((prev) => ({ ...prev, [bt.id]: (prev[bt.id] || 'asc') === 'asc' ? 'desc' : 'asc' }))}>
+                                                                                                Назва {(engineSortDir[bt.id] || 'asc') === 'asc' ? '▲' : '▼'}
+                                                                                              </th>
+                                                                                              <th className='px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-12'>Дії</th>
+                                                                                            </tr>
+                                                                                          </thead>
+                                                                                          <tbody className='divide-y divide-gray-50 block sm:table-row-group'>
+                                                                                            {getSortedEngines(bt.id).map((engine) => (
+                                                                                              <tr key={engine.id} className={`group ${editingEngineId === engine.id ? 'bg-teal-100' : ''} hover:bg-teal-100 transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none hover:cursor-pointer`}>
+                                                                                                <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 block sm:table-cell'>
+                                                                                                  <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {engine.id}
+                                                                                                </td>
+                                                                                                <td className='px-4 py-2 whitespace-nowrap text-base text-gray-900 block sm:table-cell'>
+                                                                                                  <span className='sm:hidden text-xs text-gray-500 font-semibold'>Назва:</span>
+                                                                                                  {editingEngineId === engine.id ? (
+                                                                                                    <input
+                                                                                                      type='text'
+                                                                                                      value={editingEngineName}
+                                                                                                      onChange={(e) => setEditingEngineName(e.target.value)}
+                                                                                                      className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${engineError[bt.id] && editingEngineId === engine.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-teal-400 focus:border-teal-400`}
+                                                                                                      autoFocus
+                                                                                                      placeholder='Введіть назву двигуна'
+                                                                                                      onClick={(e) => e.stopPropagation()}
+                                                                                                      onKeyDown={(e) => {
+                                                                                                        if (e.key === 'Enter') handleSaveEditEngine(engine.id, bt.id);
+                                                                                                        if (e.key === 'Escape') handleCancelEditEngine();
+                                                                                                      }}
+                                                                                                    />
+                                                                                                  ) : (
+                                                                                                    <span className='block w-full font-semibold text-gray-900'>{engine.name}</span>
+                                                                                                  )}
+                                                                                                </td>
+                                                                                                <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
+                                                                                                  <span className='sm:hidden text-xs text-gray-500 font-semibold'>Дії:</span>
+                                                                                                  <div className='flex justify-end gap-2'>
+                                                                                                    {editingEngineId === engine.id ? (
+                                                                                                      <>
+                                                                                                        <button onClick={() => handleSaveEditEngine(engine.id, bt.id)} className='text-teal-600 hover:text-teal-800 hover:cursor-pointer' title='Зберегти двигун'>
+                                                                                                          <HiOutlineCheck size={20} />
+                                                                                                        </button>
+                                                                                                        <button onClick={handleCancelEditEngine} className='text-gray-600 hover:text-gray-800 hover:cursor-pointer' title='Скасувати'>
+                                                                                                          <HiOutlineX size={20} />
+                                                                                                        </button>
+                                                                                                      </>
+                                                                                                    ) : (
+                                                                                                      <button onClick={() => handleEditEngine(engine)} className='text-teal-600 hover:text-teal-800 hover:cursor-pointer' title='Редагувати двигун'>
+                                                                                                        <HiOutlinePencil size={20} />
+                                                                                                      </button>
+                                                                                                    )}
+                                                                                                    <button onClick={() => handleDeleteEngine(engine.id, bt.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer' title='Видалити двигун'>
+                                                                                                      <HiOutlineTrash size={20} />
+                                                                                                    </button>
+                                                                                                  </div>
+                                                                                                </td>
+                                                                                              </tr>
+                                                                                            ))}
+                                                                                          </tbody>
+                                                                                        </table>
+                                                                                      )}
+                                                                                    </div>
+                                                                                  )}
+                                                                                </div>
+                                                                              </td>
+                                                                            </tr>
+                                                                          )}
+                                                                        </React.Fragment>
                                                                       ))}
                                                                     </tbody>
                                                                   </table>

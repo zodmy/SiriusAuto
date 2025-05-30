@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+  const { params } = await context;
   try {
     const carBodyTypeId = parseInt(params.id, 10);
     if (isNaN(carBodyTypeId)) {
