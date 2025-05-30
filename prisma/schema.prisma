@@ -86,7 +86,7 @@ model CarYear {
   modelId       Int
   model         CarModel        @relation(fields: [modelId], references: [id])
   year          Int
-  engines       CarEngine[]
+  bodyTypes     CarBodyType[] // Змінено з engines на bodyTypes
   compatibility Compatibility[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
@@ -95,44 +95,44 @@ model CarYear {
   @@map("car_years")
 }
 
-model CarEngine {
+model CarBodyType {
   id            Int             @id @default(autoincrement())
-  yearId        Int
-  year          CarYear         @relation(fields: [yearId], references: [id])
-  name          String // Наприклад, "1.6L Petrol", "2.0L Diesel"
-  bodyTypes     CarBodyType[]
+  yearId        Int // Додано поле для зв'язку з CarYear
+  year          CarYear         @relation(fields: [yearId], references: [id]) // Додано зв'язок з CarYear
+  name          String // Наприклад, "Sedan", "Hatchback", "SUV"
+  engines       CarEngine[] // Змінено з modifications на engines
   compatibility Compatibility[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  @@unique([yearId, name])
-  @@map("car_engines")
+  @@unique([yearId, name]) // Оновлено унікальний індекс
+  @@map("car_body_types")
 }
 
-model CarBodyType {
+model CarEngine {
   id            Int               @id @default(autoincrement())
-  engineId      Int
-  engine        CarEngine         @relation(fields: [engineId], references: [id])
-  name          String // Наприклад, "Sedan", "Hatchback", "SUV"
-  modifications CarModification[]
+  bodyTypeId    Int // Додано поле для зв'язку з CarBodyType
+  bodyType      CarBodyType       @relation(fields: [bodyTypeId], references: [id]) // Додано зв'язок з CarBodyType
+  name          String // Наприклад, "1.6L Petrol", "2.0L Diesel"
+  modifications CarModification[] // Додано поле для зв'язку з CarModification
   compatibility Compatibility[]
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
-  @@unique([engineId, name])
-  @@map("car_body_types")
+  @@unique([bodyTypeId, name]) // Оновлено унікальний індекс
+  @@map("car_engines")
 }
 
 model CarModification {
   id            Int             @id @default(autoincrement())
-  bodyTypeId    Int
-  bodyType      CarBodyType     @relation(fields: [bodyTypeId], references: [id])
+  engineId      Int // Додано поле для зв'язку з CarEngine
+  engine        CarEngine       @relation(fields: [engineId], references: [id]) // Додано зв'язок з CarEngine
   name          String? // Наприклад, "Base", "Sport", "Luxury" (може бути необов'язковим)
   compatibility Compatibility[]
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  @@unique([bodyTypeId, name])
+  @@unique([engineId, name]) // Оновлено унікальний індекс
   @@map("car_modifications")
 }
 
