@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+  const { params } = await context;
   try {
     const carEngineId = parseInt(params.id, 10);
     if (isNaN(carEngineId)) {
@@ -25,10 +26,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: { id: string } }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
+  const { params } = await context;
   try {
     const carEngineId = parseInt(params.id, 10);
     if (isNaN(carEngineId)) {
@@ -45,7 +47,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (bodyTypeId !== undefined && typeof bodyTypeId !== 'number') {
       return NextResponse.json({ error: 'Надано невірний ID типу кузова автомобіля' }, { status: 400 });
     }
-
 
     if (bodyTypeId !== undefined) {
       const bodyTypeExists = await prisma.carBodyType.findUnique({ where: { id: bodyTypeId } });
@@ -71,7 +72,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     console.error('Помилка оновлення двигуна автомобіля:', error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-
         return NextResponse.json({ error: 'Двигун з такою назвою для вказаного типу кузова вже існує' }, { status: 409 });
       }
       if (error.code === 'P2025') {
@@ -82,10 +82,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
+  const { params } = await context;
   try {
     const carEngineId = parseInt(params.id, 10);
     if (isNaN(carEngineId)) {
