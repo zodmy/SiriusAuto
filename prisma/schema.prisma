@@ -110,50 +110,36 @@ model CarBodyType {
 }
 
 model CarEngine {
-  id            Int               @id @default(autoincrement())
+  id            Int             @id @default(autoincrement())
   bodyTypeId    Int
-  bodyType      CarBodyType       @relation(fields: [bodyTypeId], references: [id])
+  bodyType      CarBodyType     @relation(fields: [bodyTypeId], references: [id])
   name          String
-  modifications CarModification[]
   compatibility Compatibility[]
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@unique([bodyTypeId, name])
   @@map("car_engines")
 }
 
-model CarModification {
-  id            Int             @id @default(autoincrement())
-  engineId      Int
-  engine        CarEngine       @relation(fields: [engineId], references: [id])
-  name          String?
-  compatibility Compatibility[]
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-
-  @@unique([engineId, name])
-  @@map("car_modifications")
-}
-
 model Compatibility {
-  id                Int              @id @default(autoincrement())
-  productId         Int
-  product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
-  carModificationId Int?
-  carModification   CarModification? @relation(fields: [carModificationId], references: [id], onDelete: Cascade)
-  carBodyTypeId     Int?
-  carBodyType       CarBodyType?     @relation(fields: [carBodyTypeId], references: [id], onDelete: Cascade)
-  carEngineId       Int?
-  carEngine         CarEngine?       @relation(fields: [carEngineId], references: [id], onDelete: Cascade)
-  carYearId         Int?
-  carYear           CarYear?         @relation(fields: [carYearId], references: [id], onDelete: Cascade)
-  carModelId        Int?
-  carModel          CarModel?        @relation(fields: [carModelId], references: [id], onDelete: Cascade)
-  carMakeId         Int?
-  carMake           CarMake?         @relation(fields: [carMakeId], references: [id], onDelete: Cascade)
+  id            Int         @id @default(autoincrement())
+  productId     Int
+  product       Product     @relation(fields: [productId], references: [id])
+  carMakeId     Int
+  carMake       CarMake     @relation(fields: [carMakeId], references: [id])
+  carModelId    Int
+  carModel      CarModel    @relation(fields: [carModelId], references: [id])
+  carYearId     Int
+  carYear       CarYear     @relation(fields: [carYearId], references: [id])
+  carBodyTypeId Int
+  carBodyType   CarBodyType @relation(fields: [carBodyTypeId], references: [id])
+  carEngineId   Int
+  carEngine     CarEngine   @relation(fields: [carEngineId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
-  @@unique([productId, carModificationId, carBodyTypeId, carEngineId, carYearId, carModelId, carMakeId], name: "compatibility_unique_idx")
+  @@unique([productId, carMakeId, carModelId, carYearId, carBodyTypeId, carEngineId])
   @@map("compatibility")
 }
 

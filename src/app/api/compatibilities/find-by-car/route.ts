@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
       carYearId: number;
       carEngineId?: number;
       carBodyTypeId?: number;
-      carModificationId?: number;
     } = {
       carMakeId,
       carModelId,
@@ -51,15 +50,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Недійсний формат ID для bodyTypeId' }, { status: 400 });
       }
       whereClause.carBodyTypeId = carBodyTypeId;
-    }
-
-    const carModificationIdStr = searchParams.get('modificationId');
-    if (carModificationIdStr) {
-      const carModificationId = parseInt(carModificationIdStr, 10);
-      if (isNaN(carModificationId)) {
-        return NextResponse.json({ error: 'Недійсний формат ID для modificationId' }, { status: 400 });
-      }
-      whereClause.carModificationId = carModificationId;
     }
 
     const compatibilities = await prisma.compatibility.findMany({
