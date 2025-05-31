@@ -793,30 +793,30 @@ export default function ManageCarVariationsPage() {
   });
 
   return (
-    <div className='min-h-screen bg-gray-50 p-2 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
-      <main className='bg-white shadow-xl rounded-2xl p-4 sm:p-8 max-w-full sm:max-w-4xl mx-auto border border-gray-200'>
-        <div className='mb-4'>
-          <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300'>
+    <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
+      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full sm:max-w-4xl mx-auto border border-gray-200'>
+        <div className='mb-3'>
+          <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300'>
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
             На головну
           </a>
         </div>
-        <h2 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-6 sm:mb-8 flex items-center gap-2 sm:gap-3'>
+        <h2 className='text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3'>
           <span className='text-blue-700'>
-            <HiOutlineCog className='inline-block mr-1' size={28} />
+            <HiOutlineCog className='inline-block mr-1' size={24} />
           </span>
           Керування автомобілями
         </h2>
-        <div className='mb-4 sm:mb-6'>
+        <div className='mb-3 sm:mb-6'>
           <label htmlFor='search' className='block text-gray-900 font-semibold mb-1 sm:mb-2 text-base sm:text-lg'>
             Глобальний пошук
           </label>
           <div className='relative'>
-            <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук марки та моделі...' value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук марки та моделі...' value={search} onChange={(e) => setSearch(e.target.value)} />
             <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
           </div>
         </div>
-        <div className='mb-3 sm:mb-4 flex gap-1 sm:gap-2'>
+        <div className='mb-2 sm:mb-4 flex gap-1 sm:gap-2'>
           <input
             type='text'
             value={newMake}
@@ -835,18 +835,442 @@ export default function ManageCarVariationsPage() {
             }}
             aria-invalid={!!makeError}
             aria-describedby={makeError ? 'make-error-text' : undefined}
+            onClick={(e) => e.stopPropagation()}
           />
           <button onClick={handleAddMake} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow' title='Додати марку'>
             <HiOutlinePlus className='text-gray-800' size={22} />
           </button>
         </div>
         {makeError && (
-          <div id='make-error-text' className='text-red-600 text-sm font-medium mb-2 px-1'>
+          <div id='make-error-text' className='text-red-600 text-xs sm:text-sm font-medium mb-2 px-1'>
             {makeError}
           </div>
         )}
 
-        <div className='bg-white rounded-lg shadow border border-gray-200 overflow-y-auto -mx-2 px-2 sm:mx-0 sm:px-0'>
+        <div className='sm:hidden'>
+          {sortedMakes.length === 0 ? (
+            <div className='text-center text-gray-500 font-semibold py-6'>Нічого не знайдено</div>
+          ) : (
+            <div className='flex flex-col gap-3'>
+              {sortedMakes.map((make) => (
+                <div key={make.id} className={`rounded-xl border border-gray-200 bg-white shadow-sm p-3 ${expandedMakeId === make.id ? 'bg-gray-100' : ''}`} onClick={() => setExpandedMakeId(expandedMakeId === make.id ? null : make.id)}>
+                  <div className='flex items-center justify-between gap-2'>
+                    <div className='font-bold text-gray-900 text-base'>
+                      {editingMakeId === make.id ? (
+                        <input
+                          type='text'
+                          value={editingMakeName}
+                          onChange={(e) => setEditingMakeName(e.target.value)}
+                          className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${makeError && editingMakeId === make.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
+                          autoFocus
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveEditMake(make.id);
+                            if (e.key === 'Escape') handleCancelEditMake();
+                          }}
+                        />
+                      ) : (
+                        <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{make.name}</span>
+                      )}
+                      <span className='ml-2 text-xs text-gray-400 font-normal'>ID: {make.id}</span>
+                    </div>
+                    <div className='flex gap-1'>
+                      {editingMakeId === make.id ? (
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSaveEditMake(make.id);
+                            }}
+                            className='text-green-600 hover:text-green-800'
+                          >
+                            <HiOutlineCheck size={20} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelEditMake();
+                            }}
+                            className='text-gray-600 hover:text-gray-800'
+                          >
+                            <HiOutlineX size={20} />
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditMake(make);
+                          }}
+                          className='text-gray-500 hover:text-gray-700'
+                        >
+                          <HiOutlinePencil size={20} />
+                        </button>
+                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteMake(make.id);
+                        }}
+                        className='text-red-600 hover:text-red-800'
+                      >
+                        <HiOutlineTrash size={20} />
+                      </button>
+                    </div>
+                  </div>
+                  {expandedMakeId === make.id && (
+                    <div className='mt-3'>
+                      <div className='font-semibold text-blue-700 mb-2'>Моделі:</div>
+                      <div className='flex gap-2 mb-2'>
+                        <input
+                          type='text'
+                          value={modelParentMakeId === make.id ? newModelName : ''}
+                          onChange={(e) => {
+                            setNewModelName(e.target.value);
+                            setModelError(null);
+                            setModelParentMakeId(make.id);
+                          }}
+                          placeholder='Нова модель'
+                          className={`border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white ${modelError && modelParentMakeId === make.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleAddModel(make.id);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <button onClick={() => handleAddModel(make.id)} className='bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-10 h-10 flex items-center justify-center transition-colors shadow' title='Додати модель'>
+                          <HiOutlinePlus size={22} />
+                        </button>
+                      </div>
+                      {modelError && modelParentMakeId === make.id && <div className='text-red-500 text-xs mb-2'>{modelError}</div>}
+                      {getSortedModels(make.id).length === 0 ? (
+                        <div className='text-gray-500 text-sm font-semibold'>Моделей не знайдено.</div>
+                      ) : (
+                        <div className='flex flex-col gap-2'>
+                          {getSortedModels(make.id).map((model) => (
+                            <div
+                              key={model.id}
+                              className={`rounded-lg border border-blue-200 bg-blue-50 p-2 ${expandedModelId === model.id ? 'bg-blue-100' : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedModelId(expandedModelId === model.id ? null : model.id);
+                              }}
+                            >
+                              <div className='flex items-center justify-between gap-2'>
+                                <div className='font-semibold text-gray-800'>
+                                  {editingModelId === model.id ? (
+                                    <input
+                                      type='text'
+                                      value={editingModelName}
+                                      onChange={(e) => setEditingModelName(e.target.value)}
+                                      className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${modelError && editingModelId === model.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
+                                      autoFocus
+                                      onClick={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleSaveEditModel(model.id);
+                                        if (e.key === 'Escape') handleCancelEditModel();
+                                      }}
+                                    />
+                                  ) : (
+                                    <span className='block w-full font-semibold text-gray-800 text-[17px] pl-3 sm:text-lg sm:pl-0'>{model.name}</span>
+                                  )}
+                                  <span className='ml-2 text-xs text-gray-400'>ID: {model.id}</span>
+                                </div>
+                                <div className='flex gap-1'>
+                                  {editingModelId === model.id ? (
+                                    <>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSaveEditModel(model.id);
+                                        }}
+                                        className='text-green-600 hover:text-green-800'
+                                      >
+                                        <HiOutlineCheck size={20} />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCancelEditModel();
+                                        }}
+                                        className='text-gray-600 hover:text-gray-800'
+                                      >
+                                        <HiOutlineX size={20} />
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleEditModel(model);
+                                      }}
+                                      className='text-blue-600 hover:text-blue-800'
+                                    >
+                                      <HiOutlinePencil size={20} />
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteModel(model.id);
+                                    }}
+                                    className='text-red-600 hover:text-red-800'
+                                  >
+                                    <HiOutlineTrash size={20} />
+                                  </button>
+                                </div>
+                              </div>
+                              {expandedModelId === model.id && (
+                                <div className='mt-2'>
+                                  <div className='font-semibold text-yellow-700 mb-2'>Роки:</div>
+                                  <div className='flex gap-2 mb-2'>
+                                    <input
+                                      type='number'
+                                      min={1970}
+                                      max={currentYear}
+                                      value={newYearValue}
+                                      onChange={(e) => {
+                                        setNewYearValue(e.target.value);
+                                        setYearError(null);
+                                      }}
+                                      placeholder='Новий рік'
+                                      className={`border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white ${yearError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400`}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') handleAddYear(model.id);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                    <button onClick={() => handleAddYear(model.id)} className='bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg w-10 h-10 flex items-center justify-center transition-colors shadow'>
+                                      <HiOutlinePlus size={22} />
+                                    </button>
+                                  </div>
+                                  {yearError && <div className='text-red-500 text-xs mb-2'>{yearError}</div>}
+                                  {getSortedYears(model.id).length === 0 ? (
+                                    <div className='text-gray-500 text-sm font-semibold'>Років не знайдено.</div>
+                                  ) : (
+                                    <div className='flex flex-col gap-2'>
+                                      {getSortedYears(model.id).map((year) => (
+                                        <div
+                                          key={year.id}
+                                          className={`rounded-lg border border-yellow-200 bg-yellow-50 p-2 ${expandedYearId === year.id ? 'bg-yellow-200' : ''}`}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setExpandedYearId(expandedYearId === year.id ? null : year.id);
+                                          }}
+                                        >
+                                          <div className='flex items-center justify-between gap-2'>
+                                            <div className='font-semibold text-gray-700'>
+                                              {editingYearId === year.id ? (
+                                                <input
+                                                  type='number'
+                                                  min={1970}
+                                                  max={currentYear}
+                                                  value={editingYearValue}
+                                                  onChange={(e) => setEditingYearValue(e.target.value)}
+                                                  className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${yearError && editingYearId === year.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400`}
+                                                  autoFocus
+                                                  onClick={(e) => e.stopPropagation()}
+                                                  onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleSaveEditYear(year.id);
+                                                    if (e.key === 'Escape') handleCancelEditYear();
+                                                  }}
+                                                />
+                                              ) : (
+                                                <span className='block w-full font-semibold text-gray-700 text-[17px] pl-3 sm:text-lg sm:pl-0'>{year.year}</span>
+                                              )}
+                                              <span className='ml-2 text-xs text-gray-400'>ID: {year.id}</span>
+                                            </div>
+                                            <div className='flex gap-1'>
+                                              {editingYearId === year.id ? (
+                                                <>
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      handleSaveEditYear(year.id);
+                                                    }}
+                                                    className='text-green-600 hover:text-green-800'
+                                                  >
+                                                    <HiOutlineCheck size={20} />
+                                                  </button>
+                                                  <button
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      handleCancelEditYear();
+                                                    }}
+                                                    className='text-gray-600 hover:text-gray-800'
+                                                  >
+                                                    <HiOutlineX size={20} />
+                                                  </button>
+                                                </>
+                                              ) : (
+                                                <button
+                                                  onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleEditYear(year);
+                                                  }}
+                                                  className='text-yellow-600 hover:text-yellow-700'
+                                                >
+                                                  <HiOutlinePencil size={20} />
+                                                </button>
+                                              )}
+                                              <button
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleDeleteYear(year.id);
+                                                }}
+                                                className='text-red-600 hover:text-red-800'
+                                              >
+                                                <HiOutlineTrash size={20} />
+                                              </button>
+                                            </div>
+                                          </div>
+                                          {expandedYearId === year.id && (
+                                            <div className='mt-2'>
+                                              <div className='font-semibold text-green-700 mb-2'>Типи кузовів:</div>
+                                              <div className='flex gap-2 mb-2'>
+                                                <input
+                                                  type='text'
+                                                  value={bodyTypeParentYearId === year.id ? newBodyTypeName : ''}
+                                                  onChange={(e) => {
+                                                    setNewBodyTypeName(e.target.value);
+                                                    setBodyTypeError(null);
+                                                    setBodyTypeParentYearId(year.id);
+                                                  }}
+                                                  placeholder='Новий тип кузова'
+                                                  className={`border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white ${bodyTypeError && bodyTypeParentYearId === year.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-400 focus:border-green-400`}
+                                                  onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleAddBodyType(year.id);
+                                                  }}
+                                                  onClick={(e) => e.stopPropagation()}
+                                                />
+                                                <button onClick={() => handleAddBodyType(year.id)} className='bg-green-600 hover:bg-green-700 text-white rounded-lg w-10 h-10 flex items-center justify-center transition-colors shadow'>
+                                                  <HiOutlinePlus size={22} />
+                                                </button>
+                                              </div>
+                                              {bodyTypeError && bodyTypeParentYearId === year.id && <div className='text-red-500 text-xs mb-2'>{bodyTypeError}</div>}
+                                              {getSortedBodyTypes(year.id).length === 0 ? (
+                                                <div className='text-gray-500 text-sm font-semibold'>Типів кузовів не знайдено.</div>
+                                              ) : (
+                                                <div className='flex flex-col gap-2'>
+                                                  {getSortedBodyTypes(year.id).map((bt) => (
+                                                    <div
+                                                      key={bt.id}
+                                                      className={`rounded-lg border border-green-200 bg-green-50 p-2 ${expandedBodyTypeId === bt.id ? 'bg-green-100' : ''}`}
+                                                      onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setExpandedBodyTypeId(expandedBodyTypeId === bt.id ? null : bt.id);
+                                                      }}
+                                                    >
+                                                      <div className='flex items-center justify-between gap-2'>
+                                                        <div className='font-semibold text-gray-700'>
+                                                          {editingBodyTypeId === bt.id ? (
+                                                            <input
+                                                              type='text'
+                                                              value={editingBodyTypeName}
+                                                              onChange={(e) => setEditingBodyTypeName(e.target.value)}
+                                                              className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${bodyTypeError && editingBodyTypeId === bt.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-400 focus:border-green-400`}
+                                                              autoFocus
+                                                              onClick={(e) => e.stopPropagation()}
+                                                              onKeyDown={(e) => {
+                                                                if (e.key === 'Enter') handleSaveEditBodyType(bt.id, year.id);
+                                                                if (e.key === 'Escape') handleCancelEditBodyType();
+                                                              }}
+                                                            />
+                                                          ) : (
+                                                            <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{bt.name}</span>
+                                                          )}
+                                                          <span className='ml-2 text-xs text-gray-400'>ID: {bt.id}</span>
+                                                        </div>
+                                                        <div className='flex gap-1'>
+                                                          {editingBodyTypeId === bt.id ? (
+                                                            <>
+                                                              <button
+                                                                onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  handleSaveEditBodyType(bt.id, year.id);
+                                                                }}
+                                                                className='text-green-600 hover:text-green-800'
+                                                              >
+                                                                <HiOutlineCheck size={20} />
+                                                              </button>
+                                                              <button
+                                                                onClick={(e) => {
+                                                                  e.stopPropagation();
+                                                                  handleCancelEditBodyType();
+                                                                }}
+                                                                className='text-gray-600 hover:text-gray-800'
+                                                              >
+                                                                <HiOutlineX size={20} />
+                                                              </button>
+                                                            </>
+                                                          ) : (
+                                                            <button
+                                                              onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleEditBodyType(bt);
+                                                              }}
+                                                              className='text-green-600 hover:text-green-800'
+                                                            >
+                                                              <HiOutlinePencil size={20} />
+                                                            </button>
+                                                          )}
+                                                          <button
+                                                            onClick={(e) => {
+                                                              e.stopPropagation();
+                                                              handleDeleteBodyType(bt.id);
+                                                            }}
+                                                            className='text-red-600 hover:text-red-800'
+                                                          >
+                                                            <HiOutlineTrash size={20} />
+                                                          </button>
+                                                        </div>
+                                                      </div>
+                                                      {expandedBodyTypeId === bt.id && (
+                                                        <div className='mt-2'>
+                                                          <div className='font-semibold text-teal-700 mb-2'>Двигуни:</div>
+                                                          <div className='flex gap-2 mb-2'>
+                                                            <input
+                                                              type='text'
+                                                              value={newEngineName[bt.id] || ''}
+                                                              onChange={(event) => setNewEngineName((prev) => ({ ...prev, [bt.id]: event.target.value }))}
+                                                              placeholder='Новий двигун'
+                                                              className={`border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white ${engineError[bt.id] ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-teal-400 focus:border-teal-400`}
+                                                              onKeyDown={(event) => {
+                                                                if (event.key === 'Enter') handleAddEngine(bt.id);
+                                                                if (event.key === 'Escape') setNewEngineName((prev) => ({ ...prev, [bt.id]: '' }));
+                                                              }}
+                                                              onClick={(e) => e.stopPropagation()}
+                                                            />
+                                                            <button onClick={() => handleAddEngine(bt.id)} className='bg-teal-600 hover:bg-teal-700 text-white rounded-lg w-10 h-10 flex items-center justify-center transition-colors shadow'>
+                                                              <HiOutlinePlus size={22} />
+                                                            </button>
+                                                          </div>
+                                                          {engineError[bt.id] && <div className='text-red-500 text-xs mt-1'>{engineError[bt.id]}</div>}
+                                                        </div>
+                                                      )}
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className='bg-white rounded-lg shadow border border-gray-200 overflow-y-auto -mx-2 px-2 sm:mx-0 sm:px-0 hidden sm:block'>
           <table className='min-w-full divide-y divide-gray-200 text-base sm:text-lg block sm:table'>
             <thead className='bg-gray-100 hidden sm:table-header-group'>
               <tr>
@@ -907,7 +1331,7 @@ export default function ManageCarVariationsPage() {
                             onClick={(e) => e.stopPropagation()}
                           />
                         ) : (
-                          <span className='block w-full font-semibold text-gray-900'>{make.name}</span>
+                          <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{make.name}</span>
                         )}
                       </td>
                       <td className='px-6 py-3 whitespace-nowrap text-right block sm:table-cell'>
@@ -980,6 +1404,7 @@ export default function ManageCarVariationsPage() {
                                 onKeyDown={(e) => {
                                   if (e.key === 'Enter') handleAddModel(make.id);
                                 }}
+                                onClick={(e) => e.stopPropagation()}
                               />
                               <button onClick={() => handleAddModel(make.id)} className='flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-10 h-10 transition-colors shadow hover:cursor-pointer' title='Додати модель'>
                                 <HiOutlinePlus size={22} />
@@ -1060,7 +1485,7 @@ export default function ManageCarVariationsPage() {
                                               }}
                                             />
                                           ) : (
-                                            <span className='block w-full font-semibold text-gray-800'>{model.name}</span>
+                                            <span className='block w-full font-semibold text-gray-800 text-[17px] pl-3 sm:text-lg sm:pl-0'>{model.name}</span>
                                           )}
                                         </td>
                                         <td className='px-4 py-2 whitespace-nowrap text-base text-right group-hover:bg-blue-200 group-[.bg-blue-100]:bg-blue-100 transition-colors duration-100 block sm:table-cell'>
@@ -1136,6 +1561,7 @@ export default function ManageCarVariationsPage() {
                                                   onKeyDown={(e) => {
                                                     if (e.key === 'Enter') handleAddYear(model.id);
                                                   }}
+                                                  onClick={(e) => e.stopPropagation()}
                                                 />
                                                 <button onClick={() => handleAddYear(model.id)} className='flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg w-10 h-10 transition-colors shadow hover:cursor-pointer' title='Додати рік'>
                                                   <HiOutlinePlus size={22} />
@@ -1198,7 +1624,7 @@ export default function ManageCarVariationsPage() {
                                                                 }}
                                                               />
                                                             ) : (
-                                                              <span className='block w-full font-semibold text-gray-800'>{year.year}</span>
+                                                              <span className='block w-full font-semibold text-gray-700 text-[17px] pl-3 sm:text-lg sm:pl-0'>{year.year}</span>
                                                             )}
                                                           </td>
                                                           <td className='px-4 py-2 whitespace-nowrap text-base text-right group-hover:bg-yellow-300 group-[.bg-yellow-200]:bg-yellow-200 transition-colors duration-100 block sm:table-cell'>
@@ -1245,12 +1671,13 @@ export default function ManageCarVariationsPage() {
                                                                     onKeyDown={(e) => {
                                                                       if (e.key === 'Enter') handleAddBodyType(year.id);
                                                                     }}
+                                                                    onClick={(e) => e.stopPropagation()}
                                                                   />
                                                                   <button onClick={() => handleAddBodyType(year.id)} className='flex items-center justify-center bg-green-600 hover:bg-green-700 text-white rounded-lg w-10 h-10 transition-colors shadow hover:cursor-pointer' title='Додати'>
                                                                     <HiOutlinePlus size={22} />
                                                                   </button>
                                                                 </div>
-                                                                {bodyTypeError && bodyTypeParentYearId === year.id && <div className='text-red-500 text-base mb-2'>{bodyTypeError}</div>}
+                                                                {bodyTypeError && bodyTypeParentYearId === year.id && <div className='text-red-500 text-xs mb-2'>{bodyTypeError}</div>}
                                                                 {getSortedBodyTypes(year.id).length === 0 ? (
                                                                   <p className='text-gray-500 text-base font-semibold'>Типів кузовів не знайдено.</p>
                                                                 ) : (
@@ -1305,7 +1732,7 @@ export default function ManageCarVariationsPage() {
                                                                                   }}
                                                                                 />
                                                                               ) : (
-                                                                                <span className='block w-full font-semibold text-gray-900'>{bt.name}</span>
+                                                                                <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{bt.name}</span>
                                                                               )}
                                                                             </td>
                                                                             <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
@@ -1335,9 +1762,7 @@ export default function ManageCarVariationsPage() {
                                                                             <tr>
                                                                               <td colSpan={3} className='p-0'>
                                                                                 <div className='bg-teal-50 p-4 border-l-4 border-teal-400 rounded-b-xl'>
-                                                                                  <h6 className='text-base font-bold text-teal-700 mb-3'>
-                                                                                    Двигуни {make.name} {model.name} {year.year} {bt.name}:
-                                                                                  </h6>
+                                                                                  <h6 className='text-base font-bold text-teal-700 mb-2'>Двигуни:</h6>
                                                                                   <div className='mb-3 flex gap-2'>
                                                                                     <input
                                                                                       type='text'
@@ -1347,7 +1772,9 @@ export default function ManageCarVariationsPage() {
                                                                                       className={`border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white ${engineError[bt.id] ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-teal-400 focus:border-teal-400`}
                                                                                       onKeyDown={(event) => {
                                                                                         if (event.key === 'Enter') handleAddEngine(bt.id);
+                                                                                        if (event.key === 'Escape') setNewEngineName((prev) => ({ ...prev, [bt.id]: '' }));
                                                                                       }}
+                                                                                      onClick={(e) => e.stopPropagation()}
                                                                                     />
                                                                                     <button onClick={() => handleAddEngine(bt.id)} className='flex items-center justify-center bg-teal-600 hover:bg-teal-700 text-white rounded-lg w-10 h-10 transition-colors shadow hover:cursor-pointer' title='Додати'>
                                                                                       <HiOutlinePlus size={22} />
@@ -1402,7 +1829,7 @@ export default function ManageCarVariationsPage() {
                                                                                                       }}
                                                                                                     />
                                                                                                   ) : (
-                                                                                                    <span className='block w-full font-semibold text-gray-900'>{engine.name}</span>
+                                                                                                    <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{engine.name}</span>
                                                                                                   )}
                                                                                                 </td>
                                                                                                 <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
