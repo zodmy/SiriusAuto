@@ -141,12 +141,19 @@ export default function ManageCarVariationsPage() {
 
   const getSortedModels = useCallback(
     (makeIdNum: number) => {
+      const searchNormalized = normalizeString(debouncedSearch.trim());
+      const make = carMakes.find((m) => m.id === makeIdNum);
+      if (expandedMakeId === makeIdNum && make && searchNormalized && normalizeString(make.name).includes(searchNormalized)) {
+        return [...carModels.filter((model) => model.makeId === makeIdNum)].sort((a, b) => {
+          return modelSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+        });
+      }
       const filteredModels = debouncedSearch.trim() ? carModels.filter((model) => model.makeId === makeIdNum && normalizeString(model.name).includes(normalizeString(debouncedSearch.trim()))) : carModels.filter((model) => model.makeId === makeIdNum);
       return [...filteredModels].sort((a, b) => {
         return modelSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
       });
     },
-    [carModels, modelSortDir, debouncedSearch, normalizeString]
+    [carModels, modelSortDir, debouncedSearch, normalizeString, expandedMakeId, carMakes]
   );
 
   const getSortedYears = useCallback(
