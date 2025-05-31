@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HiOutlineCog, HiOutlineSearch, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCheck, HiOutlineX, HiOutlineArrowLeft } from 'react-icons/hi';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
 
@@ -30,41 +30,58 @@ interface CarEngine {
 
 export default function ManageCarVariationsPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
+
+  const normalizeString = useCallback((str: string) => {
+    return str
+      .normalize('NFD')
+      .replace(/\p{Diacritic}/gu, '')
+      .toLowerCase();
+  }, []);
+
+  const currentYear = new Date().getFullYear();
+
   const [carMakes, setCarMakes] = useState<CarMake[]>([]);
   const [carModels, setCarModels] = useState<CarModel[]>([]);
   const [carYears, setCarYears] = useState<CarYear[]>([]);
   const [carBodyTypes, setCarBodyTypes] = useState<CarBodyType[]>([]);
+
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+
   const [newMake, setNewMake] = useState('');
   const [editingMakeId, setEditingMakeId] = useState<number | null>(null);
   const [editingMakeName, setEditingMakeName] = useState('');
+  const [expandedMakeId, setExpandedMakeId] = useState<number | null>(null);
+  const [makeError, setMakeError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<'id' | 'name'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [expandedMakeId, setExpandedMakeId] = useState<number | null>(null);
+
   const [newModelName, setNewModelName] = useState('');
-  const [expandedModelId, setExpandedModelId] = useState<number | null>(null);
-  const [modelParentMakeId, setModelParentMakeId] = useState<number | null>(null);
-  const [makeError, setMakeError] = useState<string | null>(null);
-  const [modelError, setModelError] = useState<string | null>(null);
-  const [yearError, setYearError] = useState<string | null>(null);
-  const [modelSortBy, setModelSortBy] = useState<'id' | 'name'>('name');
-  const [modelSortDir, setModelSortDir] = useState<'asc' | 'desc'>('asc');
-  const [expandedYearId, setExpandedYearId] = useState<number | null>(null);
   const [editingModelId, setEditingModelId] = useState<number | null>(null);
   const [editingModelName, setEditingModelName] = useState('');
   const [currentEditingModelDetails, setCurrentEditingModelDetails] = useState<CarModel | null>(null);
+  const [expandedModelId, setExpandedModelId] = useState<number | null>(null);
+  const [modelParentMakeId, setModelParentMakeId] = useState<number | null>(null);
+  const [modelError, setModelError] = useState<string | null>(null);
+  const [modelSortBy, setModelSortBy] = useState<'id' | 'name'>('name');
+  const [modelSortDir, setModelSortDir] = useState<'asc' | 'desc'>('asc');
+
   const [newYearValue, setNewYearValue] = useState('');
   const [editingYearId, setEditingYearId] = useState<number | null>(null);
   const [editingYearValue, setEditingYearValue] = useState('');
   const [currentEditingYearDetails, setCurrentEditingYearDetails] = useState<CarYear | null>(null);
-  const [newBodyTypeName, setNewBodyTypeName] = useState('');
-  const [bodyTypeParentYearId, setBodyTypeParentYearId] = useState<number | null>(null);
-  const [bodyTypeError, setBodyTypeError] = useState<string | null>(null);
+  const [expandedYearId, setExpandedYearId] = useState<number | null>(null);
+  const [yearError, setYearError] = useState<string | null>(null);
   const [yearSortDir, setYearSortDir] = useState<'asc' | 'desc'>('asc');
-  const [bodyTypeSortDir, setBodyTypeSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const [newBodyTypeName, setNewBodyTypeName] = useState('');
   const [editingBodyTypeId, setEditingBodyTypeId] = useState<number | null>(null);
   const [editingBodyTypeName, setEditingBodyTypeName] = useState('');
+  const [expandedBodyTypeId, setExpandedBodyTypeId] = useState<number | null>(null);
+  const [bodyTypeParentYearId, setBodyTypeParentYearId] = useState<number | null>(null);
+  const [bodyTypeError, setBodyTypeError] = useState<string | null>(null);
+  const [bodyTypeSortDir, setBodyTypeSortDir] = useState<'asc' | 'desc'>('asc');
+
   const [enginesByBodyType, setEnginesByBodyType] = useState<Record<number, CarEngine[]>>({});
   const [enginesLoading, setEnginesLoading] = useState<Record<number, boolean>>({});
   const [enginesError, setEnginesError] = useState<Record<number, string | null>>({});
@@ -73,13 +90,11 @@ export default function ManageCarVariationsPage() {
   const [editingEngineName, setEditingEngineName] = useState('');
   const [engineError, setEngineError] = useState<Record<number, string | null>>({});
   const [engineSortDir, setEngineSortDir] = useState<Record<number, 'asc' | 'desc'>>({});
-  const [expandedBodyTypeId, setExpandedBodyTypeId] = useState<number | null>(null);
+
   const bodyTypeRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
   const modelRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
   const yearRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
   const engineRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
-
-  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     if (isAdmin && !isVerifyingAuth) {
@@ -105,7 +120,7 @@ export default function ManageCarVariationsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  const getSortedBodyTypes = React.useCallback(
+  const getSortedBodyTypes = useCallback(
     (yearIdNum: number) => {
       const filtered = carBodyTypes.filter((e) => e.yearId === yearIdNum);
       return [...filtered].sort((a, b) => {
@@ -115,6 +130,56 @@ export default function ManageCarVariationsPage() {
     [carBodyTypes, bodyTypeSortDir]
   );
 
+  const getSortedEngines = useCallback(
+    (bodyTypeId: number) => {
+      const engines = enginesByBodyType[bodyTypeId] || [];
+      const dir = engineSortDir[bodyTypeId] || 'asc';
+      return [...engines].sort((a, b) => (dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)));
+    },
+    [enginesByBodyType, engineSortDir]
+  );
+
+  const getSortedModels = useCallback(
+    (makeIdNum: number) => {
+      const filteredModels = debouncedSearch.trim() ? carModels.filter((model) => model.makeId === makeIdNum && normalizeString(model.name).includes(normalizeString(debouncedSearch.trim()))) : carModels.filter((model) => model.makeId === makeIdNum);
+      return [...filteredModels].sort((a, b) => {
+        return modelSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      });
+    },
+    [carModels, modelSortDir, debouncedSearch, normalizeString]
+  );
+
+  const getSortedYears = useCallback(
+    (modelIdNum: number) => {
+      const filteredYears = carYears.filter((year) => year.modelId === modelIdNum);
+      return [...filteredYears].sort((a, b) => {
+        return yearSortDir === 'asc' ? a.year - b.year : b.year - a.year;
+      });
+    },
+    [carYears, yearSortDir]
+  );
+
+  const fetchEnginesForBodyType = useCallback(async (bodyTypeId: number) => {
+    setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: true }));
+    setEnginesError((prev) => ({ ...prev, [bodyTypeId]: null }));
+    try {
+      const res = await fetch(`/api/car-body-types/${bodyTypeId}/engines`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setEnginesError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка завантаження двигунів' }));
+        setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
+        return;
+      }
+      const engines: CarEngine[] = await res.json();
+      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: engines }));
+    } catch {
+      setEnginesError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
+    } finally {
+      setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: false }));
+    }
+  }, []);
+
   useEffect(() => {
     if (expandedYearId !== null) {
       getSortedBodyTypes(expandedYearId).forEach((bt) => {
@@ -123,7 +188,7 @@ export default function ManageCarVariationsPage() {
         }
       });
     }
-  }, [expandedYearId, carBodyTypes, enginesByBodyType, enginesLoading, getSortedBodyTypes]);
+  }, [expandedYearId, carBodyTypes, enginesByBodyType, enginesLoading, getSortedBodyTypes, fetchEnginesForBodyType]);
 
   useEffect(() => {
     if (expandedModelId !== null && modelRefs.current[expandedModelId]) {
@@ -173,20 +238,9 @@ export default function ManageCarVariationsPage() {
     setExpandedYearId(null);
     setExpandedBodyTypeId(null);
     setEditingEngineId(null);
-  }, [debouncedSearch, carMakes, carModels]);
+  }, [debouncedSearch, carMakes, carModels, normalizeString]);
 
-  if (isVerifyingAuth || isAdmin === null) {
-    return (
-      <div className='min-h-screen flex items-center justify-center bg-gray-100 p-4'>
-        <p className='text-gray-700 text-lg font-semibold'>Перевірка авторизації...</p>
-      </div>
-    );
-  }
-  if (!isAdmin) {
-    return null;
-  }
-
-  const handleAddMake = async () => {
+  const handleAddMake = useCallback(async () => {
     setMakeError(null);
     if (!newMake.trim()) {
       setMakeError('Введіть назву марки');
@@ -217,510 +271,512 @@ export default function ManageCarVariationsPage() {
     } catch {
       setMakeError('Помилка мережі');
     }
-  };
+  }, [newMake, carMakes, normalizeString]);
 
-  const handleEditMake = (make: CarMake) => {
+  const handleEditMake = useCallback((make: CarMake) => {
     setEditingMakeId(make.id);
     setEditingMakeName(make.name);
     setMakeError(null);
-  };
+  }, []);
 
-  const handleSaveEditMake = async (id: number) => {
-    setMakeError(null);
-    if (!editingMakeName.trim()) {
-      setMakeError('Введіть назву марки');
-      return;
-    }
-    const normalizedEdit = normalizeString(editingMakeName.trim());
-    if (carMakes.some((m) => normalizeString(m.name) === normalizedEdit && m.id !== id)) {
-      setMakeError('Така марка вже існує');
-      return;
-    }
-    try {
-      const res = await fetch(`/api/car-makes/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingMakeName }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setMakeError(data?.error || 'Помилка редагування марки');
+  const handleSaveEditMake = useCallback(
+    async (id: number) => {
+      setMakeError(null);
+      if (!editingMakeName.trim()) {
+        setMakeError('Введіть назву марки');
         return;
       }
-      setEditingMakeId(null);
-      setEditingMakeName('');
-      const response = await fetch('/api/car-makes');
-      const makes = await response.json();
-      setCarMakes(makes);
-      setExpandedMakeId(id);
-    } catch {
-      setMakeError('Помилка мережі');
-    }
-  };
+      const normalizedEdit = normalizeString(editingMakeName.trim());
+      if (carMakes.some((m) => normalizeString(m.name) === normalizedEdit && m.id !== id)) {
+        setMakeError('Така марка вже існує');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/car-makes/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: editingMakeName }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setMakeError(data?.error || 'Помилка редагування марки');
+          return;
+        }
+        setEditingMakeId(null);
+        setEditingMakeName('');
+        const response = await fetch('/api/car-makes');
+        const makes = await response.json();
+        setCarMakes(makes);
+        setExpandedMakeId(id);
+      } catch {
+        setMakeError('Помилка мережі');
+      }
+    },
+    [editingMakeName, carMakes, normalizeString]
+  );
 
-  const handleCancelEditMake = () => {
+  const handleCancelEditMake = useCallback(() => {
     setEditingMakeId(null);
     setEditingMakeName('');
     setMakeError(null);
-  };
-  const handleDeleteMake = async (id: number) => {
-    if (!window.confirm("Видалити цю марку та всі пов'язані моделі, роки і типи кузовів?")) return;
-    try {
-      await fetch(`/api/car-makes/${id}`, { method: 'DELETE' });
-      const [makesRes, modelsRes, yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-makes'), fetch('/api/car-models'), fetch('/api/car-years'), fetch('/api/car-body-types')]);
+  }, []);
 
-      const [makes, models, years, bodyTypes] = await Promise.all([makesRes.json(), modelsRes.json(), yearsRes.json(), bodyTypesRes.json()]);
+  const handleDeleteMake = useCallback(
+    async (id: number) => {
+      if (!window.confirm("Видалити цю марку та всі пов'язані моделі, роки і типи кузовів?")) return;
+      try {
+        await fetch(`/api/car-makes/${id}`, { method: 'DELETE' });
+        const [makesRes, modelsRes, yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-makes'), fetch('/api/car-models'), fetch('/api/car-years'), fetch('/api/car-body-types')]);
 
-      setCarMakes(makes);
-      setCarModels(models);
-      setCarYears(years);
-      setCarBodyTypes(bodyTypes);
+        const [makes, models, years, bodyTypes] = await Promise.all([makesRes.json(), modelsRes.json(), yearsRes.json(), bodyTypesRes.json()]);
 
-      if (expandedMakeId === id) {
-        setExpandedMakeId(null);
-        setExpandedModelId(null);
-        setExpandedYearId(null);
-        setExpandedBodyTypeId(null);
+        setCarMakes(makes);
+        setCarModels(models);
+        setCarYears(years);
+        setCarBodyTypes(bodyTypes);
+
+        if (expandedMakeId === id) {
+          setExpandedMakeId(null);
+          setExpandedModelId(null);
+          setExpandedYearId(null);
+          setExpandedBodyTypeId(null);
+        }
+      } catch (error) {
+        console.error('Помилка видалення марки:', error);
       }
-    } catch (error) {
-      console.error('Помилка видалення марки:', error);
-    }
-  };
+    },
+    [expandedMakeId]
+  );
 
-  const handleAddModel = async (makeId: number) => {
-    setModelError(null);
-    if (!newModelName.trim()) {
-      setModelError('Введіть назву моделі');
-      return;
-    }
-    const normalizedNew = normalizeString(newModelName.trim());
-    if (carModels.some((m: CarModel) => normalizeString(m.name) === normalizedNew && m.makeId === makeId)) {
-      setModelError('Така модель вже існує для цієї марки');
-      return;
-    }
-    try {
-      const res = await fetch('/api/car-models', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newModelName, makeId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setModelError(data?.error || 'Помилка створення моделі');
+  const handleAddModel = useCallback(
+    async (makeId: number) => {
+      setModelError(null);
+      if (!newModelName.trim()) {
+        setModelError('Введіть назву моделі');
         return;
       }
-      const response = await fetch('/api/car-models');
-      const models: CarModel[] = await response.json();
-      setCarModels(models);
-      setExpandedMakeId(makeId);
-      const addedModel = models.find((m: CarModel) => m.makeId === makeId && normalizeString(m.name) === normalizedNew);
-      if (addedModel) {
-        setExpandedModelId(addedModel.id);
+      const normalizedNew = normalizeString(newModelName.trim());
+      if (carModels.some((m: CarModel) => normalizeString(m.name) === normalizedNew && m.makeId === makeId)) {
+        setModelError('Така модель вже існує для цієї марки');
+        return;
       }
-      setNewModelName('');
-      setModelParentMakeId(null);
-    } catch {
-      setModelError('Помилка мережі');
-    }
-  };
-
-  const handleEditModel = (model: CarModel) => {
+      try {
+        const res = await fetch('/api/car-models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newModelName, makeId }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setModelError(data?.error || 'Помилка створення моделі');
+          return;
+        }
+        const response = await fetch('/api/car-models');
+        const models: CarModel[] = await response.json();
+        setCarModels(models);
+        setExpandedMakeId(makeId);
+        const addedModel = models.find((m: CarModel) => m.makeId === makeId && normalizeString(m.name) === normalizedNew);
+        if (addedModel) {
+          setExpandedModelId(addedModel.id);
+        }
+        setNewModelName('');
+        setModelParentMakeId(null);
+      } catch {
+        setModelError('Помилка мережі');
+      }
+    },
+    [newModelName, carModels, normalizeString]
+  );
+  const handleEditModel = useCallback((model: CarModel) => {
     setEditingModelId(model.id);
     setEditingModelName(model.name);
     setCurrentEditingModelDetails(model);
     setModelError(null);
-  };
+  }, []);
 
-  const handleSaveEditModel = async (modelId: number) => {
-    if (!currentEditingModelDetails || currentEditingModelDetails.id !== modelId) {
-      setModelError('Помилка: Деталі моделі для редагування не знайдено або ID не співпадає.');
-      return;
-    }
-    if (!editingModelName.trim()) {
-      setModelError('Назва моделі не може бути порожньою.');
-      return;
-    }
-    const carMakeId = currentEditingModelDetails.makeId;
-    if (carMakeId === undefined || carMakeId === null) {
-      setModelError('Помилка: ID марки автомобіля (makeId) не знайдено для цієї моделі.');
-      return;
-    }
-    try {
-      const response = await fetch(`/api/car-models/${modelId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingModelName, carMakeId: carMakeId }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        setModelError(errorData.error || `Помилка збереження моделі (HTTP ${response.status}): ${response.statusText}`);
+  const handleSaveEditModel = useCallback(
+    async (modelId: number) => {
+      if (!currentEditingModelDetails || currentEditingModelDetails.id !== modelId) {
+        setModelError('Помилка: Деталі моделі для редагування не знайдено або ID не співпадає.');
         return;
       }
-      const modelsResponse = await fetch('/api/car-models');
-      const models = await modelsResponse.json();
-      setCarModels(models);
-      const updated = models.find((m: CarModel) => m.id === modelId);
-      if (updated) {
-        setExpandedMakeId(carMakeId);
-        setExpandedModelId(modelId);
-      } else {
-        setExpandedModelId(null);
+      if (!editingModelName.trim()) {
+        setModelError('Назва моделі не може бути порожньою.');
+        return;
       }
-      setEditingModelId(null);
-      setCurrentEditingModelDetails(null);
-      setModelError(null);
-    } catch (error) {
-      console.error('Не вдалося зберегти модель:', error);
-      setModelError('Не вдалося зберегти модель. Перевірте консоль для деталей.');
-    }
-  };
+      const carMakeId = currentEditingModelDetails.makeId;
+      if (carMakeId === undefined || carMakeId === null) {
+        setModelError('Помилка: ID марки автомобіля (makeId) не знайдено для цієї моделі.');
+        return;
+      }
+      try {
+        const response = await fetch(`/api/car-models/${modelId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: editingModelName, carMakeId: carMakeId }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          setModelError(errorData.error || `Помилка збереження моделі (HTTP ${response.status}): ${response.statusText}`);
+          return;
+        }
+        const modelsResponse = await fetch('/api/car-models');
+        const models = await modelsResponse.json();
+        setCarModels(models);
+        const updated = models.find((m: CarModel) => m.id === modelId);
+        if (updated) {
+          setExpandedMakeId(carMakeId);
+          setExpandedModelId(modelId);
+        } else {
+          setExpandedModelId(null);
+        }
+        setEditingModelId(null);
+        setCurrentEditingModelDetails(null);
+        setModelError(null);
+      } catch (error) {
+        console.error('Не вдалося зберегти модель:', error);
+        setModelError('Не вдалося зберегти модель. Перевірте консоль для деталей.');
+      }
+    },
+    [currentEditingModelDetails, editingModelName]
+  );
 
-  const handleCancelEditModel = () => {
+  const handleCancelEditModel = useCallback(() => {
     setEditingModelId(null);
     setCurrentEditingModelDetails(null);
     setModelError(null);
-  };
-  const handleDeleteModel = async (id: number) => {
-    if (!window.confirm("Видалити цю модель та всі пов'язані роки і типи кузовів?")) return;
-    try {
-      await fetch(`/api/car-models/${id}`, { method: 'DELETE' });
-      const [modelsRes, yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-models'), fetch('/api/car-years'), fetch('/api/car-body-types')]);
+  }, []);
 
-      const [models, years, bodyTypes] = await Promise.all([modelsRes.json(), yearsRes.json(), bodyTypesRes.json()]);
+  const handleDeleteModel = useCallback(
+    async (id: number) => {
+      if (!window.confirm("Видалити цю модель та всі пов'язані роки і типи кузовів?")) return;
+      try {
+        await fetch(`/api/car-models/${id}`, { method: 'DELETE' });
+        const [modelsRes, yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-models'), fetch('/api/car-years'), fetch('/api/car-body-types')]);
 
-      setCarModels(models);
-      setCarYears(years);
-      setCarBodyTypes(bodyTypes);
+        const [models, years, bodyTypes] = await Promise.all([modelsRes.json(), yearsRes.json(), bodyTypesRes.json()]);
 
-      if (expandedModelId === id) {
-        setExpandedModelId(null);
-        setExpandedYearId(null);
-        setExpandedBodyTypeId(null);
+        setCarModels(models);
+        setCarYears(years);
+        setCarBodyTypes(bodyTypes);
+
+        if (expandedModelId === id) {
+          setExpandedModelId(null);
+          setExpandedYearId(null);
+          setExpandedBodyTypeId(null);
+        }
+      } catch (error) {
+        console.error('Помилка видалення моделі:', error);
       }
-    } catch (error) {
-      console.error('Помилка видалення моделі:', error);
-    }
-  };
+    },
+    [expandedModelId]
+  );
 
-  const handleAddYear = async (modelId: number) => {
-    setYearError(null);
-    if (!newYearValue.trim() || isNaN(Number(newYearValue)) || Number(newYearValue) < 1970 || Number(newYearValue) > currentYear) {
-      setYearError(`Введіть коректний рік (від 1970 до ${currentYear})`);
-      return;
-    }
-    const yearValue = Number(newYearValue);
-    if (carYears.some((y) => y.modelId === modelId && y.year === yearValue)) {
-      setYearError('Такий рік вже існує для цієї моделі');
-      return;
-    }
-    try {
-      const res = await fetch('/api/car-years', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year: yearValue, modelId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setYearError(data?.error || 'Помилка створення року');
+  const handleAddYear = useCallback(
+    async (modelId: number) => {
+      setYearError(null);
+      if (!newYearValue.trim() || isNaN(Number(newYearValue)) || Number(newYearValue) < 1970 || Number(newYearValue) > currentYear) {
+        setYearError(`Введіть коректний рік (від 1970 до ${currentYear})`);
         return;
       }
-      setNewYearValue('');
-      const response = await fetch('/api/car-years');
-      const years: CarYear[] = await response.json();
-      setCarYears(years);
-      setExpandedModelId(modelId);
-      const addedYear = years.find((y: CarYear) => y.modelId === modelId && y.year === yearValue);
-      if (addedYear) setExpandedYearId(addedYear.id);
-    } catch {
-      setYearError('Помилка мережі');
-    }
-  };
+      const yearValue = Number(newYearValue);
+      if (carYears.some((y) => y.modelId === modelId && y.year === yearValue)) {
+        setYearError('Такий рік вже існує для цієї моделі');
+        return;
+      }
+      try {
+        const res = await fetch('/api/car-years', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year: yearValue, modelId }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setYearError(data?.error || 'Помилка створення року');
+          return;
+        }
+        setNewYearValue('');
+        const response = await fetch('/api/car-years');
+        const years: CarYear[] = await response.json();
+        setCarYears(years);
+        setExpandedModelId(modelId);
+        const addedYear = years.find((y: CarYear) => y.modelId === modelId && y.year === yearValue);
+        if (addedYear) setExpandedYearId(addedYear.id);
+      } catch {
+        setYearError('Помилка мережі');
+      }
+    },
+    [newYearValue, currentYear, carYears]
+  );
 
-  const handleEditYear = (year: CarYear) => {
+  const handleEditYear = useCallback((year: CarYear) => {
     setEditingYearId(year.id);
     setEditingYearValue(year.year.toString());
     setCurrentEditingYearDetails(year);
     setYearError(null);
-  };
+  }, []);
 
-  const handleSaveEditYear = async (yearIdNum: number) => {
-    if (!currentEditingYearDetails || currentEditingYearDetails.id !== yearIdNum) {
-      setYearError('Помилка: Деталі року для редагування не знайдено або ID не співпадає.');
-      return;
-    }
-    if (!editingYearValue.trim() || isNaN(Number(editingYearValue)) || Number(editingYearValue) < 1970 || Number(editingYearValue) > currentYear) {
-      setYearError(`Введіть коректний рік (від 1970 до ${currentYear}).`);
-      return;
-    }
-    const yearNum = Number(editingYearValue);
-    const modelId = currentEditingYearDetails.modelId;
-    if (carYears.some((y) => y.modelId === modelId && y.year === yearNum && y.id !== yearIdNum)) {
-      setYearError('Такий рік вже існує для цієї моделі.');
-      return;
-    }
-    try {
-      const response = await fetch(`/api/car-years/${yearIdNum}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ year: yearNum, modelId: modelId }),
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        setYearError(errorData.error || `Помилка збереження року (HTTP ${response.status}): ${response.statusText}`);
+  const handleSaveEditYear = useCallback(
+    async (yearIdNum: number) => {
+      if (!currentEditingYearDetails || currentEditingYearDetails.id !== yearIdNum) {
+        setYearError('Помилка: Деталі року для редагування не знайдено або ID не співпадає.');
         return;
       }
-      const yearsResponse = await fetch('/api/car-years');
-      const years: CarYear[] = await yearsResponse.json();
-      setCarYears(years);
-      setExpandedModelId(modelId);
-      const updated = years.find((y) => y.id === yearIdNum);
-      if (updated) setExpandedYearId(yearIdNum);
-      setEditingYearId(null);
-      setCurrentEditingYearDetails(null);
-      setYearError(null);
-    } catch (error) {
-      console.error('Не вдалося зберегти рік:', error);
-      setYearError('Не вдалося зберегти рік. Перевірте консоль для деталей.');
-    }
-  };
+      if (!editingYearValue.trim() || isNaN(Number(editingYearValue)) || Number(editingYearValue) < 1970 || Number(editingYearValue) > currentYear) {
+        setYearError(`Введіть коректний рік (від 1970 до ${currentYear}).`);
+        return;
+      }
+      const yearNum = Number(editingYearValue);
+      const modelId = currentEditingYearDetails.modelId;
+      if (carYears.some((y) => y.modelId === modelId && y.year === yearNum && y.id !== yearIdNum)) {
+        setYearError('Такий рік вже існує для цієї моделі.');
+        return;
+      }
+      try {
+        const response = await fetch(`/api/car-years/${yearIdNum}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year: yearNum, modelId: modelId }),
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          setYearError(errorData.error || `Помилка збереження року (HTTP ${response.status}): ${response.statusText}`);
+          return;
+        }
+        const yearsResponse = await fetch('/api/car-years');
+        const years: CarYear[] = await yearsResponse.json();
+        setCarYears(years);
+        setExpandedModelId(modelId);
+        const updated = years.find((y) => y.id === yearIdNum);
+        if (updated) setExpandedYearId(yearIdNum);
+        setEditingYearId(null);
+        setCurrentEditingYearDetails(null);
+        setYearError(null);
+      } catch (error) {
+        console.error('Не вдалося зберегти рік:', error);
+        setYearError('Не вдалося зберегти рік. Перевірте консоль для деталей.');
+      }
+    },
+    [currentEditingYearDetails, editingYearValue, currentYear, carYears]
+  );
 
-  const handleCancelEditYear = () => {
+  const handleCancelEditYear = useCallback(() => {
     setEditingYearId(null);
     setCurrentEditingYearDetails(null);
     setEditingYearValue('');
     setYearError(null);
-  };
-  const handleDeleteYear = async (id: number) => {
-    if (!window.confirm("Видалити цей рік та всі пов'язані типи кузовів?")) return;
-    try {
-      await fetch(`/api/car-years/${id}`, { method: 'DELETE' });
-      const [yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-years'), fetch('/api/car-body-types')]);
+  }, []);
 
-      const [years, bodyTypes] = await Promise.all([yearsRes.json(), bodyTypesRes.json()]);
+  const handleDeleteYear = useCallback(
+    async (id: number) => {
+      if (!window.confirm("Видалити цей рік та всі пов'язані типи кузовів?")) return;
+      try {
+        await fetch(`/api/car-years/${id}`, { method: 'DELETE' });
+        const [yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-years'), fetch('/api/car-body-types')]);
 
-      setCarYears(years);
-      setCarBodyTypes(bodyTypes);
+        const [years, bodyTypes] = await Promise.all([yearsRes.json(), bodyTypesRes.json()]);
 
-      if (expandedYearId === id) {
-        setExpandedYearId(null);
-        setExpandedBodyTypeId(null);
+        setCarYears(years);
+        setCarBodyTypes(bodyTypes);
+
+        if (expandedYearId === id) {
+          setExpandedYearId(null);
+          setExpandedBodyTypeId(null);
+        }
+      } catch (error) {
+        console.error('Помилка видалення року:', error);
       }
-    } catch (error) {
-      console.error('Помилка видалення року:', error);
-    }
-  };
+    },
+    [expandedYearId]
+  );
 
-  const handleAddBodyType = async (yearId: number) => {
-    setBodyTypeError(null);
-    if (!newBodyTypeName.trim()) {
-      setBodyTypeError('Введіть назву типу кузова');
-      return;
-    }
-    const normalizedNew = normalizeString(newBodyTypeName.trim());
-    if (carBodyTypes.some((bt) => normalizeString(bt.name) === normalizedNew && bt.yearId === yearId)) {
-      setBodyTypeError('Такий тип кузова вже існує для цього року');
-      return;
-    }
-    try {
-      const res = await fetch('/api/car-body-types', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newBodyTypeName, yearId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setBodyTypeError(data?.error || 'Помилка створення типу кузова');
+  const handleAddBodyType = useCallback(
+    async (yearId: number) => {
+      setBodyTypeError(null);
+      if (!newBodyTypeName.trim()) {
+        setBodyTypeError('Введіть назву типу кузова');
         return;
       }
-      setNewBodyTypeName('');
-      setBodyTypeParentYearId(null);
-      const response = await fetch('/api/car-body-types');
-      const bodyTypes: CarBodyType[] = await response.json();
-      setCarBodyTypes(bodyTypes);
-      setExpandedYearId(yearId);
-      const addedBodyType = bodyTypes.find((bt: CarBodyType) => bt.yearId === yearId && normalizeString(bt.name) === normalizedNew);
-      if (addedBodyType) setExpandedBodyTypeId(addedBodyType.id);
-    } catch {
-      setBodyTypeError('Помилка мережі');
-    }
-  };
-
-  const handleEditBodyType = (bt: CarBodyType) => {
+      const normalizedNew = normalizeString(newBodyTypeName.trim());
+      if (carBodyTypes.some((bt) => normalizeString(bt.name) === normalizedNew && bt.yearId === yearId)) {
+        setBodyTypeError('Такий тип кузова вже існує для цього року');
+        return;
+      }
+      try {
+        const res = await fetch('/api/car-body-types', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newBodyTypeName, yearId }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setBodyTypeError(data?.error || 'Помилка створення типу кузова');
+          return;
+        }
+        setNewBodyTypeName('');
+        setBodyTypeParentYearId(null);
+        const response = await fetch('/api/car-body-types');
+        const bodyTypes: CarBodyType[] = await response.json();
+        setCarBodyTypes(bodyTypes);
+        setExpandedYearId(yearId);
+        const addedBodyType = bodyTypes.find((bt: CarBodyType) => bt.yearId === yearId && normalizeString(bt.name) === normalizedNew);
+        if (addedBodyType) setExpandedBodyTypeId(addedBodyType.id);
+      } catch {
+        setBodyTypeError('Помилка мережі');
+      }
+    },
+    [newBodyTypeName, normalizeString, carBodyTypes]
+  );
+  const handleEditBodyType = useCallback((bt: CarBodyType) => {
     setEditingBodyTypeId(bt.id);
     setEditingBodyTypeName(bt.name);
     setBodyTypeError(null);
-  };
-
-  const handleSaveEditBodyType = async (bodyTypeId: number, yearId: number) => {
-    if (!editingBodyTypeName.trim()) {
-      setBodyTypeError('Введіть назву типу кузова');
-      return;
-    }
-    const normalizedEdit = normalizeString(editingBodyTypeName.trim());
-    if (carBodyTypes.some((bt) => normalizeString(bt.name) === normalizedEdit && bt.yearId === yearId && bt.id !== bodyTypeId)) {
-      setBodyTypeError('Такий тип кузова вже існує для цього року');
-      return;
-    }
-    try {
-      const response = await fetch(`/api/car-body-types/${bodyTypeId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editingBodyTypeName, yearId }),
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        setBodyTypeError(data?.error || 'Помилка збереження типу кузова');
+  }, []);
+  const handleSaveEditBodyType = useCallback(
+    async (bodyTypeId: number, yearId: number) => {
+      if (!editingBodyTypeName.trim()) {
+        setBodyTypeError('Введіть назву типу кузова');
         return;
       }
-      const bodyTypesResponse = await fetch('/api/car-body-types');
-      const bodyTypes: CarBodyType[] = await bodyTypesResponse.json();
-      setCarBodyTypes(bodyTypes);
-      setExpandedYearId(yearId);
-      const updated = bodyTypes.find((bt) => bt.id === bodyTypeId);
-      if (updated) setExpandedBodyTypeId(bodyTypeId);
-      setEditingBodyTypeId(null);
-      setEditingBodyTypeName('');
-      setBodyTypeError(null);
-    } catch {
-      setBodyTypeError('Помилка мережі');
-    }
-  };
-
-  const handleCancelEditBodyType = () => {
+      const normalizedEdit = normalizeString(editingBodyTypeName.trim());
+      if (carBodyTypes.some((bt) => normalizeString(bt.name) === normalizedEdit && bt.yearId === yearId && bt.id !== bodyTypeId)) {
+        setBodyTypeError('Такий тип кузова вже існує для цього року');
+        return;
+      }
+      try {
+        const response = await fetch(`/api/car-body-types/${bodyTypeId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: editingBodyTypeName, yearId }),
+        });
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          setBodyTypeError(data?.error || 'Помилка збереження типу кузова');
+          return;
+        }
+        const bodyTypesResponse = await fetch('/api/car-body-types');
+        const bodyTypes: CarBodyType[] = await bodyTypesResponse.json();
+        setCarBodyTypes(bodyTypes);
+        setExpandedYearId(yearId);
+        const updated = bodyTypes.find((bt) => bt.id === bodyTypeId);
+        if (updated) setExpandedBodyTypeId(bodyTypeId);
+        setEditingBodyTypeId(null);
+        setEditingBodyTypeName('');
+        setBodyTypeError(null);
+      } catch {
+        setBodyTypeError('Помилка мережі');
+      }
+    },
+    [editingBodyTypeName, normalizeString, carBodyTypes]
+  );
+  const handleCancelEditBodyType = useCallback(() => {
     setEditingBodyTypeId(null);
     setEditingBodyTypeName('');
     setBodyTypeError(null);
-  };
-  const handleDeleteBodyType = async (id: number) => {
-    if (!window.confirm('Видалити цей тип кузова?')) return;
-    try {
-      await fetch(`/api/car-body-types/${id}`, { method: 'DELETE' });
-      const response = await fetch('/api/car-body-types');
-      const bodyTypes = await response.json();
-      setCarBodyTypes(bodyTypes);
+  }, []);
+  const handleDeleteBodyType = useCallback(
+    async (id: number) => {
+      if (!window.confirm('Видалити цей тип кузова?')) return;
+      try {
+        await fetch(`/api/car-body-types/${id}`, { method: 'DELETE' });
+        const response = await fetch('/api/car-body-types');
+        const bodyTypes = await response.json();
+        setCarBodyTypes(bodyTypes);
 
-      if (expandedBodyTypeId === id) {
-        setExpandedBodyTypeId(null);
+        if (expandedBodyTypeId === id) {
+          setExpandedBodyTypeId(null);
+        }
+      } catch (error) {
+        console.error('Помилка видалення типу кузова:', error);
       }
-    } catch (error) {
-      console.error('Помилка видалення типу кузова:', error);
-    }
-  };
-
-  const fetchEnginesForBodyType = async (bodyTypeId: number) => {
-    setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: true }));
-    setEnginesError((prev) => ({ ...prev, [bodyTypeId]: null }));
-    try {
-      const res = await fetch(`/api/car-body-types/${bodyTypeId}/engines`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setEnginesError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка завантаження двигунів' }));
-        setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
+    },
+    [expandedBodyTypeId]
+  );
+  const handleAddEngine = useCallback(
+    async (bodyTypeId: number) => {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: null }));
+      const name = (newEngineName[bodyTypeId] || '').trim();
+      if (!name) {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
         return;
       }
-      const engines: CarEngine[] = await res.json();
-      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: engines }));
-    } catch {
-      setEnginesError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
-      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
-    } finally {
-      setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: false }));
-    }
-  };
-
-  const getSortedEngines = (bodyTypeId: number) => {
-    const engines = enginesByBodyType[bodyTypeId] || [];
-    const dir = engineSortDir[bodyTypeId] || 'asc';
-    return [...engines].sort((a, b) => (dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)));
-  };
-
-  const handleAddEngine = async (bodyTypeId: number) => {
-    setEngineError((prev) => ({ ...prev, [bodyTypeId]: null }));
-    const name = (newEngineName[bodyTypeId] || '').trim();
-    if (!name) {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
-      return;
-    }
-    if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase())) {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
-      return;
-    }
-    try {
-      const res = await fetch('/api/car-engines', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, bodyTypeId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setEngineError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка створення двигуна' }));
+      if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase())) {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
         return;
       }
-      setNewEngineName((prev) => ({ ...prev, [bodyTypeId]: '' }));
-      await fetchEnginesForBodyType(bodyTypeId);
-      setExpandedBodyTypeId(bodyTypeId);
-    } catch {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
-    }
-  };
-
-  const handleEditEngine = (engine: CarEngine) => {
+      try {
+        const res = await fetch('/api/car-engines', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, bodyTypeId }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setEngineError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка створення двигуна' }));
+          return;
+        }
+        setNewEngineName((prev) => ({ ...prev, [bodyTypeId]: '' }));
+        await fetchEnginesForBodyType(bodyTypeId);
+        setExpandedBodyTypeId(bodyTypeId);
+      } catch {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+      }
+    },
+    [newEngineName, enginesByBodyType, fetchEnginesForBodyType]
+  );
+  const handleEditEngine = useCallback((engine: CarEngine) => {
     setEditingEngineId(engine.id);
     setEditingEngineName(engine.name);
     setEngineError((prev) => ({ ...prev, [engine.bodyTypeId]: null }));
-  };
-
-  const handleSaveEditEngine = async (engineId: number, bodyTypeId: number) => {
-    const name = editingEngineName.trim();
-    if (!name) {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
-      return;
-    }
-    if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase() && e.id !== engineId)) {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
-      return;
-    }
-    try {
-      const res = await fetch(`/api/car-engines/${engineId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, bodyTypeId }),
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setEngineError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка збереження двигуна' }));
+  }, []);
+  const handleSaveEditEngine = useCallback(
+    async (engineId: number, bodyTypeId: number) => {
+      const name = editingEngineName.trim();
+      if (!name) {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
         return;
       }
-      setEditingEngineId(null);
-      setEditingEngineName('');
-      await fetchEnginesForBodyType(bodyTypeId);
-      setExpandedBodyTypeId(bodyTypeId);
-    } catch {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
-    }
-  };
-
-  const handleCancelEditEngine = () => {
+      if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase() && e.id !== engineId)) {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
+        return;
+      }
+      try {
+        const res = await fetch(`/api/car-engines/${engineId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, bodyTypeId }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setEngineError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка збереження двигуна' }));
+          return;
+        }
+        setEditingEngineId(null);
+        setEditingEngineName('');
+        await fetchEnginesForBodyType(bodyTypeId);
+        setExpandedBodyTypeId(bodyTypeId);
+      } catch {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+      }
+    },
+    [editingEngineName, enginesByBodyType, fetchEnginesForBodyType]
+  );
+  const handleCancelEditEngine = useCallback(() => {
     setEditingEngineId(null);
     setEditingEngineName('');
-  };
-
-  const handleDeleteEngine = async (engineId: number, bodyTypeId: number) => {
-    if (!window.confirm('Видалити цей двигун?')) return;
-    try {
-      await fetch(`/api/car-engines/${engineId}`, { method: 'DELETE' });
-      fetchEnginesForBodyType(bodyTypeId);
-    } catch {
-      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
-    }
-  };
-
-  function normalizeString(str: string) {
-    return str
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase();
-  }
+  }, []);
+  const handleDeleteEngine = useCallback(
+    async (engineId: number, bodyTypeId: number) => {
+      if (!window.confirm('Видалити цей двигун?')) return;
+      try {
+        await fetch(`/api/car-engines/${engineId}`, { method: 'DELETE' });
+        fetchEnginesForBodyType(bodyTypeId);
+      } catch {
+        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+      }
+    },
+    [fetchEnginesForBodyType]
+  );
 
   const globalSearch = normalizeString(debouncedSearch.trim());
   const filteredMakes = carMakes.filter((make) => normalizeString(make.name).includes(globalSearch) || carModels.some((model) => model.makeId === make.id && normalizeString(model.name).includes(globalSearch)));
@@ -728,20 +784,6 @@ export default function ManageCarVariationsPage() {
   const sortedMakes = [...filteredMakes].sort((a, b) => {
     return sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
   });
-
-  const getSortedModels = (makeIdNum: number) => {
-    const filteredModels = debouncedSearch.trim() ? carModels.filter((model) => model.makeId === makeIdNum && normalizeString(model.name).includes(normalizeString(debouncedSearch.trim()))) : carModels.filter((model) => model.makeId === makeIdNum);
-    return [...filteredModels].sort((a, b) => {
-      return modelSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-    });
-  };
-
-  const getSortedYears = (modelIdNum: number) => {
-    const filteredYears = carYears.filter((year) => year.modelId === modelIdNum);
-    return [...filteredYears].sort((a, b) => {
-      return yearSortDir === 'asc' ? a.year - b.year : b.year - a.year;
-    });
-  };
 
   return (
     <div className='min-h-screen bg-gray-50 p-2 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
