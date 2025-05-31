@@ -77,6 +77,9 @@ export default function ManageCarVariationsPage() {
   const bodyTypeRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
   const modelRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
   const yearRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
+  const engineRefs = useRef<Record<number, HTMLTableRowElement | null>>({});
+
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     if (isAdmin && !isVerifyingAuth) {
@@ -102,17 +105,55 @@ export default function ManageCarVariationsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
+  const getSortedBodyTypes = React.useCallback(
+    (yearIdNum: number) => {
+      const filtered = carBodyTypes.filter((e) => e.yearId === yearIdNum);
+      return [...filtered].sort((a, b) => {
+        return bodyTypeSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+      });
+    },
+    [carBodyTypes, bodyTypeSortDir]
+  );
+
   useEffect(() => {
-    if (!debouncedSearch.trim()) {
-      setExpandedMakeId(null);
-      setExpandedModelId(null);
-      setExpandedYearId(null);
-      return;
+    if (expandedYearId !== null) {
+      getSortedBodyTypes(expandedYearId).forEach((bt) => {
+        if (enginesByBodyType[bt.id] === undefined && !enginesLoading[bt.id]) {
+          fetchEnginesForBodyType(bt.id);
+        }
+      });
     }
+  }, [expandedYearId, carBodyTypes, enginesByBodyType, enginesLoading, getSortedBodyTypes]);
+
+  useEffect(() => {
+    if (expandedModelId !== null && modelRefs.current[expandedModelId]) {
+      modelRefs.current[expandedModelId]?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    }
+  }, [expandedModelId]);
+
+  useEffect(() => {
+    if (expandedYearId !== null && yearRefs.current[expandedYearId]) {
+      yearRefs.current[expandedYearId]?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    }
+  }, [expandedYearId]);
+
+  useEffect(() => {
+    if (expandedBodyTypeId !== null && bodyTypeRefs.current[expandedBodyTypeId]) {
+      bodyTypeRefs.current[expandedBodyTypeId]?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    }
+  }, [expandedBodyTypeId]);
+
+  useEffect(() => {
+    if (editingEngineId !== null && engineRefs.current[editingEngineId]) {
+      engineRefs.current[editingEngineId]?.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+    }
+  }, [editingEngineId]);
+
+  useEffect(() => {
+    if (!debouncedSearch.trim()) return;
     const globalSearch = normalizeString(debouncedSearch.trim());
     let foundMakeId: number | null = null;
     let foundModelId: number | null = null;
-    let foundYearId: number | null = null;
     for (const make of carMakes) {
       if (normalizeString(make.name).includes(globalSearch)) {
         foundMakeId = make.id;
@@ -124,43 +165,15 @@ export default function ManageCarVariationsPage() {
           foundModelId = model.id;
           break;
         }
-        for (const year of carYears.filter((y) => y.modelId === model.id)) {
-          if (year.year.toString().includes(globalSearch)) {
-            foundMakeId = make.id;
-            foundModelId = model.id;
-            foundYearId = year.id;
-            break;
-          }
-          for (const bodyType of carBodyTypes.filter((bt) => bt.yearId === year.id)) {
-            if (normalizeString(bodyType.name).includes(globalSearch)) {
-              foundMakeId = make.id;
-              foundModelId = model.id;
-              foundYearId = year.id;
-              break;
-            }
-          }
-          if (foundYearId) break;
-        }
-        if (foundModelId) break;
       }
-      if (foundMakeId) break;
+      if (foundModelId) break;
     }
-    setExpandedMakeId(foundMakeId);
-    setExpandedModelId(foundModelId);
-    setExpandedYearId(foundYearId);
-  }, [debouncedSearch, carMakes, carModels, carYears, carBodyTypes]);
-
-  useEffect(() => {
-    // Auto-fetch engines for all expanded body types in the current year
-    if (expandedYearId !== null) {
-      getSortedBodyTypes(expandedYearId).forEach((bt) => {
-        if (enginesByBodyType[bt.id] === undefined && !enginesLoading[bt.id]) {
-          fetchEnginesForBodyType(bt.id);
-        }
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [expandedYearId, carBodyTypes, enginesByBodyType, enginesLoading]);
+    if (foundMakeId) setExpandedMakeId(foundMakeId);
+    if (foundModelId) setExpandedModelId(foundModelId);
+    setExpandedYearId(null);
+    setExpandedBodyTypeId(null);
+    setEditingEngineId(null);
+  }, [debouncedSearch, carMakes, carModels]);
 
   if (isVerifyingAuth || isAdmin === null) {
     return (
@@ -196,9 +209,11 @@ export default function ManageCarVariationsPage() {
         return;
       }
       setNewMake('');
-      fetch('/api/car-makes')
-        .then((r) => r.json())
-        .then(setCarMakes);
+      const response = await fetch('/api/car-makes');
+      const makes = await response.json();
+      setCarMakes(makes);
+      const addedMake = makes.find((m: CarMake) => normalizeString(m.name) === normalizedNew);
+      if (addedMake) setExpandedMakeId(addedMake.id);
     } catch {
       setMakeError('Помилка мережі');
     }
@@ -234,9 +249,10 @@ export default function ManageCarVariationsPage() {
       }
       setEditingMakeId(null);
       setEditingMakeName('');
-      fetch('/api/car-makes')
-        .then((r) => r.json())
-        .then(setCarMakes);
+      const response = await fetch('/api/car-makes');
+      const makes = await response.json();
+      setCarMakes(makes);
+      setExpandedMakeId(id);
     } catch {
       setMakeError('Помилка мережі');
     }
@@ -247,22 +263,28 @@ export default function ManageCarVariationsPage() {
     setEditingMakeName('');
     setMakeError(null);
   };
-
   const handleDeleteMake = async (id: number) => {
     if (!window.confirm("Видалити цю марку та всі пов'язані моделі, роки і типи кузовів?")) return;
-    await fetch(`/api/car-makes/${id}`, { method: 'DELETE' });
-    fetch('/api/car-makes')
-      .then((r) => r.json())
-      .then(setCarMakes);
-    fetch('/api/car-models')
-      .then((r) => r.json())
-      .then(setCarModels);
-    fetch('/api/car-years')
-      .then((r) => r.json())
-      .then(setCarYears);
-    fetch('/api/car-body-types')
-      .then((r) => r.json())
-      .then(setCarBodyTypes);
+    try {
+      await fetch(`/api/car-makes/${id}`, { method: 'DELETE' });
+      const [makesRes, modelsRes, yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-makes'), fetch('/api/car-models'), fetch('/api/car-years'), fetch('/api/car-body-types')]);
+
+      const [makes, models, years, bodyTypes] = await Promise.all([makesRes.json(), modelsRes.json(), yearsRes.json(), bodyTypesRes.json()]);
+
+      setCarMakes(makes);
+      setCarModels(models);
+      setCarYears(years);
+      setCarBodyTypes(bodyTypes);
+
+      if (expandedMakeId === id) {
+        setExpandedMakeId(null);
+        setExpandedModelId(null);
+        setExpandedYearId(null);
+        setExpandedBodyTypeId(null);
+      }
+    } catch (error) {
+      console.error('Помилка видалення марки:', error);
+    }
   };
 
   const handleAddModel = async (makeId: number) => {
@@ -272,7 +294,7 @@ export default function ManageCarVariationsPage() {
       return;
     }
     const normalizedNew = normalizeString(newModelName.trim());
-    if (carModels.some((m) => normalizeString(m.name) === normalizedNew && m.makeId === makeId)) {
+    if (carModels.some((m: CarModel) => normalizeString(m.name) === normalizedNew && m.makeId === makeId)) {
       setModelError('Така модель вже існує для цієї марки');
       return;
     }
@@ -287,11 +309,16 @@ export default function ManageCarVariationsPage() {
         setModelError(data?.error || 'Помилка створення моделі');
         return;
       }
+      const response = await fetch('/api/car-models');
+      const models: CarModel[] = await response.json();
+      setCarModels(models);
+      setExpandedMakeId(makeId);
+      const addedModel = models.find((m: CarModel) => m.makeId === makeId && normalizeString(m.name) === normalizedNew);
+      if (addedModel) {
+        setExpandedModelId(addedModel.id);
+      }
       setNewModelName('');
       setModelParentMakeId(null);
-      fetch('/api/car-models')
-        .then((r) => r.json())
-        .then(setCarModels);
     } catch {
       setModelError('Помилка мережі');
     }
@@ -329,9 +356,16 @@ export default function ManageCarVariationsPage() {
         setModelError(errorData.error || `Помилка збереження моделі (HTTP ${response.status}): ${response.statusText}`);
         return;
       }
-      fetch('/api/car-models')
-        .then((r) => r.json())
-        .then(setCarModels);
+      const modelsResponse = await fetch('/api/car-models');
+      const models = await modelsResponse.json();
+      setCarModels(models);
+      const updated = models.find((m: CarModel) => m.id === modelId);
+      if (updated) {
+        setExpandedMakeId(carMakeId);
+        setExpandedModelId(modelId);
+      } else {
+        setExpandedModelId(null);
+      }
       setEditingModelId(null);
       setCurrentEditingModelDetails(null);
       setModelError(null);
@@ -346,25 +380,32 @@ export default function ManageCarVariationsPage() {
     setCurrentEditingModelDetails(null);
     setModelError(null);
   };
-
   const handleDeleteModel = async (id: number) => {
     if (!window.confirm("Видалити цю модель та всі пов'язані роки і типи кузовів?")) return;
-    await fetch(`/api/car-models/${id}`, { method: 'DELETE' });
-    fetch('/api/car-models')
-      .then((r) => r.json())
-      .then(setCarModels);
-    fetch('/api/car-years')
-      .then((r) => r.json())
-      .then(setCarYears);
-    fetch('/api/car-body-types')
-      .then((r) => r.json())
-      .then(setCarBodyTypes);
+    try {
+      await fetch(`/api/car-models/${id}`, { method: 'DELETE' });
+      const [modelsRes, yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-models'), fetch('/api/car-years'), fetch('/api/car-body-types')]);
+
+      const [models, years, bodyTypes] = await Promise.all([modelsRes.json(), yearsRes.json(), bodyTypesRes.json()]);
+
+      setCarModels(models);
+      setCarYears(years);
+      setCarBodyTypes(bodyTypes);
+
+      if (expandedModelId === id) {
+        setExpandedModelId(null);
+        setExpandedYearId(null);
+        setExpandedBodyTypeId(null);
+      }
+    } catch (error) {
+      console.error('Помилка видалення моделі:', error);
+    }
   };
 
   const handleAddYear = async (modelId: number) => {
     setYearError(null);
-    if (!newYearValue.trim() || isNaN(Number(newYearValue)) || Number(newYearValue) < 1900 || Number(newYearValue) > new Date().getFullYear() + 1) {
-      setYearError('Введіть коректний рік (наприклад, 2023)');
+    if (!newYearValue.trim() || isNaN(Number(newYearValue)) || Number(newYearValue) < 1970 || Number(newYearValue) > currentYear) {
+      setYearError(`Введіть коректний рік (від 1970 до ${currentYear})`);
       return;
     }
     const yearValue = Number(newYearValue);
@@ -384,9 +425,12 @@ export default function ManageCarVariationsPage() {
         return;
       }
       setNewYearValue('');
-      fetch('/api/car-years')
-        .then((r) => r.json())
-        .then(setCarYears);
+      const response = await fetch('/api/car-years');
+      const years: CarYear[] = await response.json();
+      setCarYears(years);
+      setExpandedModelId(modelId);
+      const addedYear = years.find((y: CarYear) => y.modelId === modelId && y.year === yearValue);
+      if (addedYear) setExpandedYearId(addedYear.id);
     } catch {
       setYearError('Помилка мережі');
     }
@@ -404,8 +448,8 @@ export default function ManageCarVariationsPage() {
       setYearError('Помилка: Деталі року для редагування не знайдено або ID не співпадає.');
       return;
     }
-    if (!editingYearValue.trim() || isNaN(Number(editingYearValue)) || Number(editingYearValue) < 1900 || Number(editingYearValue) > new Date().getFullYear() + 1) {
-      setYearError('Введіть коректний рік (наприклад, 2023).');
+    if (!editingYearValue.trim() || isNaN(Number(editingYearValue)) || Number(editingYearValue) < 1970 || Number(editingYearValue) > currentYear) {
+      setYearError(`Введіть коректний рік (від 1970 до ${currentYear}).`);
       return;
     }
     const yearNum = Number(editingYearValue);
@@ -425,9 +469,12 @@ export default function ManageCarVariationsPage() {
         setYearError(errorData.error || `Помилка збереження року (HTTP ${response.status}): ${response.statusText}`);
         return;
       }
-      fetch('/api/car-years')
-        .then((r) => r.json())
-        .then(setCarYears);
+      const yearsResponse = await fetch('/api/car-years');
+      const years: CarYear[] = await yearsResponse.json();
+      setCarYears(years);
+      setExpandedModelId(modelId);
+      const updated = years.find((y) => y.id === yearIdNum);
+      if (updated) setExpandedYearId(yearIdNum);
       setEditingYearId(null);
       setCurrentEditingYearDetails(null);
       setYearError(null);
@@ -443,16 +490,24 @@ export default function ManageCarVariationsPage() {
     setEditingYearValue('');
     setYearError(null);
   };
-
   const handleDeleteYear = async (id: number) => {
     if (!window.confirm("Видалити цей рік та всі пов'язані типи кузовів?")) return;
-    await fetch(`/api/car-years/${id}`, { method: 'DELETE' });
-    fetch('/api/car-years')
-      .then((r) => r.json())
-      .then(setCarYears);
-    fetch('/api/car-body-types')
-      .then((r) => r.json())
-      .then(setCarBodyTypes);
+    try {
+      await fetch(`/api/car-years/${id}`, { method: 'DELETE' });
+      const [yearsRes, bodyTypesRes] = await Promise.all([fetch('/api/car-years'), fetch('/api/car-body-types')]);
+
+      const [years, bodyTypes] = await Promise.all([yearsRes.json(), bodyTypesRes.json()]);
+
+      setCarYears(years);
+      setCarBodyTypes(bodyTypes);
+
+      if (expandedYearId === id) {
+        setExpandedYearId(null);
+        setExpandedBodyTypeId(null);
+      }
+    } catch (error) {
+      console.error('Помилка видалення року:', error);
+    }
   };
 
   const handleAddBodyType = async (yearId: number) => {
@@ -479,9 +534,12 @@ export default function ManageCarVariationsPage() {
       }
       setNewBodyTypeName('');
       setBodyTypeParentYearId(null);
-      fetch('/api/car-body-types')
-        .then((r) => r.json())
-        .then(setCarBodyTypes);
+      const response = await fetch('/api/car-body-types');
+      const bodyTypes: CarBodyType[] = await response.json();
+      setCarBodyTypes(bodyTypes);
+      setExpandedYearId(yearId);
+      const addedBodyType = bodyTypes.find((bt: CarBodyType) => bt.yearId === yearId && normalizeString(bt.name) === normalizedNew);
+      if (addedBodyType) setExpandedBodyTypeId(addedBodyType.id);
     } catch {
       setBodyTypeError('Помилка мережі');
     }
@@ -514,9 +572,12 @@ export default function ManageCarVariationsPage() {
         setBodyTypeError(data?.error || 'Помилка збереження типу кузова');
         return;
       }
-      fetch('/api/car-body-types')
-        .then((r) => r.json())
-        .then(setCarBodyTypes);
+      const bodyTypesResponse = await fetch('/api/car-body-types');
+      const bodyTypes: CarBodyType[] = await bodyTypesResponse.json();
+      setCarBodyTypes(bodyTypes);
+      setExpandedYearId(yearId);
+      const updated = bodyTypes.find((bt) => bt.id === bodyTypeId);
+      if (updated) setExpandedBodyTypeId(bodyTypeId);
       setEditingBodyTypeId(null);
       setEditingBodyTypeName('');
       setBodyTypeError(null);
@@ -530,20 +591,20 @@ export default function ManageCarVariationsPage() {
     setEditingBodyTypeName('');
     setBodyTypeError(null);
   };
-
   const handleDeleteBodyType = async (id: number) => {
     if (!window.confirm('Видалити цей тип кузова?')) return;
-    await fetch(`/api/car-body-types/${id}`, { method: 'DELETE' });
-    fetch('/api/car-body-types')
-      .then((r) => r.json())
-      .then(setCarBodyTypes);
-  };
+    try {
+      await fetch(`/api/car-body-types/${id}`, { method: 'DELETE' });
+      const response = await fetch('/api/car-body-types');
+      const bodyTypes = await response.json();
+      setCarBodyTypes(bodyTypes);
 
-  const getSortedBodyTypes = (yearIdNum: number) => {
-    const filtered = carBodyTypes.filter((e) => e.yearId === yearIdNum);
-    return [...filtered].sort((a, b) => {
-      return bodyTypeSortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
-    });
+      if (expandedBodyTypeId === id) {
+        setExpandedBodyTypeId(null);
+      }
+    } catch (error) {
+      console.error('Помилка видалення типу кузова:', error);
+    }
   };
 
   const fetchEnginesForBodyType = async (bodyTypeId: number) => {
@@ -596,7 +657,8 @@ export default function ManageCarVariationsPage() {
         return;
       }
       setNewEngineName((prev) => ({ ...prev, [bodyTypeId]: '' }));
-      fetchEnginesForBodyType(bodyTypeId);
+      await fetchEnginesForBodyType(bodyTypeId);
+      setExpandedBodyTypeId(bodyTypeId);
     } catch {
       setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
     }
@@ -631,7 +693,8 @@ export default function ManageCarVariationsPage() {
       }
       setEditingEngineId(null);
       setEditingEngineName('');
-      fetchEnginesForBodyType(bodyTypeId);
+      await fetchEnginesForBodyType(bodyTypeId);
+      setExpandedBodyTypeId(bodyTypeId);
     } catch {
       setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
     }
@@ -660,20 +723,7 @@ export default function ManageCarVariationsPage() {
   }
 
   const globalSearch = normalizeString(debouncedSearch.trim());
-  const filteredMakes = carMakes.filter(
-    (make) =>
-      normalizeString(make.name).includes(globalSearch) ||
-      carModels.some((model) => model.makeId === make.id && normalizeString(model.name).includes(globalSearch)) ||
-      carYears.some((year) => {
-        const model = carModels.find((m) => m.id === year.modelId && m.makeId === make.id);
-        return model && year.year.toString().includes(globalSearch);
-      }) ||
-      carBodyTypes.some((bodyType) => {
-        const year = carYears.find((y) => y.id === bodyType.yearId);
-        const model = year && carModels.find((m) => m.id === year.modelId && m.makeId === make.id);
-        return model && normalizeString(bodyType.name).includes(globalSearch);
-      })
-  );
+  const filteredMakes = carMakes.filter((make) => normalizeString(make.name).includes(globalSearch) || carModels.some((model) => model.makeId === make.id && normalizeString(model.name).includes(globalSearch)));
 
   const sortedMakes = [...filteredMakes].sort((a, b) => {
     return sortDir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
@@ -694,7 +744,7 @@ export default function ManageCarVariationsPage() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-50 p-2 sm:p-4'>
+    <div className='min-h-screen bg-gray-50 p-2 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
       <main className='bg-white shadow-xl rounded-2xl p-4 sm:p-8 max-w-full sm:max-w-4xl mx-auto border border-gray-200'>
         <div className='mb-4'>
           <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300'>
@@ -713,7 +763,7 @@ export default function ManageCarVariationsPage() {
             Глобальний пошук
           </label>
           <div className='relative'>
-            <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук марки, моделі, року, типу кузова...' value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук марки та моделі...' value={search} onChange={(e) => setSearch(e.target.value)} />
             <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
           </div>
         </div>
@@ -781,7 +831,7 @@ export default function ManageCarVariationsPage() {
             <tbody className={`bg-white divide-y divide-gray-100 block sm:table-row-group ${expandedMakeId === null ? 'max-h-[340px] overflow-y-auto' : ''}`}>
               {sortedMakes.length === 0 ? (
                 <tr className='block sm:table-row'>
-                  <td colSpan={3} className='px-6 py-4 text-center text-gray-400 block sm:table-cell'>
+                  <td colSpan={3} className='px-6 py-4 text-center text-gray-500 font-semibold block sm:table-cell'>
                     Нічого не знайдено
                   </td>
                 </tr>
@@ -888,7 +938,7 @@ export default function ManageCarVariationsPage() {
                             </div>
                             {modelError && modelParentMakeId === make.id && <div className='text-red-500 text-sm mb-2'>{modelError}</div>}
                             {getSortedModels(make.id).length === 0 ? (
-                              <p className='text-gray-400 text-base'>Моделей не знайдено.</p>
+                              <p className='text-gray-500 text-base font-semibold'>Моделей не знайдено.</p>
                             ) : (
                               <table className='min-w-full divide-y divide-gray-200 bg-white rounded-xl shadow block sm:table'>
                                 <thead className='bg-gray-50 hidden sm:table-header-group'>
@@ -1025,6 +1075,8 @@ export default function ManageCarVariationsPage() {
                                               <div className='mb-3 flex gap-2'>
                                                 <input
                                                   type='number'
+                                                  min={1970}
+                                                  max={currentYear}
                                                   value={newYearValue}
                                                   onChange={(e) => {
                                                     setNewYearValue(e.target.value);
@@ -1042,7 +1094,7 @@ export default function ManageCarVariationsPage() {
                                               </div>
                                               {yearError && <div className='text-red-500 text-base mb-2'>{yearError}</div>}
                                               {getSortedYears(model.id).length === 0 ? (
-                                                <p className='text-gray-400 text-base'>Років не знайдено.</p>
+                                                <p className='text-gray-500 text-base font-semibold'>Років не знайдено.</p>
                                               ) : (
                                                 <table className='min-w-full divide-y divide-gray-200 bg-white rounded-xl shadow-sm block sm:table'>
                                                   <thead className='bg-gray-50 hidden sm:table-header-group'>
@@ -1083,6 +1135,8 @@ export default function ManageCarVariationsPage() {
                                                             {editingYearId === year.id ? (
                                                               <input
                                                                 type='number'
+                                                                min={1970}
+                                                                max={currentYear}
                                                                 value={editingYearValue}
                                                                 onChange={(e) => setEditingYearValue(e.target.value)}
                                                                 className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${yearError && editingYearId === year.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400`}
@@ -1149,7 +1203,7 @@ export default function ManageCarVariationsPage() {
                                                                 </div>
                                                                 {bodyTypeError && bodyTypeParentYearId === year.id && <div className='text-red-500 text-base mb-2'>{bodyTypeError}</div>}
                                                                 {getSortedBodyTypes(year.id).length === 0 ? (
-                                                                  <p className='text-gray-400 text-base'>Типів кузовів не знайдено.</p>
+                                                                  <p className='text-gray-500 text-base font-semibold'>Типів кузовів не знайдено.</p>
                                                                 ) : (
                                                                   <table className='min-w-full divide-y divide-gray-100 bg-white rounded-xl shadow-xs block sm:table'>
                                                                     <thead className='bg-gray-50 hidden sm:table-header-group'>
@@ -1258,7 +1312,7 @@ export default function ManageCarVariationsPage() {
                                                                                   ) : (
                                                                                     <div>
                                                                                       {getSortedEngines(bt.id).length === 0 ? (
-                                                                                        <p className='text-gray-400 text-base'>Двигунів не знайдено.</p>
+                                                                                        <p className='text-gray-500 text-base font-semibold'>Двигунів не знайдено.</p>
                                                                                       ) : (
                                                                                         <table className='min-w-full divide-y divide-gray-100 bg-white rounded-xl shadow-xs block sm:table'>
                                                                                           <thead className='bg-gray-50 hidden sm:table-header-group'>
@@ -1272,7 +1326,13 @@ export default function ManageCarVariationsPage() {
                                                                                           </thead>
                                                                                           <tbody className='divide-y divide-gray-50 block sm:table-row-group'>
                                                                                             {getSortedEngines(bt.id).map((engine) => (
-                                                                                              <tr key={engine.id} className={`group ${editingEngineId === engine.id ? 'bg-teal-100' : ''} hover:bg-teal-100 transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none hover:cursor-pointer`}>
+                                                                                              <tr
+                                                                                                key={engine.id}
+                                                                                                ref={(el) => {
+                                                                                                  engineRefs.current[engine.id] = el;
+                                                                                                }}
+                                                                                                className={`group ${editingEngineId === engine.id ? 'bg-teal-100' : ''} hover:bg-teal-100 transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none hover:cursor-pointer`}
+                                                                                              >
                                                                                                 <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 block sm:table-cell'>
                                                                                                   <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {engine.id}
                                                                                                 </td>
