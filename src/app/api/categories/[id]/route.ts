@@ -3,9 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET(request: Request, context: { params: { id: string } }) {
+export async function GET(request: NextRequest, context: { params: { id: string } }) {
 
-  const { id: rawId } = await context.params;
+  const { id: rawId } = context.params;
   const parsedId = parseInt(rawId, 10);
 
   if (isNaN(parsedId)) {
@@ -38,15 +38,30 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const { id: rawId } = await context.params;
+  const { id: rawId } = context.params;
   const id = parseInt(rawId, 10);
 
   if (isNaN(id)) {
     return NextResponse.json({ error: 'Невалідний ID категорії' }, { status: 400 });
   }
-
   try {
     const { name, parentId } = await request.json();
+
+    if (parentId !== null && parentId !== undefined) {
+      const parentCategory = await prisma.category.findUnique({
+        where: { id: Number(parentId) },
+        select: { id: true }
+      });
+
+      if (!parentCategory) {
+        return NextResponse.json({ error: `Батьківську категорію з ID '${parentId}' не знайдено` }, { status: 400 });
+      }
+
+      if (Number(parentId) === id) {
+        return NextResponse.json({ error: `Категорія не може бути власною батьківською категорією` }, { status: 400 });
+      }
+    }
+
     const updatedCategory = await prisma.category.update({
       where: { id },
       data: {
@@ -80,7 +95,7 @@ export async function DELETE(request: NextRequest, context: { params: { id: stri
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const { id: rawId } = await context.params;
+  const { id: rawId } = context.params;
   const id = parseInt(rawId, 10);
 
   if (isNaN(id)) {
