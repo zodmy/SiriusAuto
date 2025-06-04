@@ -25,8 +25,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  if (!(await checkAdmin({ req }))) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  if (!(await checkAdmin({ req: request }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
@@ -35,7 +35,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Невалідний ID типу кузова автомобіля' }, { status: 400 });
     }
 
-    const body = await req.json();
+    const body = await request.json();
     const { name, yearId } = body;
 
     if (name !== undefined && (typeof name !== 'string' || name.trim() === '')) {

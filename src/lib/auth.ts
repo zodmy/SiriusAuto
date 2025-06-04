@@ -3,7 +3,6 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-// Отримує токен з request (API) або cookies (app route/server component)
 async function getTokenFromRequestOrCookies(req?: NextRequest): Promise<string | undefined> {
   if (req) {
     return req.cookies.get('token')?.value;

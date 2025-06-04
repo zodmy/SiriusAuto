@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET(request: Request, context: { params: { id: string } }) {
+export async function GET(request: NextRequest) {
 
-  const { id: rawId } = await context.params;
+  const url = new URL(request.url);
+  const rawId = url.pathname.split('/').pop() || '';
   const parsedId = parseInt(rawId, 10);
 
   if (isNaN(parsedId)) {
@@ -33,25 +34,42 @@ export async function GET(request: Request, context: { params: { id: string } })
   }
 }
 
-export async function PUT(request: NextRequest, context: { params: { id: string } }) {
+export async function PUT(request: NextRequest) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const { id: rawId } = await context.params;
+  const url = new URL(request.url);
+  const rawId = url.pathname.split('/').pop() || '';
   const id = parseInt(rawId, 10);
 
   if (isNaN(id)) {
     return NextResponse.json({ error: 'Невалідний ID категорії' }, { status: 400 });
   }
-
   try {
     const { name, parentId } = await request.json();
+
+    if (parentId !== null && parentId !== undefined) {
+      const parentCategory = await prisma.category.findUnique({
+        where: { id: Number(parentId) },
+        select: { id: true }
+      });
+
+      if (!parentCategory) {
+        return NextResponse.json({ error: `Батьківську категорію з ID '${parentId}' не знайдено` }, { status: 400 });
+      }
+
+      if (Number(parentId) === id) {
+        return NextResponse.json({ error: `Категорія не може бути власною батьківською категорією` }, { status: 400 });
+      }
+    }
+
     const updatedCategory = await prisma.category.update({
       where: { id },
       data: {
         name: name || undefined,
-        parentId: parentId !== undefined ? Number(parentId) : (parentId === null ? null : undefined),
+        // if parentId is provided (number or null), use it; otherwise omit
+        parentId: parentId,
       },
       include: {
         parent: { select: { id: true, name: true } },
@@ -70,17 +88,21 @@ export async function PUT(request: NextRequest, context: { params: { id: string 
       if (error.code === 'P2025') {
         return NextResponse.json({ error: `Категорію з ID ${id} не знайдено для оновлення` }, { status: 404 });
       }
+      if (error.code === 'P2003') {
+        return NextResponse.json({ error: 'Вказана батьківська категорія недійсна' }, { status: 400 });
+      }
     }
     return NextResponse.json({ error: `Не вдалося оновити категорію з ID ${id}` }, { status: 500 });
   }
 }
 
-export async function DELETE(request: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(request: NextRequest) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const { id: rawId } = await context.params;
+  const url = new URL(request.url);
+  const rawId = url.pathname.split('/').pop() || '';
   const id = parseInt(rawId, 10);
 
   if (isNaN(id)) {

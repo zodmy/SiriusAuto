@@ -36,24 +36,19 @@ export async function POST(request: NextRequest) {
 
     if (categoriesData.some(cat => !cat.name)) {
       return NextResponse.json({ error: 'Для всіх категорій потрібно вказати назву' }, { status: 400 });
-    }
-
-    const createdCategories = await prisma.$transaction(async (tx) => {
+    } const createdCategories = await prisma.$transaction(async (tx) => {
       return Promise.all(categoriesData.map(async (categoryData) => {
-        const { name, parentName } = categoryData;
-        let parentIdToSet: number | null = null;
+        const { name, parentId } = categoryData;
+        const parentIdToSet: number | null = parentId || null;
 
-        if (parentName && typeof parentName === 'string') {
+        if (parentIdToSet !== null) {
           const parentCategory = await tx.category.findUnique({
-            where: { name: parentName },
+            where: { id: parentIdToSet },
             select: { id: true }
           });
           if (!parentCategory) {
-            throw new Error(`Батьківську категорію з назвою '${parentName}' не знайдено для створення підкатегорії '${name}'.`);
+            throw new Error(`Батьківську категорію з ID '${parentIdToSet}' не знайдено для створення підкатегорії '${name}'.`);
           }
-          parentIdToSet = parentCategory.id;
-        } else if (parentName !== undefined && parentName !== null) {
-          throw new Error(`Некоректне значення для parentName для категорії '${name}'. Очікується рядок.`);
         }
 
         return tx.category.create({
@@ -73,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(Array.isArray(body) ? createdCategories : createdCategories[0], { status: 201 });
   } catch (error: unknown) {
-    console.error('Помилка створення категорії(й):', error);
+    console.error('Помилка створення категорії:', error);
 
     if (error instanceof Error && (error.message.startsWith('Батьківську категорію з назвою') || error.message.startsWith('Некоректне значення для parentName'))) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -86,11 +81,9 @@ export async function POST(request: NextRequest) {
       };
 
       if (potentialErrorObject.code === 'P2002' && potentialErrorObject.meta?.target?.includes('name')) {
-        return NextResponse.json({ error: 'Категорія(ї) з такою назвою вже існує' }, { status: 409 });
-      }
-
-      if (potentialErrorObject.code === 'P2003' && potentialErrorObject.meta?.field_name === 'parentId') {
-        return NextResponse.json({ error: 'Не вдалося створити категорію(ї): вказано неіснуючу батьківську категорію (parentId). Це не повинно було статися при використанні parentName.' }, { status: 500 });
+        return NextResponse.json({ error: 'Категорія з такою назвою вже існує' }, { status: 409 });
+      } if (potentialErrorObject.code === 'P2003' && potentialErrorObject.meta?.field_name === 'parentId') {
+        return NextResponse.json({ error: 'Не вдалося створити категорію: вказано неіснуючу батьківську категорію (parentId).' }, { status: 400 });
       }
     }
     return NextResponse.json({ error: 'Не вдалося створити категорію(ї)' }, { status: 500 });

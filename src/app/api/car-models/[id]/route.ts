@@ -84,7 +84,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const resolvedParams = await params; // Await params
+  const resolvedParams = await params;
   const carModelId = parseInt(resolvedParams.id, 10);
 
   if (isNaN(carModelId)) {

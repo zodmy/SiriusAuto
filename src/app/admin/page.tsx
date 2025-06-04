@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SiriusAutoLogoDynamic from '@/components/SiriusAutoLogoDynamic';
-import '../admin.css';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
-
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -30,7 +28,36 @@ export default function AdminLogin() {
       setIsChecking(false);
     };
 
+    const originalOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHeight = document.documentElement.style.height;
+    const originalBodyHeight = document.body.style.height;
+    const originalMargin = document.body.style.margin;
+    const originalPadding = document.body.style.padding;
+    const originalMinHeight = document.body.style.minHeight;
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.height = '100%';
+    document.body.style.height = '100%';
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+
+    if (window.innerWidth <= 640) {
+      document.body.style.minHeight = '-webkit-fill-available';
+    }
+
     checkAuth();
+
+    return () => {
+      document.documentElement.style.overflow = originalOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.height = originalHeight;
+      document.body.style.height = originalBodyHeight;
+      document.body.style.margin = originalMargin;
+      document.body.style.padding = originalPadding;
+      document.body.style.minHeight = originalMinHeight;
+    };
   }, [router]);
 
   if (isChecking) {
@@ -86,7 +113,7 @@ export default function AdminLogin() {
             <input id='password' type='password' value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Введіть ваш пароль' className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 bg-white' autoFocus />
           </div>
           {error && <div className='text-red-600 mb-3 text-center'>{error}</div>}
-          <button type='submit' className='w-full flex justify-center py-2 px-4 rounded-lg shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-colors'>
+          <button type='submit' className='w-full flex justify-center py-2 px-4 rounded-lg shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-colors cursor-pointer'>
             Увійти
           </button>
         </form>
