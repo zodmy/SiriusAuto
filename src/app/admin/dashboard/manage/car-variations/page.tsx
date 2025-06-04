@@ -44,6 +44,7 @@ export default function ManageCarVariationsPage() {
   const [carModels, setCarModels] = useState<CarModel[]>([]);
   const [carYears, setCarYears] = useState<CarYear[]>([]);
   const [carBodyTypes, setCarBodyTypes] = useState<CarBodyType[]>([]);
+  const [carEngines, setCarEngines] = useState<CarEngine[]>([]);
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -82,9 +83,6 @@ export default function ManageCarVariationsPage() {
   const [bodyTypeError, setBodyTypeError] = useState<string | null>(null);
   const [bodyTypeSortDir, setBodyTypeSortDir] = useState<'asc' | 'desc'>('asc');
 
-  const [enginesByBodyType, setEnginesByBodyType] = useState<Record<number, CarEngine[]>>({});
-  const [enginesLoading, setEnginesLoading] = useState<Record<number, boolean>>({});
-  const [enginesError, setEnginesError] = useState<Record<number, string | null>>({});
   const [newEngineName, setNewEngineName] = useState<Record<number, string>>({});
   const [editingEngineId, setEditingEngineId] = useState<number | null>(null);
   const [editingEngineName, setEditingEngineName] = useState('');
@@ -110,6 +108,9 @@ export default function ManageCarVariationsPage() {
       fetch('/api/car-body-types')
         .then((r) => r.json())
         .then(setCarBodyTypes);
+      fetch('/api/car-engines')
+        .then((r) => r.json())
+        .then(setCarEngines);
     }
   }, [isAdmin, isVerifyingAuth]);
 
@@ -132,11 +133,11 @@ export default function ManageCarVariationsPage() {
 
   const getSortedEngines = useCallback(
     (bodyTypeId: number) => {
-      const engines = enginesByBodyType[bodyTypeId] || [];
+      const engines = carEngines.filter((e) => e.bodyTypeId === bodyTypeId);
       const dir = engineSortDir[bodyTypeId] || 'asc';
       return [...engines].sort((a, b) => (dir === 'asc' ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)));
     },
-    [enginesByBodyType, engineSortDir]
+    [carEngines, engineSortDir]
   );
 
   const getSortedModels = useCallback(
@@ -165,37 +166,6 @@ export default function ManageCarVariationsPage() {
     },
     [carYears, yearSortDir]
   );
-
-  const fetchEnginesForBodyType = useCallback(async (bodyTypeId: number) => {
-    setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: true }));
-    setEnginesError((prev) => ({ ...prev, [bodyTypeId]: null }));
-    try {
-      const res = await fetch(`/api/car-body-types/${bodyTypeId}/engines`);
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setEnginesError((prev) => ({ ...prev, [bodyTypeId]: data?.error || 'Помилка завантаження двигунів' }));
-        setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
-        return;
-      }
-      const engines: CarEngine[] = await res.json();
-      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: engines }));
-    } catch {
-      setEnginesError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
-      setEnginesByBodyType((prev) => ({ ...prev, [bodyTypeId]: [] }));
-    } finally {
-      setEnginesLoading((prev) => ({ ...prev, [bodyTypeId]: false }));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (expandedYearId !== null) {
-      getSortedBodyTypes(expandedYearId).forEach((bt) => {
-        if (enginesByBodyType[bt.id] === undefined && !enginesLoading[bt.id]) {
-          fetchEnginesForBodyType(bt.id);
-        }
-      });
-    }
-  }, [expandedYearId, carBodyTypes, enginesByBodyType, enginesLoading, getSortedBodyTypes, fetchEnginesForBodyType]);
 
   useEffect(() => {
     if (expandedModelId !== null && modelRefs.current[expandedModelId]) {
@@ -707,7 +677,7 @@ export default function ManageCarVariationsPage() {
         setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
         return;
       }
-      if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase())) {
+      if (carEngines.some((e) => e.bodyTypeId === bodyTypeId && e.name.trim().toLowerCase() === name.toLowerCase())) {
         setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
         return;
       }
@@ -723,13 +693,15 @@ export default function ManageCarVariationsPage() {
           return;
         }
         setNewEngineName((prev) => ({ ...prev, [bodyTypeId]: '' }));
-        await fetchEnginesForBodyType(bodyTypeId);
+        const enginesRes = await fetch('/api/car-engines');
+        const engines = await enginesRes.json();
+        setCarEngines(engines);
         setExpandedBodyTypeId(bodyTypeId);
       } catch {
         setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
       }
     },
-    [newEngineName, enginesByBodyType, fetchEnginesForBodyType]
+    [newEngineName, carEngines]
   );
   const handleEditEngine = useCallback((engine: CarEngine) => {
     setEditingEngineId(engine.id);
@@ -743,7 +715,7 @@ export default function ManageCarVariationsPage() {
         setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Введіть назву двигуна' }));
         return;
       }
-      if ((enginesByBodyType[bodyTypeId] || []).some((e) => e.name.trim().toLowerCase() === name.toLowerCase() && e.id !== engineId)) {
+      if (carEngines.some((e) => e.bodyTypeId === bodyTypeId && e.name.trim().toLowerCase() === name.toLowerCase() && e.id !== engineId)) {
         setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Такий двигун вже існує для цього типу кузова' }));
         return;
       }
@@ -760,30 +732,31 @@ export default function ManageCarVariationsPage() {
         }
         setEditingEngineId(null);
         setEditingEngineName('');
-        await fetchEnginesForBodyType(bodyTypeId);
+        const enginesRes = await fetch('/api/car-engines');
+        const engines = await enginesRes.json();
+        setCarEngines(engines);
         setExpandedBodyTypeId(bodyTypeId);
       } catch {
         setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
       }
     },
-    [editingEngineName, enginesByBodyType, fetchEnginesForBodyType]
+    [editingEngineName, carEngines]
   );
   const handleCancelEditEngine = useCallback(() => {
     setEditingEngineId(null);
     setEditingEngineName('');
   }, []);
-  const handleDeleteEngine = useCallback(
-    async (engineId: number, bodyTypeId: number) => {
-      if (!window.confirm('Видалити цей двигун?')) return;
-      try {
-        await fetch(`/api/car-engines/${engineId}`, { method: 'DELETE' });
-        fetchEnginesForBodyType(bodyTypeId);
-      } catch {
-        setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
-      }
-    },
-    [fetchEnginesForBodyType]
-  );
+  const handleDeleteEngine = useCallback(async (engineId: number, bodyTypeId: number) => {
+    if (!window.confirm('Видалити цей двигун?')) return;
+    try {
+      await fetch(`/api/car-engines/${engineId}`, { method: 'DELETE' });
+      const enginesRes = await fetch('/api/car-engines');
+      const engines = await enginesRes.json();
+      setCarEngines(engines);
+    } catch {
+      setEngineError((prev) => ({ ...prev, [bodyTypeId]: 'Помилка мережі' }));
+    }
+  }, []);
 
   const globalSearch = normalizeString(debouncedSearch.trim());
   const filteredMakes = carMakes.filter((make) => normalizeString(make.name).includes(globalSearch) || carModels.some((model) => model.makeId === make.id && normalizeString(model.name).includes(globalSearch)));
@@ -1245,6 +1218,18 @@ export default function ManageCarVariationsPage() {
                                                             </button>
                                                           </div>
                                                           {engineError[bt.id] && <div className='text-red-500 text-xs mt-1'>{engineError[bt.id]}</div>}
+                                                          {getSortedEngines(bt.id).length === 0 ? (
+                                                            <div className='text-gray-500 text-sm font-semibold'>Двигунів не знайдено.</div>
+                                                          ) : (
+                                                            <div className='flex flex-col gap-2'>
+                                                              {getSortedEngines(bt.id).map((engine) => (
+                                                                <div key={engine.id} className='rounded border border-teal-200 bg-white p-2 flex items-center justify-between'>
+                                                                  <span className='font-semibold text-gray-800'>{engine.name}</span>
+                                                                  {/* Додайте кнопки редагування/видалення, якщо потрібно */}
+                                                                </div>
+                                                              ))}
+                                                            </div>
+                                                          )}
                                                         </div>
                                                       )}
                                                     </div>
@@ -1781,85 +1766,77 @@ export default function ManageCarVariationsPage() {
                                                                                     </button>
                                                                                   </div>
                                                                                   {engineError[bt.id] && <div className='text-red-500 text-base mt-1'>{engineError[bt.id]}</div>}
-                                                                                  {enginesLoading[bt.id] ? (
-                                                                                    <div className='text-teal-700 text-base'>Завантаження...</div>
-                                                                                  ) : enginesError[bt.id] ? (
-                                                                                    <div className='text-red-500 text-base'>{enginesError[bt.id]}</div>
+                                                                                  {getSortedEngines(bt.id).length === 0 ? (
+                                                                                    <p className='text-gray-500 text-base font-semibold'>Двигунів не знайдено.</p>
                                                                                   ) : (
-                                                                                    <div>
-                                                                                      {getSortedEngines(bt.id).length === 0 ? (
-                                                                                        <p className='text-gray-500 text-base font-semibold'>Двигунів не знайдено.</p>
-                                                                                      ) : (
-                                                                                        <table className='min-w-full divide-y divide-gray-100 bg-white rounded-xl shadow-xs block sm:table'>
-                                                                                          <thead className='bg-gray-50 hidden sm:table-header-group'>
-                                                                                            <tr>
-                                                                                              <th className='px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-8'>ID</th>
-                                                                                              <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none' onClick={() => setEngineSortDir((prev) => ({ ...prev, [bt.id]: (prev[bt.id] || 'asc') === 'asc' ? 'desc' : 'asc' }))}>
-                                                                                                Назва {(engineSortDir[bt.id] || 'asc') === 'asc' ? '▲' : '▼'}
-                                                                                              </th>
-                                                                                              <th className='px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-12'>Дії</th>
-                                                                                            </tr>
-                                                                                          </thead>
-                                                                                          <tbody className='divide-y divide-gray-50 block sm:table-row-group'>
-                                                                                            {getSortedEngines(bt.id).map((engine) => (
-                                                                                              <tr
-                                                                                                key={engine.id}
-                                                                                                ref={(el) => {
-                                                                                                  engineRefs.current[engine.id] = el;
-                                                                                                }}
-                                                                                                className={`group ${editingEngineId === engine.id ? 'bg-teal-100' : ''} hover:bg-teal-100 transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none hover:cursor-pointer`}
-                                                                                              >
-                                                                                                <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 block sm:table-cell'>
-                                                                                                  <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {engine.id}
-                                                                                                </td>
-                                                                                                <td className='px-4 py-2 whitespace-nowrap text-base text-gray-900 block sm:table-cell'>
-                                                                                                  <span className='sm:hidden text-xs text-gray-500 font-semibold'>Назва:</span>
-                                                                                                  {editingEngineId === engine.id ? (
-                                                                                                    <input
-                                                                                                      type='text'
-                                                                                                      value={editingEngineName}
-                                                                                                      onChange={(e) => setEditingEngineName(e.target.value)}
-                                                                                                      className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${engineError[bt.id] && editingEngineId === engine.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-teal-400 focus:border-teal-400`}
-                                                                                                      autoFocus
-                                                                                                      placeholder='Введіть назву двигуна'
-                                                                                                      onClick={(e) => e.stopPropagation()}
-                                                                                                      onKeyDown={(e) => {
-                                                                                                        if (e.key === 'Enter') handleSaveEditEngine(engine.id, bt.id);
-                                                                                                        if (e.key === 'Escape') handleCancelEditEngine();
-                                                                                                      }}
-                                                                                                    />
-                                                                                                  ) : (
-                                                                                                    <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{engine.name}</span>
-                                                                                                  )}
-                                                                                                </td>
-                                                                                                <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
-                                                                                                  <span className='sm:hidden text-xs text-gray-500 font-semibold'>Дії:</span>
-                                                                                                  <div className='flex justify-end gap-2'>
-                                                                                                    {editingEngineId === engine.id ? (
-                                                                                                      <>
-                                                                                                        <button onClick={() => handleSaveEditEngine(engine.id, bt.id)} className='text-teal-600 hover:text-teal-800 hover:cursor-pointer' title='Зберегти двигун'>
-                                                                                                          <HiOutlineCheck size={20} />
-                                                                                                        </button>
-                                                                                                        <button onClick={handleCancelEditEngine} className='text-gray-600 hover:text-gray-800 hover:cursor-pointer' title='Скасувати'>
-                                                                                                          <HiOutlineX size={20} />
-                                                                                                        </button>
-                                                                                                      </>
-                                                                                                    ) : (
-                                                                                                      <button onClick={() => handleEditEngine(engine)} className='text-teal-600 hover:text-teal-800 hover:cursor-pointer' title='Редагувати двигун'>
-                                                                                                        <HiOutlinePencil size={20} />
-                                                                                                      </button>
-                                                                                                    )}
-                                                                                                    <button onClick={() => handleDeleteEngine(engine.id, bt.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer' title='Видалити двигун'>
-                                                                                                      <HiOutlineTrash size={20} />
+                                                                                    <table className='min-w-full divide-y divide-gray-100 bg-white rounded-xl shadow-xs block sm:table'>
+                                                                                      <thead className='bg-gray-50 hidden sm:table-header-group'>
+                                                                                        <tr>
+                                                                                          <th className='px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-8'>ID</th>
+                                                                                          <th className='px-4 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none' onClick={() => setEngineSortDir((prev) => ({ ...prev, [bt.id]: (prev[bt.id] || 'asc') === 'asc' ? 'desc' : 'asc' }))}>
+                                                                                            Назва {(engineSortDir[bt.id] || 'asc') === 'asc' ? '▲' : '▼'}
+                                                                                          </th>
+                                                                                          <th className='px-4 py-2 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-12'>Дії</th>
+                                                                                        </tr>
+                                                                                      </thead>
+                                                                                      <tbody className='divide-y divide-gray-50 block sm:table-row-group'>
+                                                                                        {getSortedEngines(bt.id).map((engine) => (
+                                                                                          <tr
+                                                                                            key={engine.id}
+                                                                                            ref={(el) => {
+                                                                                              engineRefs.current[engine.id] = el;
+                                                                                            }}
+                                                                                            className={`group ${editingEngineId === engine.id ? 'bg-teal-100' : ''} hover:bg-teal-100 transition-colors duration-100 block sm:table-row mb-2 sm:mb-0 rounded-lg sm:rounded-none shadow-sm sm:shadow-none hover:cursor-pointer`}
+                                                                                          >
+                                                                                            <td className='px-3 py-2 whitespace-nowrap text-base font-semibold text-gray-700 block sm:table-cell'>
+                                                                                              <span className='sm:hidden text-xs text-gray-500 font-semibold'>ID:</span> {engine.id}
+                                                                                            </td>
+                                                                                            <td className='px-4 py-2 whitespace-nowrap text-base text-gray-900 block sm:table-cell'>
+                                                                                              <span className='sm:hidden text-xs text-gray-500 font-semibold'>Назва:</span>
+                                                                                              {editingEngineId === engine.id ? (
+                                                                                                <input
+                                                                                                  type='text'
+                                                                                                  value={editingEngineName}
+                                                                                                  onChange={(e) => setEditingEngineName(e.target.value)}
+                                                                                                  className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${engineError[bt.id] && editingEngineId === engine.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-teal-400 focus:border-teal-400`}
+                                                                                                  autoFocus
+                                                                                                  placeholder='Введіть назву двигуна'
+                                                                                                  onClick={(e) => e.stopPropagation()}
+                                                                                                  onKeyDown={(e) => {
+                                                                                                    if (e.key === 'Enter') handleSaveEditEngine(engine.id, bt.id);
+                                                                                                    if (e.key === 'Escape') handleCancelEditEngine();
+                                                                                                  }}
+                                                                                                />
+                                                                                              ) : (
+                                                                                                <span className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0'>{engine.name}</span>
+                                                                                              )}
+                                                                                            </td>
+                                                                                            <td className='px-4 py-2 whitespace-nowrap text-base text-right block sm:table-cell'>
+                                                                                              <span className='sm:hidden text-xs text-gray-500 font-semibold'>Дії:</span>
+                                                                                              <div className='flex justify-end gap-2'>
+                                                                                                {editingEngineId === engine.id ? (
+                                                                                                  <>
+                                                                                                    <button onClick={() => handleSaveEditEngine(engine.id, bt.id)} className='text-teal-600 hover:text-teal-800 hover:cursor-pointer' title='Зберегти двигун'>
+                                                                                                      <HiOutlineCheck size={20} />
                                                                                                     </button>
-                                                                                                  </div>
-                                                                                                </td>
-                                                                                              </tr>
-                                                                                            ))}
-                                                                                          </tbody>
-                                                                                        </table>
-                                                                                      )}
-                                                                                    </div>
+                                                                                                    <button onClick={handleCancelEditEngine} className='text-gray-600 hover:text-gray-800 hover:cursor-pointer' title='Скасувати'>
+                                                                                                      <HiOutlineX size={20} />
+                                                                                                    </button>
+                                                                                                  </>
+                                                                                                ) : (
+                                                                                                  <button onClick={() => handleEditEngine(engine)} className='text-teal-600 hover:text-teal-800 hover:cursor-pointer' title='Редагувати двигун'>
+                                                                                                    <HiOutlinePencil size={20} />
+                                                                                                  </button>
+                                                                                                )}
+                                                                                                <button onClick={() => handleDeleteEngine(engine.id, bt.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer' title='Видалити двигун'>
+                                                                                                  <HiOutlineTrash size={20} />
+                                                                                                </button>
+                                                                                              </div>
+                                                                                            </td>
+                                                                                          </tr>
+                                                                                        ))}
+                                                                                      </tbody>
+                                                                                    </table>
                                                                                   )}
                                                                                 </div>
                                                                               </td>
