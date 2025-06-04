@@ -145,7 +145,6 @@ model Compatibility {
 
 model User {
   id           Int      @id @default(autoincrement())
-  telegramId   BigInt?  @unique
   email        String   @unique
   passwordHash String
   firstName    String

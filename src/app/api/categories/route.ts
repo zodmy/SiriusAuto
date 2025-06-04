@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(Array.isArray(body) ? createdCategories : createdCategories[0], { status: 201 });
   } catch (error: unknown) {
-    console.error('Помилка створення категорії(й):', error);
+    console.error('Помилка створення категорії:', error);
 
     if (error instanceof Error && (error.message.startsWith('Батьківську категорію з назвою') || error.message.startsWith('Некоректне значення для parentName'))) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -81,9 +81,9 @@ export async function POST(request: NextRequest) {
       };
 
       if (potentialErrorObject.code === 'P2002' && potentialErrorObject.meta?.target?.includes('name')) {
-        return NextResponse.json({ error: 'Категорія(ї) з такою назвою вже існує' }, { status: 409 });
+        return NextResponse.json({ error: 'Категорія з такою назвою вже існує' }, { status: 409 });
       } if (potentialErrorObject.code === 'P2003' && potentialErrorObject.meta?.field_name === 'parentId') {
-        return NextResponse.json({ error: 'Не вдалося створити категорію(ї): вказано неіснуючу батьківську категорію (parentId).' }, { status: 400 });
+        return NextResponse.json({ error: 'Не вдалося створити категорію: вказано неіснуючу батьківську категорію (parentId).' }, { status: 400 });
       }
     }
     return NextResponse.json({ error: 'Не вдалося створити категорію(ї)' }, { status: 500 });

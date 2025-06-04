@@ -98,7 +98,10 @@ export default function ManageCategoriesPage() {
   const [editingCategoryName, setEditingCategoryName] = useState('');
   const [editingParentSearch, setEditingParentSearch] = useState('');
   const [editingParentSearchFocused, setEditingParentSearchFocused] = useState(false);
-  const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [subCategoryName, setSubCategoryName] = useState('');
+  const [subCreateError, setSubCreateError] = useState<string | null>(null);
 
   const [sortBy, setSortBy] = useState<'id' | 'name'>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -173,7 +176,7 @@ export default function ManageCategoriesPage() {
     setEditingCategoryName('');
     setEditingNameFocused(false);
     setEditingParentFocused(false);
-    setCategoryError(null);
+    setEditError(null);
   }, []);
 
   useEffect(() => {
@@ -192,14 +195,14 @@ export default function ManageCategoriesPage() {
   const getFilteredParentOptions = useCallback(
     (searchTerm: string) => {
       const normalizedSearch = normalizeString(searchTerm.trim());
-      return categories.filter((c) => normalizeString(c.name).includes(normalizedSearch) && c.id !== editingCategoryId);
+      return categories.filter((c) => normalizeString(c.name).includes(normalizedSearch) && c.id !== editingCategoryId).sort((a, b) => a.name.localeCompare(b.name));
     },
     [categories, editingCategoryId, normalizeString]
   );
   const handleAddCategory = useCallback(async () => {
-    setCategoryError(null);
+    setCreateError(null);
     if (!newCategoryName.trim()) {
-      setCategoryError('Введіть назву категорії');
+      setCreateError('Введіть назву категорії');
       return;
     }
 
@@ -216,13 +219,15 @@ export default function ManageCategoriesPage() {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setCategoryError(data?.error || 'Помилка створення категорії');
+        setCreateError(data?.error || 'Помилка створення категорії');
         return;
       }
 
       setNewCategoryName('');
       if (selectedParentId === null) setSelectedParentId(null);
       await fetchCategories();
+      setSortBy('name');
+      setSortDir('asc');
 
       if (parentIdForSub) {
         setExpandedCategoryId(parentIdForSub);
@@ -235,11 +240,46 @@ export default function ManageCategoriesPage() {
         }
       }
     } catch {
-      setCategoryError('Помилка мережі');
+      setCreateError('Помилка мережі');
     }
   }, [newCategoryName, selectedParentId, fetchCategories, normalizeString]);
+
+  const handleAddSubCategory = useCallback(
+    async (parentId: number) => {
+      setSubCreateError(null);
+      if (!subCategoryName.trim()) {
+        setSubCreateError('Введіть назву категорії');
+        return;
+      }
+      try {
+        const res = await fetch('/api/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: subCategoryName.trim(), parentId }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setSubCreateError(data?.error || 'Помилка створення категорії');
+          return;
+        }
+        setSubCategoryName('');
+        await fetchCategories();
+        setSortBy('name');
+        setSortDir('asc');
+        setExpandedCategoryId(parentId);
+      } catch {
+        setSubCreateError('Помилка мережі');
+      }
+    },
+    [subCategoryName, fetchCategories]
+  );
+
   const handleEditCategory = useCallback(
     (category: Category) => {
+      // clear create form when editing
+      setNewCategoryName('');
+      setSelectedParentId(null);
+      setParentSearch('');
       setEditingCategoryId(category.id);
       setEditingCategoryName(category.name);
       if (category.parentId) {
@@ -249,22 +289,22 @@ export default function ManageCategoriesPage() {
         setEditingParentSearch('');
       }
       setEditingParentSearchFocused(true);
-      setCategoryError(null);
+      setEditError(null);
     },
     [categories]
   );
 
   const handleSaveEditCategory = useCallback(
     async (id: number) => {
-      setCategoryError(null);
+      setEditError(null);
       if (!editingCategoryName.trim()) {
-        setCategoryError('Введіть назву категорії');
+        setEditError('Введіть назву категорії');
         return;
       }
 
       let parentIdToSave: number | null = null;
       const trimmedParent = editingParentSearch.trim();
-      if (!trimmedParent || trimmedParent === 'Без батьківської') {
+      if (!trimmedParent || trimmedParent === 'Немає') {
         parentIdToSave = null;
       } else {
         const found = categories.find((c) => c.name === trimmedParent);
@@ -287,7 +327,7 @@ export default function ManageCategoriesPage() {
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setCategoryError(data?.error || 'Помилка редагування категорії');
+          setEditError(data?.error || 'Помилка редагування категорії');
           return;
         }
 
@@ -297,10 +337,40 @@ export default function ManageCategoriesPage() {
         await fetchCategories();
         setExpandedCategoryId(id);
       } catch {
-        setCategoryError('Помилка мережі');
+        setEditError('Помилка мережі');
       }
     },
     [editingCategoryName, editingParentSearch, categories, fetchCategories]
+  );
+
+  const handleSaveEditCategoryWithParent = useCallback(
+    async (id: number, parentIdOverride: number | null) => {
+      setEditError(null);
+      if (!editingCategoryName.trim()) {
+        setEditError('Введіть назву категорії');
+        return;
+      }
+      try {
+        const res = await fetch(`/api/categories/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: editingCategoryName.trim(), parentId: parentIdOverride }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setEditError(data?.error || 'Помилка редагування категорії');
+          return;
+        }
+        setEditingCategoryId(null);
+        setEditingCategoryName('');
+        setEditingParentSearchFocused(false);
+        await fetchCategories();
+        setExpandedCategoryId(id);
+      } catch {
+        setEditError('Помилка мережі');
+      }
+    },
+    [editingCategoryName, fetchCategories]
   );
 
   const handleDeleteCategory = useCallback(
@@ -314,7 +384,7 @@ export default function ManageCategoriesPage() {
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));
-          setCategoryError(data?.error || 'Помилка видалення категорії');
+          setEditError(data?.error || 'Помилка видалення категорії');
           return;
         }
 
@@ -324,7 +394,7 @@ export default function ManageCategoriesPage() {
           setExpandedCategoryId(null);
         }
       } catch {
-        setCategoryError('Помилка мережі');
+        setEditError('Помилка мережі');
       }
     },
     [expandedCategoryId, fetchCategories]
@@ -332,7 +402,7 @@ export default function ManageCategoriesPage() {
 
   const getChildCategories = useCallback(
     (parentId: number) => {
-      return categories.filter((c) => c.parentId === parentId);
+      return categories.filter((c) => c.parentId === parentId).sort((a, b) => a.name.localeCompare(b.name));
     },
     [categories]
   );
@@ -405,15 +475,15 @@ export default function ManageCategoriesPage() {
               value={newCategoryName}
               onChange={(e) => {
                 setNewCategoryName(e.target.value);
-                setCategoryError(null);
+                setCreateError(null);
               }}
               placeholder='Нова категорія'
-              className={`border rounded-lg px-3 py-2 flex-1 text-base sm:text-lg font-semibold text-gray-900 bg-white ${categoryError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
+              className={`border rounded-lg px-3 py-2 flex-1 text-base sm:text-lg font-semibold text-gray-900 bg-white ${createError ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleAddCategory();
                 if (e.key === 'Escape') {
                   setNewCategoryName('');
-                  setCategoryError(null);
+                  setCreateError(null);
                 }
               }}
             />{' '}
@@ -430,9 +500,9 @@ export default function ManageCategoriesPage() {
                 className='border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-lg font-semibold text-gray-900 bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400 w-full'
               />
               {parentSearchFocused && (
-                <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                <div className='absolute z-10 mt-1 w-max bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto overflow-x-hidden'>
                   <div
-                    className='p-2 text-base font-semibold hover:bg-blue-100 cursor-pointer'
+                    className='p-2 text-base font-semibold text-gray-500 hover:bg-blue-100 cursor-pointer'
                     onClick={() => {
                       setSelectedParentId(null);
                       setParentSearch('');
@@ -443,7 +513,7 @@ export default function ManageCategoriesPage() {
                   {getFilteredParentOptions(parentSearch).map((cat) => (
                     <div
                       key={cat.id}
-                      className='p-2 text-base font-semibold hover:bg-blue-100 cursor-pointer'
+                      className='p-2 text-base font-semibold text-gray-900 hover:bg-blue-100 cursor-pointer'
                       onClick={() => {
                         setSelectedParentId(cat.id);
                         setParentSearch(cat.name);
@@ -454,26 +524,12 @@ export default function ManageCategoriesPage() {
                   ))}
                 </div>
               )}
-              {selectedParentId !== null && !parentSearchFocused && (
-                <div className='flex items-center mt-1'>
-                  <span className='text-xs text-blue-600'>Вибрано: {categories.find((c) => c.id === selectedParentId)?.name}</span>
-                  <button
-                    onClick={() => {
-                      setSelectedParentId(null);
-                      setParentSearch('');
-                    }}
-                    className='ml-1 text-xs text-red-600'
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
             </div>
             <button onClick={handleAddCategory} className='bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow p-2' title='Додати категорію'>
               <HiOutlinePlus className='text-white' size={22} />
             </button>
           </div>
-          {categoryError && <div className='text-red-600 text-xs sm:text-sm font-medium mt-1 px-1'>{categoryError}</div>}
+          {createError && <div className='text-red-600 text-xs sm:text-sm font-medium mt-1 px-1'>{createError}</div>}
         </div>{' '}
         <div className='sm:hidden'>
           {isLoading ? (
@@ -486,18 +542,20 @@ export default function ManageCategoriesPage() {
                 <div key={category.id} className={`rounded-xl border border-gray-200 bg-white shadow-sm p-3 ${expandedCategoryId === category.id ? 'bg-gray-100' : ''}`} onClick={() => setExpandedCategoryId(expandedCategoryId === category.id ? null : category.id)}>
                   <div className='flex items-center justify-between gap-2'>
                     <div className='font-bold text-gray-900 text-base flex-1'>
-                      {editingCategoryId === category.id ? (
+                      {/* Only one field: name OR parent, never both */}
+                      {editingCategoryId === category.id && editingNameFocused ? (
                         <input
                           type='text'
                           value={editingCategoryName}
                           onChange={(e) => setEditingCategoryName(e.target.value)}
-                          className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${categoryError && editingCategoryId === category.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
+                          className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${editError && editingCategoryId === category.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
                           autoFocus
                           onClick={(e) => e.stopPropagation()}
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') handleSaveEditCategory(category.id);
                             if (e.key === 'Escape') handleCancelEdit();
                           }}
+                          onBlur={() => setEditingNameFocused(false)}
                         />
                       ) : (
                         <span
@@ -505,6 +563,8 @@ export default function ManageCategoriesPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditCategory(category);
+                            setEditingNameFocused(true);
+                            setEditingParentFocused(false);
                           }}
                         >
                           {category.name}
@@ -516,6 +576,8 @@ export default function ManageCategoriesPage() {
                           onClick={(e) => {
                             e.stopPropagation();
                             handleEditCategory(category);
+                            setEditingParentFocused(true);
+                            setEditingNameFocused(false);
                           }}
                         >
                           (батьківська: {category.parent.name})
@@ -524,168 +586,119 @@ export default function ManageCategoriesPage() {
                       <span className='ml-2 text-xs text-gray-600 font-normal'>ID: {category.id}</span>
                     </div>
                     <div className='flex gap-1'>
+                      {!category.parent && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditCategory(category);
+                            setEditingParentFocused(true);
+                            setEditingNameFocused(false);
+                          }}
+                          className='text-blue-600 hover:text-blue-800 hover:cursor-pointer'
+                          title='Додати батьківську категорію'
+                        >
+                          <HiOutlinePlus size={20} />
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteCategory(category.id);
                         }}
-                        className='text-red-600 hover:text-red-800'
+                        className='text-red-600 hover:text-red-800 hover:cursor-pointer'
                       >
                         <HiOutlineTrash size={20} />
                       </button>
                     </div>
                   </div>
-                  {expandedCategoryId === category.id && editingCategoryId === category.id && (
-                    <div className='mt-3'>
-                      <label className='block text-sm font-medium text-gray-800 mb-1'>Батьківська категорія</label>
-                      <div className='relative'>
-                        <input
-                          type='text'
-                          value={editingParentSearch}
-                          onChange={(e) => setEditingParentSearch(e.target.value)}
-                          onFocus={(e) => {
-                            setEditingParentSearchFocused(true);
-                            e.target.select();
-                          }}
-                          onBlur={() => {
-                            setTimeout(() => setEditingParentSearchFocused(false), 200);
-                          }}
-                          placeholder='Батьківська категорія'
-                          className='w-full border border-gray-300 rounded-lg px-3 py-2 text-base font-semibold text-gray-900 bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
-                          onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleSaveEditCategory(category.id);
-                            if (e.key === 'Escape') handleCancelEdit();
-                          }}
-                        />
-                        {editingParentSearchFocused && (
-                          <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>                            <div
-                              className='p-2 text-base font-semibold hover:bg-blue-100 cursor-pointer'
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingParentSearch('');
-                                handleSaveEditCategory(category.id);
-                              }}
-                            >
-                              Без батьківської
-                            </div>
-                            {getFilteredParentOptions(editingParentSearch).map((cat) => (
-                              <div
-                                key={cat.id}
-                                className='p-2 text-base font-semibold hover:bg-blue-100 cursor-pointer'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingParentSearch(cat.name);
-                                  handleSaveEditCategory(category.id);
-                                }}
-                              >
-                                {cat.name}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {expandedCategoryId === category.id && (
-                    <div className='mt-3 sm:hidden'>
-                      <label className='block text-sm font-medium text-gray-800 mb-1'>Батьківська категорія</label>
-                      <div className='relative'>
-                        {editingCategoryId === category.id && editingParentFocused ? (
-                          <input
-                            ref={(el) => {
-                              parentInputRefs.current[category.id] = el;
-                            }}
-                            type='text'
-                            value={editingParentSearch}
-                            onChange={(e) => setEditingParentSearch(e.target.value)}
-                            onFocus={(e) => {
-                              setEditingParentFocused(true);
-                              e.target.select();
-                            }}
-                            onBlur={() => setEditingParentFocused(false)}
-                            placeholder='Батьківська категорія'
-                            className='w-full border border-gray-300 rounded-lg px-3 py-2 text-base font-semibold text-gray-900 bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
-                            onClick={(e) => e.stopPropagation()}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveEditCategory(category.id);
-                              if (e.key === 'Escape') handleCancelEdit();
-                            }}
-                          />
-                        ) : (
-                          <span
-                            className='text-gray-800 cursor-pointer hover:text-blue-600 transition-colors font-semibold'
+                  {/* Батьківська категорія: окремий блок під назвою, якщо editingParentFocused */}
+                  {editingCategoryId === category.id && editingParentFocused && (
+                    <div className='relative mt-2'>
+                      <input
+                        ref={(el) => {
+                          parentInputRefs.current[category.id] = el;
+                        }}
+                        type='text'
+                        value={editingParentSearch}
+                        onChange={(e) => setEditingParentSearch(e.target.value)}
+                        onFocus={(e) => {
+                          setEditingParentFocused(true);
+                          e.target.select();
+                        }}
+                        onBlur={() => setTimeout(() => setEditingParentFocused(false), 200)}
+                        placeholder='Батьківська категорія'
+                        className='w-full border border-gray-300 rounded-lg px-3 py-2 text-base font-semibold text-gray-900 bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleSaveEditCategory(category.id);
+                          if (e.key === 'Escape') handleCancelEdit();
+                        }}
+                      />
+                      {editingParentFocused && (
+                        <div className='absolute z-10 mt-1 w-max bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto overflow-x-hidden'>
+                          <div
+                            className='p-2 text-base font-semibold text-gray-500 hover:bg-blue-100 cursor-pointer'
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleEditCategory(category);
-                              setEditingParentFocused(true);
-                              setEditingNameFocused(false);
+                              handleSaveEditCategoryWithParent(category.id, null);
                             }}
                           >
-                            {category.parent ? category.parent.name : 'Немає'}
-                          </span>
-                        )}
-                        {editingCategoryId === category.id && editingParentFocused && (
-                          <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                            Без батьківської
+                          </div>
+                          {getFilteredParentOptions(editingParentSearch).map((cat) => (
                             <div
-                              className='p-2 text-base font-bold text-gray-900 hover:bg-blue-100 cursor-pointer'
+                              key={cat.id}
+                              className='p-2 text-base font-semibold text-gray-900 hover:bg-blue-100 cursor-pointer'
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setEditingParentSearch('');
+                                handleSaveEditCategoryWithParent(category.id, cat.id);
                               }}
                             >
-                              Без батьківської
-                            </div>
-                            {getFilteredParentOptions(editingParentSearch).map((cat) => (
-                              <div
-                                key={cat.id}
-                                className='p-2 text-base font-bold text-gray-900 hover:bg-blue-100 cursor-pointer'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setEditingParentSearch(cat.name);
-                                }}
-                              >
-                                {cat.name}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {expandedCategoryId === category.id && (
-                    <div className='mt-3'>
-                      <div className='font-semibold text-blue-700 mb-2'>Підкатегорії:</div>
-                      {getChildCategories(category.id).length === 0 ? (
-                        <div className='text-gray-700 text-sm font-semibold'>Підкатегорій не знайдено.</div>
-                      ) : (
-                        <div className='flex flex-col gap-2 pl-3 border-l-2 border-blue-200'>
-                          {getChildCategories(category.id).map((child) => (
-                            <div key={child.id} className='flex justify-between items-center p-2 bg-blue-50 rounded-lg'>
-                              <span
-                                className='font-semibold text-gray-900 cursor-pointer hover:text-blue-600 transition-colors'
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditCategory(child);
-                                }}
-                              >
-                                {child.name}
-                              </span>
-                              <div className='flex gap-1'>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteCategory(child.id);
-                                  }}
-                                  className='text-red-600 hover:text-red-800'
-                                >
-                                  <HiOutlineTrash size={18} />
-                                </button>
-                              </div>
+                              {cat.name}
                             </div>
                           ))}
                         </div>
                       )}
+                    </div>
+                  )}
+                  {expandedCategoryId === category.id && (
+                    <div className='mt-3 flex flex-col gap-3 p-2 bg-gray-50 rounded-lg sm:hidden'>
+                      <input
+                        type='text'
+                        value={subCategoryName}
+                        onChange={(e) => {
+                          setSubCategoryName(e.target.value);
+                          setSubCreateError(null);
+                        }}
+                        placeholder={`Додати підкатегорію для "${category.name}"`}
+                        className='border border-gray-300 rounded-lg px-3 py-2 text-base font-semibold text-gray-900 bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddSubCategory(category.id);
+                        }}
+                        className='self-start bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 hover:cursor-pointer transition-colors'
+                      >
+                        Додати підкатегорію
+                      </button>
+                      {subCreateError && <div className='text-red-600 text-sm'>{subCreateError}</div>}
+                      {/* List child categories */}
+                      <div className='mt-2'>
+                        {getChildCategories(category.id).length === 0 ? (
+                          <div className='text-gray-700 text-sm'>Підкатегорій не знайдено.</div>
+                        ) : (
+                          getChildCategories(category.id).map((child) => (
+                            <div key={child.id} className='flex justify-between items-center py-1'>
+                              <span className='text-gray-900 font-medium'>{child.name}</span>
+                              <button onClick={() => handleDeleteCategory(child.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer' title='Видалити підкатегорію'>
+                                <HiOutlineTrash size={18} />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
@@ -693,7 +706,7 @@ export default function ManageCategoriesPage() {
             </div>
           )}
         </div>{' '}
-        <div className='bg-white rounded-lg shadow border border-gray-200 overflow-y-auto -mx-2 px-2 sm:mx-0 sm:px-0 hidden sm:block'>
+        <div className='bg-white rounded-lg shadow border border-gray-200 -mx-2 px-2 sm:mx-0 sm:px-0 hidden sm:block'>
           {isLoading ? (
             <CategorySkeleton />
           ) : (
@@ -751,26 +764,29 @@ export default function ManageCategoriesPage() {
                         <td className='px-6 py-3 whitespace-nowrap block sm:table-cell'>
                           <span className='sm:hidden text-xs text-gray-700 font-semibold'>Категорія:</span>
                           {editingCategoryId === category.id && editingNameFocused ? (
-                            <input
-                              ref={(el) => {
-                                nameInputRefs.current[category.id] = el;
-                              }}
-                              type='text'
-                              value={editingCategoryName}
-                              onChange={(e) => setEditingCategoryName(e.target.value)}
-                              className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${categoryError && editingCategoryId === category.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
-                              autoFocus
-                              onFocus={() => setEditingNameFocused(true)}
-                              onBlur={() => setEditingNameFocused(false)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleSaveEditCategory(category.id);
-                                if (e.key === 'Escape') handleCancelEdit();
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            />
+                            <>
+                              <input
+                                ref={(el) => {
+                                  nameInputRefs.current[category.id] = el;
+                                }}
+                                type='text'
+                                value={editingCategoryName}
+                                onChange={(e) => setEditingCategoryName(e.target.value)}
+                                className={`border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white ${editError && editingCategoryId === category.id ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-400 focus:border-blue-400`}
+                                autoFocus
+                                onFocus={() => setEditingNameFocused(true)}
+                                onBlur={() => setEditingNameFocused(false)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveEditCategory(category.id);
+                                  if (e.key === 'Escape') handleCancelEdit();
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                              {editError && editingCategoryId === category.id && <div className='text-red-600 text-xs mt-1 px-1'>{editError}</div>}
+                            </>
                           ) : (
                             <span
-                              className='block w-full font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0 cursor-pointer hover:text-blue-600 transition-colors'
+                              className='inline-block font-semibold text-gray-900 text-[17px] pl-3 sm:text-lg sm:pl-0 cursor-pointer hover:text-blue-600 transition-colors'
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditCategory(category);
@@ -797,7 +813,7 @@ export default function ManageCategoriesPage() {
                                   setEditingParentFocused(true);
                                   e.target.select();
                                 }}
-                                onBlur={() => setEditingParentFocused(false)}
+                                onBlur={() => setTimeout(() => setEditingParentFocused(false), 200)}
                                 placeholder='Батьківська категорія'
                                 className='border rounded-lg px-3 py-2 w-full text-base font-semibold text-gray-900 bg-white focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
                                 onClick={(e) => e.stopPropagation()}
@@ -805,14 +821,14 @@ export default function ManageCategoriesPage() {
                                   if (e.key === 'Enter') handleSaveEditCategory(category.id);
                                   if (e.key === 'Escape') handleCancelEdit();
                                 }}
-                              />                              {editingParentFocused && (
-                                <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                              />{' '}
+                              {editingParentFocused && (
+                                <div className='absolute z-10 mt-1 w-max bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto overflow-x-hidden'>
                                   <div
-                                    className='p-2 text-base font-bold text-gray-900 hover:bg-blue-100 cursor-pointer'
+                                    className='p-2 text-base font-bold text-gray-500 hover:bg-blue-100 cursor-pointer'
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setEditingParentSearch('');
-                                      handleSaveEditCategory(category.id);
+                                      handleSaveEditCategoryWithParent(category.id, null);
                                     }}
                                   >
                                     Без батьківської
@@ -823,8 +839,7 @@ export default function ManageCategoriesPage() {
                                       className='p-2 text-base font-bold text-gray-900 hover:bg-blue-100 cursor-pointer'
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        setEditingParentSearch(cat.name);
-                                        handleSaveEditCategory(category.id);
+                                        handleSaveEditCategoryWithParent(category.id, cat.id);
                                       }}
                                     >
                                       {cat.name}
@@ -835,7 +850,7 @@ export default function ManageCategoriesPage() {
                             </div>
                           ) : (
                             <span
-                              className='text-gray-800 cursor-pointer hover:text-blue-600 transition-colors font-semibold'
+                              className='text-gray-800 font-semibold cursor-pointer hover:text-blue-600 transition-colors'
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleEditCategory(category);
@@ -843,13 +858,27 @@ export default function ManageCategoriesPage() {
                                 setEditingNameFocused(false);
                               }}
                             >
-                              {category.parent ? category.parent.name : 'Немає'}
+                              {category.parent?.name || ''}
                             </span>
                           )}
                         </td>
                         <td className='px-6 py-3 whitespace-nowrap text-right block sm:table-cell'>
                           <span className='sm:hidden text-xs text-gray-700 font-semibold'>Дії:</span>
                           <div className='flex justify-end gap-2'>
+                            {!category.parent && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditCategory(category);
+                                  setEditingParentFocused(true);
+                                  setEditingNameFocused(false);
+                                }}
+                                className='text-blue-600 hover:text-blue-800 hover:cursor-pointer'
+                                title='Додати батьківську категорію'
+                              >
+                                <HiOutlinePlus size={20} />
+                              </button>
+                            )}
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -871,30 +900,30 @@ export default function ManageCategoriesPage() {
                                 <div className='flex gap-2'>
                                   <input
                                     type='text'
-                                    value={selectedParentId === category.id ? newCategoryName : ''}
+                                    value={subCategoryName}
                                     onChange={(e) => {
-                                      setNewCategoryName(e.target.value);
-                                      setSelectedParentId(category.id);
-                                      setCategoryError(null);
+                                      setSubCategoryName(e.target.value);
+                                      setSubCreateError(null);
                                     }}
                                     placeholder={`Створити підкатегорію для "${category.name}"`}
                                     className='border rounded-lg px-3 py-2 flex-1 text-base font-semibold text-gray-900 bg-white border-gray-300 focus:ring-2 focus:ring-blue-400 focus:border-blue-400'
                                     onClick={(e) => e.stopPropagation()}
                                     onKeyDown={(e) => {
-                                      if (e.key === 'Enter') handleAddCategory();
+                                      if (e.key === 'Enter') handleAddSubCategory(category.id);
                                     }}
                                   />
                                   <button
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      handleAddCategory();
+                                      handleAddSubCategory(category.id);
                                     }}
-                                    className='bg-blue-600 hover:bg-blue-700 text-white rounded-lg w-10 h-10 flex items-center justify-center transition-colors shadow'
+                                    className='bg-blue-600 hover:bg-blue-700 hover:cursor-pointer text-white rounded-lg w-10 h-10 flex items-center justify-center transition-colors shadow'
                                     title='Додати підкатегорію'
                                   >
                                     <HiOutlinePlus size={22} />
                                   </button>
                                 </div>
+                                {subCreateError && <div className='text-red-600 text-xs mt-1 px-1'>{subCreateError}</div>}
                               </div>
                               <h4 className='text-lg font-bold text-blue-700 mb-3'>Підкатегорії {category.name}:</h4>
                               {getChildCategories(category.id).length === 0 ? (
@@ -928,13 +957,12 @@ export default function ManageCategoriesPage() {
                                         </td>
                                         <td className='px-6 py-2 whitespace-nowrap text-right block sm:table-cell'>
                                           <div className='flex justify-end gap-2'>
-                                            {' '}
                                             <button
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 handleDeleteCategory(child.id);
                                               }}
-                                              className='text-red-600 hover:text-red-800'
+                                              className='text-red-600 hover:text-red-800 hover:cursor-pointer'
                                               title='Видалити підкатегорію'
                                             >
                                               <HiOutlineTrash size={18} />
