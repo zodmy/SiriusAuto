@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState, useRef } from 'react';
-import { HiOutlineFolder, HiOutlineArrowLeft, HiOutlineTrash, HiOutlinePlus, HiOutlineSearch } from 'react-icons/hi';
+import { HiOutlineTag, HiOutlineArrowLeft, HiOutlineTrash, HiOutlinePlus, HiOutlineSearch } from 'react-icons/hi';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
 import React from 'react';
 
@@ -276,7 +276,6 @@ export default function ManageCategoriesPage() {
 
   const handleEditCategory = useCallback(
     (category: Category) => {
-      // clear create form when editing
       setNewCategoryName('');
       setSelectedParentId(null);
       setParentSearch('');
@@ -452,10 +451,10 @@ export default function ManageCategoriesPage() {
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
             На головну
           </a>
-        </div>
+        </div>{' '}
         <h2 className='text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3'>
-          <span className='text-blue-700'>
-            <HiOutlineFolder className='inline-block mr-1' size={24} />
+          <span className='text-green-700'>
+            <HiOutlineTag className='inline-block mr-1' size={24} />
           </span>
           Керування категоріями
         </h2>

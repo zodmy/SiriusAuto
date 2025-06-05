@@ -68,7 +68,6 @@ export async function PUT(request: NextRequest) {
       where: { id },
       data: {
         name: name || undefined,
-        // if parentId is provided (number or null), use it; otherwise omit
         parentId: parentId,
       },
       include: {

@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const manufacturerId = parseInt(params.id, 10);
+  const { id } = await params;
+  const manufacturerId = parseInt(id, 10);
 
   if (isNaN(manufacturerId)) {
     return NextResponse.json({ error: 'Невалідний ID виробника' }, { status: 400 });
@@ -29,7 +30,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
-  const manufacturerId = parseInt(params.id, 10);
+  const { id } = await params;
+  const manufacturerId = parseInt(id, 10);
 
   if (isNaN(manufacturerId)) {
     return NextResponse.json({ error: 'Невалідний ID виробника' }, { status: 400 });
@@ -69,7 +71,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
-  const manufacturerId = parseInt(params.id, 10);
+  const { id } = await params;
+  const manufacturerId = parseInt(id, 10);
 
   if (isNaN(manufacturerId)) {
     return NextResponse.json({ error: 'Невалідний ID виробника' }, { status: 400 });
