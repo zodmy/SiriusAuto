@@ -34,12 +34,11 @@ export default function ProfilePage() {
     new: false,
     confirm: false,
   });
-
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isInitialCheckComplete: authReady } = useAuth();
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (authReady && !isAuthenticated) {
       router.push('/login');
       return;
     }
@@ -47,7 +46,7 @@ export default function ProfilePage() {
     if (isAuthenticated) {
       fetchProfile();
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authReady, router]);
 
   const fetchProfile = async () => {
     try {
@@ -175,8 +174,7 @@ export default function ProfilePage() {
       [field]: !prev[field],
     }));
   };
-
-  if (authLoading) {
+  if (!authReady) {
     return <div className='min-h-screen bg-gray-50'></div>;
   }
 

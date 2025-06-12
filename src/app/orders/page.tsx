@@ -30,10 +30,10 @@ export default function OrdersPage() {
   const [error, setError] = useState('');
 
   const router = useRouter();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isInitialCheckComplete: authReady } = useAuth();
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (authReady && !isAuthenticated) {
       router.push('/login');
       return;
     }
@@ -41,7 +41,7 @@ export default function OrdersPage() {
     if (isAuthenticated) {
       fetchOrders();
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authReady, router]);
 
   const fetchOrders = async () => {
     try {
@@ -97,7 +97,7 @@ export default function OrdersPage() {
     }
   };
 
-  if (authLoading || isLoading) {
+  if (!authReady || isLoading) {
     return (
       <div className='flex flex-col min-h-screen bg-gray-50'>
         <Header />
