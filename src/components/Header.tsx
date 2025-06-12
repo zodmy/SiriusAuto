@@ -5,6 +5,7 @@ import { BiCategory } from 'react-icons/bi';
 import { AiOutlineShoppingCart } from 'react-icons/ai';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCart } from '@/lib/hooks/useCart';
 
 const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -12,6 +13,7 @@ const Header = () => {
   const cartButtonRef = useRef<HTMLButtonElement>(null);
 
   const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
+  const { items, getTotalItems, getTotalPrice, isEmpty, removeItem, updateQuantity } = useCart();
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (cartRef.current && !cartRef.current.contains(event.target as Node) && cartButtonRef.current && !cartButtonRef.current.contains(event.target as Node)) {
@@ -79,20 +81,58 @@ const Header = () => {
                   </Link>
                 </div>
               )}
-            </li>
+            </li>{' '}
             <li className='relative'>
-              <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md text-sm font-medium flex items-center cursor-pointer' aria-label='Open cart'>
+              <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md text-sm font-medium flex items-center cursor-pointer relative' aria-label='Open cart'>
                 <AiOutlineShoppingCart size={24} />
+                {getTotalItems() > 0 && <span className='absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{getTotalItems()}</span>}
               </button>
               {isCartOpen && (
                 <div ref={cartRef} className='absolute right-0 mt-2 w-72 sm:w-80 md:w-96 bg-white text-gray-800 rounded-md shadow-xl z-50 p-4'>
                   <h3 className='text-lg font-semibold mb-2'>Кошик</h3>
-                  <p className='text-sm text-gray-600'>Ваш кошик порожній.</p>
-                  <div className='mt-4'>
-                    <Link href='/checkout' onClick={() => setIsCartOpen(false)} className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer'>
-                      Оформити замовлення
-                    </Link>
-                  </div>
+                  {isEmpty() ? (
+                    <p className='text-sm text-gray-600'>Ваш кошик порожній.</p>
+                  ) : (
+                    <>
+                      <div className='space-y-3 mb-4'>
+                        {items.map((item) => (
+                          <div key={item.id} className='flex items-center justify-between border-b border-gray-200 pb-2'>
+                            <div className='flex-1'>
+                              <h4 className='text-sm font-medium text-gray-900'>{item.name}</h4>
+                              <p className='text-xs text-gray-500'>
+                                ₴{item.price.toFixed(2)} × {item.quantity}
+                              </p>
+                            </div>
+                            <div className='flex items-center space-x-2'>
+                              <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className='text-gray-500 hover:text-gray-700 w-6 h-6 flex items-center justify-center border border-gray-300 rounded'>
+                                -
+                              </button>
+                              <span className='text-sm font-medium'>{item.quantity}</span>
+                              <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className='text-gray-500 hover:text-gray-700 w-6 h-6 flex items-center justify-center border border-gray-300 rounded'>
+                                +
+                              </button>
+                              <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 ml-2'>
+                                ×
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className='border-t pt-3'>
+                        <div className='flex justify-between items-center mb-3'>
+                          <span className='font-semibold'>Загальна сума:</span>
+                          <span className='font-semibold'>₴{getTotalPrice().toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {!isEmpty() && (
+                    <div className='mt-4'>
+                      <Link href='/checkout' onClick={() => setIsCartOpen(false)} className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer'>
+                        Оформити замовлення
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </li>
