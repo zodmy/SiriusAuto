@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { HiOutlineCog, HiOutlineSearch, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCheck, HiOutlineX, HiOutlineArrowLeft } from 'react-icons/hi';
+import { HiOutlineSearch, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCheck, HiOutlineX, HiOutlineArrowLeft } from 'react-icons/hi';
+import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
 
 interface CarMake {
@@ -773,10 +774,10 @@ export default function ManageCarVariationsPage() {
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
             На головну
           </a>
-        </div>
+        </div>{' '}
         <h2 className='text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3'>
           <span className='text-blue-700'>
-            <HiOutlineCog className='inline-block mr-1' size={24} />
+            <LuCar className='inline-block mr-1' size={24} />
           </span>
           Керування автомобілями
         </h2>
@@ -819,7 +820,6 @@ export default function ManageCarVariationsPage() {
             {makeError}
           </div>
         )}
-
         <div className='sm:hidden'>
           {sortedMakes.length === 0 ? (
             <div className='text-center text-gray-500 font-semibold py-6'>Нічого не знайдено</div>

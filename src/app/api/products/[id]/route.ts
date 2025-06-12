@@ -4,7 +4,8 @@ import { checkAdmin } from '@/lib/auth';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    const productId = parseInt(params.id, 10);
+    const { id } = await params;
+    const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
@@ -12,6 +13,26 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        manufacturer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        baseProduct: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!product) {
@@ -30,7 +51,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
-    const productId = parseInt(params.id, 10);
+    const { id } = await params;
+    const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
@@ -40,6 +62,26 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const product = await prisma.product.update({
       where: { id: productId },
       data,
+      include: {
+        category: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        manufacturer: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        baseProduct: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(product);
@@ -54,7 +96,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
-    const productId = parseInt(params.id, 10);
+    const { id } = await params;
+    const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
@@ -66,11 +109,12 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     return new NextResponse(null, { status: 204 });
   } catch (error: unknown) {
-    console.error(`Помилка видалення продукту з ID ${params.id}:`, error);
+    const { id } = await params;
+    console.error(`Помилка видалення продукту з ID ${id}:`, error);
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const prismaError = error as { code?: string };
       if (prismaError.code === 'P2025') {
-        return NextResponse.json({ message: `Продукт з ID ${params.id} не знайдено` }, { status: 404 });
+        return NextResponse.json({ message: `Продукт з ID ${id} не знайдено` }, { status: 404 });
       }
     }
     return NextResponse.json({ error: 'Не вдалося видалити продукт' }, { status: 500 });

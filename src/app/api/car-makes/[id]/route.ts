@@ -3,7 +3,8 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const carMakeId = parseInt(params.id, 10);
+  const { id } = await params;
+  const carMakeId = parseInt(id, 10);
 
   if (isNaN(carMakeId)) {
     return NextResponse.json({ error: 'Невалідний ID марки автомобіля' }, { status: 400 });
@@ -30,8 +31,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const resolvedParams = await params;
-  const carMakeId = parseInt(resolvedParams.id, 10);
+  const { id } = await params;
+  const carMakeId = parseInt(id, 10);
 
   if (isNaN(carMakeId)) {
     return NextResponse.json({ error: 'Невалідний ID марки автомобіля' }, { status: 400 });
@@ -72,7 +73,8 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const carMakeId = parseInt(params.id, 10);
+  const { id } = await params;
+  const carMakeId = parseInt(id, 10);
 
   if (isNaN(carMakeId)) {
     return NextResponse.json({ error: 'Невалідний ID марки автомобіля' }, { status: 400 });
