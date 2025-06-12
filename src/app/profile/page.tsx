@@ -15,8 +15,27 @@ interface ProfileData {
   updatedAt: string;
 }
 
+interface OrderItem {
+  id: number;
+  quantity: number;
+  price: string;
+  product: {
+    id: number;
+    name: string;
+  };
+}
+
+interface Order {
+  id: number;
+  totalPrice: string;
+  orderDate: string;
+  status: string;
+  orderItems: OrderItem[];
+}
+
 export default function ProfilePage() {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,6 +45,7 @@ export default function ProfilePage() {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -35,8 +55,7 @@ export default function ProfilePage() {
     confirm: false,
   });
   const router = useRouter();
-  const { isAuthenticated, isInitialCheckComplete: authReady } = useAuth();
-
+  const { isAuthenticated, isInitialCheckComplete: authReady, logout } = useAuth();
   useEffect(() => {
     if (authReady && !isAuthenticated) {
       router.push('/login');
@@ -45,6 +64,7 @@ export default function ProfilePage() {
 
     if (isAuthenticated) {
       fetchProfile();
+      fetchOrders();
     }
   }, [isAuthenticated, authReady, router]);
 
@@ -72,6 +92,26 @@ export default function ProfilePage() {
       setError('Мережева помилка');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      setOrdersLoading(true);
+      const response = await fetch('/api/orders/my', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data);
+      } else {
+        console.error('Failed to fetch orders');
+      }
+    } catch (error) {
+      console.error('Orders fetch error:', error);
+    } finally {
+      setOrdersLoading(false);
     }
   };
 
@@ -168,6 +208,40 @@ export default function ProfilePage() {
     }
   };
 
+  const getOrderStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed':
+        return 'bg-blue-100 text-blue-800';
+      case 'shipped':
+        return 'bg-purple-100 text-purple-800';
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getOrderStatusText = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Очікує обробки';
+      case 'confirmed':
+        return 'Підтверджено';
+      case 'shipped':
+        return 'Відправлено';
+      case 'delivered':
+        return 'Доставлено';
+      case 'cancelled':
+        return 'Скасовано';
+      default:
+        return status;
+    }
+  };
+
   const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
     setShowPasswords((prev) => ({
       ...prev,
@@ -221,16 +295,33 @@ export default function ProfilePage() {
       </div>
     );
   }
-
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
       <div className='flex-grow py-12 px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-2xl mx-auto'>
+        <div className='max-w-4xl mx-auto space-y-8'>
+          {/* Header with logout button */}
           <div className='bg-white shadow rounded-lg'>
             <div className='px-6 py-4 border-b border-gray-200'>
               <div className='flex justify-between items-center'>
                 <h1 className='text-2xl font-bold text-gray-900'>Особистий кабінет</h1>
+                <button
+                  onClick={async () => {
+                    await logout();
+                  }}
+                  className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'
+                >
+                  Вийти
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Personal Information Section */}
+          <div className='bg-white shadow rounded-lg'>
+            <div className='px-6 py-4 border-b border-gray-200'>
+              <div className='flex justify-between items-center'>
+                <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>
                 {!isEditing && (
                   <button onClick={() => setIsEditing(true)} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
                     Редагувати
@@ -408,12 +499,10 @@ export default function ProfilePage() {
                       <dd className='mt-1 text-sm text-gray-900'>{profileData.lastName || 'Не вказано'}</dd>
                     </div>
                   </div>
-
                   <div>
                     <dt className='text-sm font-medium text-gray-500'>Email адреса</dt>
                     <dd className='mt-1 text-sm text-gray-900'>{profileData.email}</dd>
                   </div>
-
                   <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
                     <div>
                       <dt className='text-sm font-medium text-gray-500'>Дата реєстрації</dt>
@@ -422,8 +511,78 @@ export default function ProfilePage() {
                     <div>
                       <dt className='text-sm font-medium text-gray-500'>Останнє оновлення</dt>
                       <dd className='mt-1 text-sm text-gray-900'>{new Date(profileData.updatedAt).toLocaleDateString('uk-UA')}</dd>
+                    </div>{' '}
+                  </div>{' '}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Orders Section */}
+          <div className='bg-white shadow rounded-lg'>
+            <div className='px-6 py-4 border-b border-gray-200'>
+              <h2 className='text-xl font-bold text-gray-900'>Мої замовлення</h2>
+            </div>
+            <div className='p-6'>
+              {ordersLoading ? (
+                <div className='space-y-4'>
+                  {[...Array(3)].map((_, index) => (
+                    <div key={index} className='border border-gray-200 rounded-lg p-4'>
+                      <div className='animate-pulse'>
+                        <div className='h-4 bg-gray-200 rounded w-1/4 mb-2'></div>
+                        <div className='h-3 bg-gray-200 rounded w-1/3 mb-2'></div>
+                        <div className='h-3 bg-gray-200 rounded w-1/6'></div>
+                      </div>
                     </div>
+                  ))}
+                </div>
+              ) : orders.length === 0 ? (
+                <div className='text-center py-8'>
+                  <div className='text-gray-500'>
+                    <svg className='w-12 h-12 mx-auto mb-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' />
+                    </svg>
+                    <p className='text-lg font-medium'>Замовлень поки немає</p>
+                    <p className='text-sm text-gray-400 mt-1'>Коли ви зробите своє перше замовлення, воно з&apos;явиться тут</p>
                   </div>
+                </div>
+              ) : (
+                <div className='space-y-4'>
+                  {orders.map((order) => (
+                    <div key={order.id} className='border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow'>
+                      <div className='flex justify-between items-start mb-3'>
+                        <div>
+                          <h3 className='font-medium text-gray-900'>Замовлення #{order.id}</h3>
+                          <p className='text-sm text-gray-500'>
+                            {new Date(order.orderDate).toLocaleDateString('uk-UA', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getOrderStatusColor(order.status)}`}>{getOrderStatusText(order.status)}</span>
+                      </div>
+
+                      <div className='space-y-2 mb-3'>
+                        {order.orderItems.map((item) => (
+                          <div key={item.id} className='flex justify-between items-center text-sm'>
+                            <span className='text-gray-700'>
+                              {item.product.name} × {item.quantity}
+                            </span>
+                            <span className='font-medium'>{parseFloat(item.price).toFixed(2)} ₴</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className='border-t pt-3 flex justify-between items-center'>
+                        <span className='text-sm text-gray-500'>Загальна сума:</span>
+                        <span className='font-bold text-lg text-gray-900'>{parseFloat(order.totalPrice).toFixed(2)} ₴</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
