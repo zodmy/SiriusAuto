@@ -14,23 +14,21 @@ export default function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, isAuthenticated, isLoading } = useAuth();
-
+  const { login, isAuthenticated, isInitialCheckComplete } = useAuth();
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
       setSuccessMessage('Реєстрацію завершено! Тепер ви можете увійти до системи.');
     }
   }, [searchParams]);
 
+  // Перенаправлення авторизованих користувачів після завершення початкової перевірки
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    if (isInitialCheckComplete && isAuthenticated) {
       router.push('/');
     }
-  }, [isLoading, isAuthenticated, router]);
-
+  }, [isInitialCheckComplete, isAuthenticated, router]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -43,7 +41,6 @@ export default function LoginPage() {
     } else {
       setError(result.error || 'Помилка входу');
     }
-
     setIsSubmitting(false);
   };
 

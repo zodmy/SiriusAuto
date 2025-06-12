@@ -13,7 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  isInitialCheckComplete: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   register: (userData: {
     email: string;
@@ -39,15 +39,15 @@ export const useAuth = () => {
 
 function useAuthHook() {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialCheckComplete, setIsInitialCheckComplete] = useState(false);
   const router = useRouter();
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
+    // Розпочинаємо тиху перевірку після монтування компонента
     checkAuthStatus();
   }, []);
-
   const checkAuthStatus = async () => {
     try {
       const response = await fetch('/api/auth/me', {
@@ -64,7 +64,7 @@ function useAuthHook() {
       console.error('Error checking auth status:', error);
       setUser(null);
     } finally {
-      setIsLoading(false);
+      setIsInitialCheckComplete(true);
     }
   };
 
@@ -135,11 +135,10 @@ function useAuthHook() {
       router.push('/');
     }
   };
-
   return {
     user,
     isAuthenticated,
-    isLoading,
+    isInitialCheckComplete,
     login,
     register,
     logout,

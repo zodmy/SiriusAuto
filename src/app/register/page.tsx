@@ -19,15 +19,14 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const router = useRouter();
-  const { register, isAuthenticated, isLoading } = useAuth();
-
+  const { register, isAuthenticated, isInitialCheckComplete } = useAuth();
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
+    // Перенаправлення авторизованих користувачів після завершення початкової перевірки
+    if (isInitialCheckComplete && isAuthenticated) {
       router.push('/');
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isInitialCheckComplete, isAuthenticated, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -83,7 +82,6 @@ export default function RegisterPage() {
     } else {
       setError(result.error || 'Помилка реєстрації');
     }
-
     setIsSubmitting(false);
   };
 
