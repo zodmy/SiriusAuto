@@ -46,19 +46,6 @@ export default function LoginPage() {
 
     setIsSubmitting(false);
   };
-  if (isLoading) {
-    return (
-      <div className='flex flex-col min-h-screen bg-gray-50'>
-        <Header />
-        <div className='flex-grow flex items-center justify-center'>
-          <div className='text-center'>
-            <p className='text-gray-700'>Завантаження...</p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
@@ -70,7 +57,7 @@ export default function LoginPage() {
             <h2 className='text-3xl font-extrabold text-gray-900'>Вхід до системи</h2>
             <p className='mt-2 text-sm text-gray-600'>
               Не маєте облікового запису?{' '}
-              <Link href='/register' className='font-medium text-blue-600 hover:text-blue-500'>
+              <Link href='/register' className='font-medium text-blue-600 hover:text-blue-500 cursor-pointer'>
                 Зареєструйтесь
               </Link>
             </p>
@@ -83,7 +70,7 @@ export default function LoginPage() {
                   Email адреса
                 </label>
                 <div className='mt-1'>
-                  <input id='email' name='email' type='email' autoComplete='email' required value={email} onChange={(e) => setEmail(e.target.value)} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors' placeholder='Введіть ваш email' />
+                  <input id='email' name='email' type='email' autoComplete='email' required value={email} onChange={(e) => setEmail(e.target.value)} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder='Введіть ваш email' />
                 </div>
               </div>
 
@@ -92,11 +79,12 @@ export default function LoginPage() {
                   Пароль
                 </label>
                 <div className='mt-1 relative'>
-                  <input id='password' name='password' type={showPassword ? 'text' : 'password'} autoComplete='current-password' required value={password} onChange={(e) => setPassword(e.target.value)} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors' placeholder='Введіть ваш пароль' />
-                  <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center' onClick={() => setShowPassword(!showPassword)}>
+                  <input id='password' name='password' type={showPassword ? 'text' : 'password'} autoComplete='current-password' required value={password} onChange={(e) => setPassword(e.target.value)} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder='Введіть ваш пароль' />
+                  <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => setShowPassword(!showPassword)}>
                     {showPassword ? (
                       <svg className='h-5 w-5 text-gray-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
-                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.467 8.467m1.411 1.411l-1.411 1.411m4.242 4.242l1.411-1.411m-1.411 1.411l1.411 1.411' />
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243' />
+                        <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M3 3l18 18' />
                       </svg>
                     ) : (
                       <svg className='h-5 w-5 text-gray-400' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
@@ -137,7 +125,7 @@ export default function LoginPage() {
               </div>
             )}
             <div>
-              <button type='submit' disabled={isSubmitting} className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'>
+              <button type='submit' disabled={isSubmitting} className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer'>
                 {isSubmitting ? 'Вхід...' : 'Увійти'}
               </button>
             </div>{' '}

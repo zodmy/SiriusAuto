@@ -811,7 +811,7 @@ export default function ManageCarVariationsPage() {
             aria-describedby={makeError ? 'make-error-text' : undefined}
             onClick={(e) => e.stopPropagation()}
           />
-          <button onClick={handleAddMake} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow' title='Додати марку'>
+          <button onClick={handleAddMake} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow cursor-pointer' title='Додати марку'>
             <HiOutlinePlus className='text-gray-800' size={22} />
           </button>
         </div>
@@ -1225,7 +1225,6 @@ export default function ManageCarVariationsPage() {
                                                               {getSortedEngines(bt.id).map((engine) => (
                                                                 <div key={engine.id} className='rounded border border-teal-200 bg-white p-2 flex items-center justify-between'>
                                                                   <span className='font-semibold text-gray-800'>{engine.name}</span>
-                                                                  {/* Додайте кнопки редагування/видалення, якщо потрібно */}
                                                                 </div>
                                                               ))}
                                                             </div>

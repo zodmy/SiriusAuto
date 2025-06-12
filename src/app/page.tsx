@@ -1,45 +1,90 @@
-import Image from 'next/image';
+import Link from 'next/link';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import SiriusAutoLogoDynamic from '@/components/SiriusAutoLogoDynamic';
 
 export default function Home() {
   return (
     <div className='flex flex-col min-h-screen'>
-      <Header />{' '}
-      <div className='grid grid-rows-[20px_1fr_20px] items-center justify-items-center flex-grow p-8 pb-20 gap-16 sm:p-20 font-sans'>
-        <main className='flex flex-col gap-8 row-start-2 items-center sm:items-start'>
-          <Image className='dark:invert' src='/next.svg' alt='Next.js logo' width={180} height={38} priority />
-          <ol className='list-inside list-decimal text-sm/6 text-center sm:text-left font-mono'>
-            <li className='mb-2 tracking-tight'>
-              Get started by editing <code className='bg-black/5 dark:bg-white/10 px-1 py-0.5 rounded font-mono font-semibold'>src/app/page.tsx</code>.
-            </li>
-            <li className='tracking-tight'>Save and see your changes instantly.</li>
-          </ol>
-
-          <div className='flex gap-4 items-center flex-col sm:flex-row'>
-            <a className='rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-gray-900 text-white gap-2 hover:bg-gray-700 dark:hover:bg-gray-200 dark:hover:text-gray-900 font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto' href='https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app' target='_blank' rel='noopener noreferrer'>
-              <Image className='dark:invert' src='/vercel.svg' alt='Vercel logomark' width={20} height={20} />
-              Deploy now
-            </a>
-            <a className='rounded-full border border-solid border-black/10 dark:border-white/20 transition-colors flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]' href='https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app' target='_blank' rel='noopener noreferrer'>
-              Read our docs
-            </a>
+      <Header />
+      <main className='flex-grow'>
+        <section className='bg-gradient-to-r from-gray-900 to-gray-700 text-white py-20'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='text-center'>
+              <div className='mb-8'>
+                <SiriusAutoLogoDynamic textColor='#FFFFFF' iconColor='#1c5eae' width={300} height={100} className='mx-auto' />
+              </div>
+              <h1 className='text-4xl md:text-6xl font-bold mb-6'>Автозапчастини для вашого авто</h1>
+              <p className='text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto'>Широкий асортимент якісних запчастин для різних марок автомобілів за найкращими цінами</p>
+              <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+                <Link href='/products' className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg'>
+                  Каталог товарів
+                </Link>
+                <Link href='/about' className='bg-transparent border-2 border-white hover:bg-white hover:text-gray-900 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg'>
+                  Про нас
+                </Link>
+              </div>
+            </div>
           </div>
-        </main>
-        <footer className='row-start-3 flex gap-6 flex-wrap items-center justify-center'>
-          <a className='flex items-center gap-2 hover:underline hover:underline-offset-4' href='https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app' target='_blank' rel='noopener noreferrer'>
-            <Image aria-hidden src='/file.svg' alt='File icon' width={16} height={16} />
-            Learn
-          </a>
-          <a className='flex items-center gap-2 hover:underline hover:underline-offset-4' href='https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app' target='_blank' rel='noopener noreferrer'>
-            <Image aria-hidden src='/window.svg' alt='Window icon' width={16} height={16} />
-            Examples
-          </a>
-          <a className='flex items-center gap-2 hover:underline hover:underline-offset-4' href='https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app' target='_blank' rel='noopener noreferrer'>
-            <Image aria-hidden src='/globe.svg' alt='Globe icon' width={16} height={16} />
-            Go to nextjs.org →
-          </a>
-        </footer>
-      </div>
+        </section>
+
+        <section className='py-16 bg-gray-50'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='text-center mb-12'>
+              <h2 className='text-3xl md:text-4xl font-bold text-gray-900 mb-4'>Чому обирають нас?</h2>
+              <p className='text-lg text-gray-600 max-w-2xl mx-auto'>Ми пропонуємо найкращий сервіс та якісні автозапчастини для вашого комфорту</p>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
+              <div className='text-center p-6'>
+                <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+                  </svg>
+                </div>
+                <h3 className='text-xl font-semibold text-gray-900 mb-2'>Гарантія якості</h3>
+                <p className='text-gray-600'>Всі запчастини проходять ретельну перевірку та мають офіційну гарантію</p>
+              </div>
+
+              <div className='text-center p-6'>
+                <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+                  </svg>
+                </div>
+                <h3 className='text-xl font-semibold text-gray-900 mb-2'>Швидка доставка</h3>
+                <p className='text-gray-600'>Доставляємо замовлення по всій Україні протягом 1-3 робочих днів</p>
+              </div>
+
+              <div className='text-center p-6'>
+                <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
+                  <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z' />
+                  </svg>
+                </div>
+                <h3 className='text-xl font-semibold text-gray-900 mb-2'>Підтримка 24/7</h3>
+                <p className='text-gray-600'>Наші фахівці готові допомогти вам у виборі запчастин цілодобово</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className='py-16 bg-blue-600'>
+          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
+            <h2 className='text-3xl md:text-4xl font-bold text-white mb-4'>Готові знайти потрібні запчастини?</h2>
+            <p className='text-xl text-blue-100 mb-8 max-w-2xl mx-auto'>Скористайтесь нашим каталогом або зверніться до наших консультантів</p>
+            <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+              <Link href='/products' className='bg-white text-blue-600 hover:bg-gray-100 font-bold py-3 px-8 rounded-lg transition-colors text-lg'>
+                Переглянути каталог
+              </Link>
+              <Link href='/contact' className='bg-transparent border-2 border-white hover:bg-white hover:text-blue-600 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg'>
+                Зв'язатися з нами
+              </Link>
+            </div>
+          </div>
+        </section>
+      </main>
+      <Footer />
     </div>
   );
 }

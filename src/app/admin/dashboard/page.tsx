@@ -78,16 +78,16 @@ export default function AdminDashboard() {
         </div>
         <div className='grid grid-cols-1 gap-4 mb-6'>
           {' '}
-          <Link href='/admin/dashboard/manage/car-variations' className='flex items-center justify-center gap-2 bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2'>
+          <Link href='/admin/dashboard/manage/car-variations' className='flex items-center justify-center gap-2 bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer'>
             <LuCar size={22} /> Керування автомобілями
           </Link>
-          <Link href='/admin/dashboard/manage/categories' className='flex items-center justify-center gap-2 bg-green-600 text-white p-4 rounded-lg shadow hover:bg-green-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2'>
+          <Link href='/admin/dashboard/manage/categories' className='flex items-center justify-center gap-2 bg-green-600 text-white p-4 rounded-lg shadow hover:bg-green-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 cursor-pointer'>
             <HiOutlineTag size={22} /> Керування категоріями
           </Link>{' '}
-          <Link href='/admin/dashboard/manage/products' className='flex items-center justify-center gap-2 bg-pink-600 text-white p-4 rounded-lg shadow hover:bg-pink-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2'>
+          <Link href='/admin/dashboard/manage/products' className='flex items-center justify-center gap-2 bg-pink-600 text-white p-4 rounded-lg shadow hover:bg-pink-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-2 cursor-pointer'>
             <HiOutlineCube size={22} /> Керування товарами
           </Link>
-          <Link href='/admin/dashboard/manage/manufacturers' className='flex items-center justify-center gap-2 bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2'>
+          <Link href='/admin/dashboard/manage/manufacturers' className='flex items-center justify-center gap-2 bg-purple-600 text-white p-4 rounded-lg shadow hover:bg-purple-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 cursor-pointer'>
             <HiOutlineOfficeBuilding size={22} /> Керування виробниками
           </Link>
         </div>
