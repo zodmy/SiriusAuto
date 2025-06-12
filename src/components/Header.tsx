@@ -150,12 +150,10 @@ const Header = () => {
         <div className='flex items-center justify-between'>
           <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center justify-center' aria-label='Toggle menu'>
             {isMobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
-          </button>
-
+          </button>{' '}
           <Link href='/' className='flex items-center'>
-            <Image src='/SiriusAutoLogo.svg' alt='Sirius Auto Logo' width={40} height={40} />
+            <Image src='/SiriusAutoLogo.svg' alt='Sirius Auto Logo' width={120} height={32} />
           </Link>
-
           <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center justify-center relative' aria-label='Open cart'>
             <AiOutlineShoppingCart size={24} />
             {getTotalItems() > 0 && <span className='absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{getTotalItems()}</span>}
