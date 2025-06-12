@@ -301,13 +301,12 @@ export default function ManageManufacturersPage() {
                 }
               }}
             />
-            <button onClick={handleAddManufacturer} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg sm:w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow p-2' title='Додати виробника'>
+            <button onClick={handleAddManufacturer} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg sm:w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow p-2 cursor-pointer' title='Додати виробника'>
               <HiOutlinePlus className='text-white' size={22} />
             </button>
           </div>
           {createError && <div className='text-red-600 text-xs sm:text-sm font-medium mt-1 px-1'>{createError}</div>}
         </div>
-        {/* Mobile View */}
         <div className='sm:hidden'>
           {isLoading ? (
             <ManufacturerSkeleton />
@@ -364,7 +363,6 @@ export default function ManageManufacturersPage() {
             </div>
           )}
         </div>
-        {/* Desktop View */}
         <div className='bg-white rounded-lg shadow border border-gray-200 -mx-2 px-2 sm:mx-0 sm:px-0 hidden sm:block'>
           {isLoading ? (
             <ManufacturerSkeleton />

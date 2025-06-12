@@ -524,7 +524,7 @@ export default function ManageCategoriesPage() {
                 </div>
               )}
             </div>
-            <button onClick={handleAddCategory} className='bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow p-2' title='Додати категорію'>
+            <button onClick={handleAddCategory} className='bg-blue-600 hover:bg-blue-700 text-white rounded-lg sm:w-10 h-10 flex items-center justify-center hover:cursor-pointer transition-colors shadow p-2 cursor-pointer' title='Додати категорію'>
               <HiOutlinePlus className='text-white' size={22} />
             </button>
           </div>
@@ -541,7 +541,6 @@ export default function ManageCategoriesPage() {
                 <div key={category.id} className={`rounded-xl border border-gray-200 bg-white shadow-sm p-3 ${expandedCategoryId === category.id ? 'bg-gray-100' : ''}`} onClick={() => setExpandedCategoryId(expandedCategoryId === category.id ? null : category.id)}>
                   <div className='flex items-center justify-between gap-2'>
                     <div className='font-bold text-gray-900 text-base flex-1'>
-                      {/* Only one field: name OR parent, never both */}
                       {editingCategoryId === category.id && editingNameFocused ? (
                         <input
                           type='text'
@@ -610,7 +609,6 @@ export default function ManageCategoriesPage() {
                       </button>
                     </div>
                   </div>
-                  {/* Батьківська категорія: окремий блок під назвою, якщо editingParentFocused */}
                   {editingCategoryId === category.id && editingParentFocused && (
                     <div className='relative mt-2'>
                       <input
@@ -683,7 +681,6 @@ export default function ManageCategoriesPage() {
                         Додати підкатегорію
                       </button>
                       {subCreateError && <div className='text-red-600 text-sm'>{subCreateError}</div>}
-                      {/* List child categories */}
                       <div className='mt-2'>
                         {getChildCategories(category.id).length === 0 ? (
                           <div className='text-gray-700 text-sm'>Підкатегорій не знайдено.</div>
