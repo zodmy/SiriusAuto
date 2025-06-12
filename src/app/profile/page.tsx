@@ -300,7 +300,6 @@ export default function ProfilePage() {
       <Header />
       <div className='flex-grow py-12 px-4 sm:px-6 lg:px-8'>
         <div className='max-w-4xl mx-auto space-y-8'>
-          {/* Header with logout button */}
           <div className='bg-white shadow rounded-lg'>
             <div className='px-6 py-4 border-b border-gray-200'>
               <div className='flex justify-between items-center'>
@@ -317,7 +316,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Personal Information Section */}
           <div className='bg-white shadow rounded-lg'>
             <div className='px-6 py-4 border-b border-gray-200'>
               <div className='flex justify-between items-center'>
@@ -518,7 +516,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Orders Section */}
           <div className='bg-white shadow rounded-lg'>
             <div className='px-6 py-4 border-b border-gray-200'>
               <h2 className='text-xl font-bold text-gray-900'>Мої замовлення</h2>
