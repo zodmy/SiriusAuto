@@ -93,51 +93,77 @@ const Header = () => {
                   {getTotalItems() > 0 && <span className='absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{getTotalItems()}</span>}
                 </button>
                 {isCartOpen && (
-                  <div ref={cartRef} className='absolute right-0 mt-2 w-72 sm:w-80 md:w-96 bg-white text-gray-800 rounded-md shadow-xl z-50 p-4'>
-                    <h3 className='text-lg font-semibold mb-2'>Кошик</h3>
-                    {isEmpty() ? (
-                      <p className='text-sm text-gray-600'>Ваш кошик порожній.</p>
-                    ) : (
-                      <>
-                        <div className='space-y-3 mb-4'>
-                          {items.map((item) => (
-                            <div key={item.id} className='flex items-center justify-between border-b border-gray-200 pb-2'>
-                              <div className='flex-1'>
-                                <h4 className='text-sm font-medium text-gray-900'>{item.name}</h4>
-                                <p className='text-xs text-gray-500'>
-                                  ₴{item.price.toFixed(2)} × {item.quantity}
-                                </p>
-                              </div>
-                              <div className='flex items-center space-x-2'>
-                                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className='text-gray-500 hover:text-gray-700 w-6 h-6 flex items-center justify-center border border-gray-300 rounded'>
-                                  -
-                                </button>
-                                <span className='text-sm font-medium'>{item.quantity}</span>
-                                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className='text-gray-500 hover:text-gray-700 w-6 h-6 flex items-center justify-center border border-gray-300 rounded'>
-                                  +
-                                </button>
-                                <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 ml-2'>
-                                  ×
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className='border-t pt-3'>
-                          <div className='flex justify-between items-center mb-3'>
-                            <span className='font-semibold'>Загальна сума:</span>
-                            <span className='font-semibold'>₴{getTotalPrice().toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                    {!isEmpty() && (
-                      <div className='mt-4'>
-                        <Link href='/checkout' onClick={() => setIsCartOpen(false)} className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer'>
-                          Оформити замовлення
-                        </Link>
+                  <div ref={cartRef} className='fixed inset-0 z-50 flex items-end md:items-start justify-center md:justify-end pointer-events-none'>
+                    <div className='bg-white text-gray-800 rounded-t-2xl md:rounded-md shadow-2xl w-full max-w-md md:w-96 p-4 md:mt-24 md:mr-8 pointer-events-auto animate-slide-up md:animate-fade-in' style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+                      <div className='flex items-center justify-between mb-4'>
+                        <h3 className='text-lg font-semibold'>Кошик</h3>
+                        <button onClick={() => setIsCartOpen(false)} className='text-gray-400 hover:text-gray-700 text-2xl leading-none cursor-pointer' aria-label='Закрити кошик'>
+                          ×
+                        </button>
                       </div>
-                    )}
+                      {isEmpty() ? (
+                        <div className='flex flex-col items-center justify-center py-8'>
+                          <svg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                            <rect width='80' height='80' rx='40' fill='#F1F5F9' />
+                            <path d='M24 32h32l-4 20a6 6 0 01-6 5H34a6 6 0 01-6-5l-4-20z' stroke='#64748B' strokeWidth='2' fill='#fff' />
+                            <circle cx='32' cy='40' r='2' fill='#64748B' />
+                            <circle cx='48' cy='40' r='2' fill='#64748B' />
+                            <path d='M36 50c2 2 6 2 8 0' stroke='#64748B' strokeWidth='2' strokeLinecap='round' />
+                            <path d='M28 28v-2a4 4 0 014-4h16a4 4 0 014 4v2' stroke='#64748B' strokeWidth='2' />
+                          </svg>
+                          <p className='text-sm text-gray-600 mt-4'>Ваш кошик порожній.</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className='divide-y divide-gray-200 mb-4'>
+                            {items.map((item) => (
+                              <div key={item.id} className='flex items-center py-3 gap-3'>
+                                {item.image && (
+                                  <div className='flex-shrink-0 w-14 h-14 relative'>
+                                    <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
+                                  </div>
+                                )}
+                                <div className='flex-1 min-w-0'>
+                                  <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
+                                  <div className='text-xs text-gray-500 mt-1'>₴{item.price.toFixed(2)}</div>
+                                  <div className='flex items-center mt-2 gap-2'>
+                                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700' aria-label='Зменшити кількість'>
+                                      –
+                                    </button>
+                                    <span className='text-sm font-medium w-6 text-center'>{item.quantity}</span>
+                                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700' aria-label='Збільшити кількість'>
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className='flex flex-col items-end gap-2'>
+                                  <span className='text-sm font-semibold text-gray-900'>₴{(item.price * item.quantity).toFixed(2)}</span>
+                                  <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
+                                    ×
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div className='border-t pt-4'>
+                            <div className='flex justify-between items-center mb-3'>
+                              <span className='font-semibold'>Загальна сума:</span>
+                              <span className='font-semibold text-lg'>₴{getTotalPrice().toFixed(2)}</span>
+                            </div>
+                            <Link
+                              href='/checkout'
+                              onClick={() => {
+                                setIsCartOpen(false);
+                                setIsMobileMenuOpen(false);
+                              }}
+                              className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-base font-medium mt-2'
+                            >
+                              Оформити замовлення
+                            </Link>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </li>
@@ -199,58 +225,77 @@ const Header = () => {
       )}
 
       {isCartOpen && (
-        <div ref={cartRef} className='absolute right-4 top-16 md:top-20 w-72 sm:w-80 md:w-96 bg-white text-gray-800 rounded-md shadow-xl z-50 p-4'>
-          <h3 className='text-lg font-semibold mb-2'>Кошик</h3>
-          {isEmpty() ? (
-            <p className='text-sm text-gray-600'>Ваш кошик порожній.</p>
-          ) : (
-            <>
-              <div className='space-y-3 mb-4'>
-                {items.map((item) => (
-                  <div key={item.id} className='flex items-center justify-between border-b border-gray-200 pb-2'>
-                    <div className='flex-1'>
-                      <h4 className='text-sm font-medium text-gray-900'>{item.name}</h4>
-                      <p className='text-xs text-gray-500'>
-                        ₴{item.price.toFixed(2)} × {item.quantity}
-                      </p>
-                    </div>
-                    <div className='flex items-center space-x-2'>
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className='text-gray-500 hover:text-gray-700 w-6 h-6 flex items-center justify-center border border-gray-300 rounded'>
-                        -
-                      </button>
-                      <span className='text-sm font-medium'>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className='text-gray-500 hover:text-gray-700 w-6 h-6 flex items-center justify-center border border-gray-300 rounded'>
-                        +
-                      </button>
-                      <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 ml-2'>
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className='border-t pt-3'>
-                <div className='flex justify-between items-center mb-3'>
-                  <span className='font-semibold'>Загальна сума:</span>
-                  <span className='font-semibold'>₴{getTotalPrice().toFixed(2)}</span>
-                </div>
-              </div>
-            </>
-          )}
-          {!isEmpty() && (
-            <div className='mt-4'>
-              <Link
-                href='/checkout'
-                onClick={() => {
-                  setIsCartOpen(false);
-                  setIsMobileMenuOpen(false);
-                }}
-                className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium cursor-pointer'
-              >
-                Оформити замовлення
-              </Link>
+        <div ref={cartRef} className='fixed inset-0 z-50 flex items-end md:items-start justify-center md:justify-end pointer-events-none'>
+          <div className='bg-white text-gray-800 rounded-t-2xl md:rounded-md shadow-2xl w-full max-w-md md:w-96 p-4 md:mt-24 md:mr-8 pointer-events-auto animate-slide-up md:animate-fade-in' style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className='flex items-center justify-between mb-4'>
+              <h3 className='text-lg font-semibold'>Кошик</h3>
+              <button onClick={() => setIsCartOpen(false)} className='text-gray-400 hover:text-gray-700 text-2xl leading-none cursor-pointer' aria-label='Закрити кошик'>
+                ×
+              </button>
             </div>
-          )}
+            {isEmpty() ? (
+              <div className='flex flex-col items-center justify-center py-8'>
+                <svg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'>
+                  <rect width='80' height='80' rx='40' fill='#F1F5F9' />
+                  <path d='M24 32h32l-4 20a6 6 0 01-6 5H34a6 6 0 01-6-5l-4-20z' stroke='#64748B' strokeWidth='2' fill='#fff' />
+                  <circle cx='32' cy='40' r='2' fill='#64748B' />
+                  <circle cx='48' cy='40' r='2' fill='#64748B' />
+                  <path d='M36 50c2 2 6 2 8 0' stroke='#64748B' strokeWidth='2' strokeLinecap='round' />
+                  <path d='M28 28v-2a4 4 0 014-4h16a4 4 0 014 4v2' stroke='#64748B' strokeWidth='2' />
+                </svg>
+                <p className='text-sm text-gray-600 mt-4'>Ваш кошик порожній.</p>
+              </div>
+            ) : (
+              <>
+                <div className='divide-y divide-gray-200 mb-4'>
+                  {items.map((item) => (
+                    <div key={item.id} className='flex items-center py-3 gap-3'>
+                      {item.image && (
+                        <div className='flex-shrink-0 w-14 h-14 relative'>
+                          <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
+                        </div>
+                      )}
+                      <div className='flex-1 min-w-0'>
+                        <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
+                        <div className='text-xs text-gray-500 mt-1'>₴{item.price.toFixed(2)}</div>
+                        <div className='flex items-center mt-2 gap-2'>
+                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700' aria-label='Зменшити кількість'>
+                            –
+                          </button>
+                          <span className='text-sm font-medium w-6 text-center'>{item.quantity}</span>
+                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700' aria-label='Збільшити кількість'>
+                            +
+                          </button>
+                        </div>
+                      </div>
+                      <div className='flex flex-col items-end gap-2'>
+                        <span className='text-sm font-semibold text-gray-900'>₴{(item.price * item.quantity).toFixed(2)}</span>
+                        <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className='border-t pt-4'>
+                  <div className='flex justify-between items-center mb-3'>
+                    <span className='font-semibold'>Загальна сума:</span>
+                    <span className='font-semibold text-lg'>₴{getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <Link
+                    href='/checkout'
+                    onClick={() => {
+                      setIsCartOpen(false);
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-base font-medium mt-2'
+                  >
+                    Оформити замовлення
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </header>
