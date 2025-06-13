@@ -263,6 +263,8 @@ export default function ManageProductsPage() {
     carBodyTypeId: '',
     carEngineId: '',
   });
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
   const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch('/api/products');
@@ -802,6 +804,33 @@ export default function ManageProductsPage() {
     setProducts((prevProducts) => prevProducts.map((product) => (product.id === productId ? { ...product, imageUrl: newImageUrl } : product)));
   }, []);
 
+  const handleOpenImageModal = useCallback((imageUrl: string, productName: string) => {
+    setSelectedImage({ url: imageUrl, alt: productName });
+    setImageModalOpen(true);
+  }, []);
+  const handleCloseImageModal = useCallback(() => {
+    setImageModalOpen(false);
+    setSelectedImage(null);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && imageModalOpen) {
+        handleCloseImageModal();
+      }
+    };
+
+    if (imageModalOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [imageModalOpen, handleCloseImageModal]);
+
   if (isVerifyingAuth) {
     return (
       <div className='min-h-screen bg-gray-50 p-4 flex justify-center items-center'>
@@ -1131,19 +1160,10 @@ export default function ManageProductsPage() {
                 <div key={product.id} className='rounded-xl border border-gray-200 bg-white shadow-sm p-3'>
                   <div className='flex items-start justify-between gap-3'>
                     <div className='flex gap-3 flex-1'>
+                      {' '}
                       {product.imageUrl ? (
-                        <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center'>
+                        <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity' onClick={() => handleOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
                           <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-contain' />
-                          <button
-                            type='button'
-                            onClick={() => {
-                              if (product.imageUrl) window.open(product.imageUrl, '_blank');
-                            }}
-                            className='absolute bottom-0.5 right-0.5 bg-white border border-gray-300 rounded px-1 py-0.5 text-[9px] text-gray-700 shadow hover:bg-gray-100 transition'
-                            title='Переглянути повністю'
-                          >
-                            Переглянути
-                          </button>
                         </div>
                       ) : (
                         <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
@@ -1294,21 +1314,11 @@ export default function ManageProductsPage() {
                   ) : (
                     filteredProducts.map((product) => (
                       <tr key={product.id} className='hover:bg-gray-50'>
-                        <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>
+                        <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>{' '}
                         <td className='px-2 py-3'>
                           {product.imageUrl ? (
-                            <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center'>
+                            <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity' onClick={() => handleOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
                               <Image src={product.imageUrl} alt={product.name} width={40} height={40} className='w-full h-full object-contain' />
-                              <button
-                                type='button'
-                                onClick={() => {
-                                  if (product.imageUrl) window.open(product.imageUrl, '_blank');
-                                }}
-                                className='absolute bottom-0.5 right-0.5 bg-white border border-gray-300 rounded px-1 py-0.5 text-[9px] text-gray-700 shadow hover:bg-gray-100 transition'
-                                title='Переглянути повністю'
-                              >
-                                Переглянути
-                              </button>
                             </div>
                           ) : (
                             <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mx-auto'>
@@ -1621,6 +1631,23 @@ export default function ManageProductsPage() {
                 <button onClick={handleCancelEdit} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Скасувати
                 </button>
+              </div>
+            </div>
+          </div>
+        )}{' '}
+        {imageModalOpen && selectedImage && (
+          <div className='fixed inset-0 flex items-center justify-center p-4 z-50' style={{ backgroundColor: 'rgba(255, 255, 255, 0.95)' }} onClick={handleCloseImageModal}>
+            <div className='bg-white rounded-xl shadow-2xl border border-gray-200 p-4 w-[90vw] h-[90vh] flex flex-col' onClick={(e) => e.stopPropagation()}>
+              <div className='flex justify-between items-center mb-3 flex-shrink-0'>
+                <h3 className='text-lg font-semibold text-gray-900 truncate mr-4'>Перегляд зображення - {selectedImage.alt}</h3>
+                <button onClick={handleCloseImageModal} className='text-gray-500 hover:text-gray-700 cursor-pointer text-2xl flex-shrink-0 w-8 h-8 flex items-center justify-center hover:bg-gray-100 rounded-full transition-colors'>
+                  ✕
+                </button>
+              </div>
+              <div className='flex-1 flex items-center justify-center min-h-0'>
+                <div className='relative w-full h-full flex items-center justify-center'>
+                  <Image src={selectedImage.url} alt={selectedImage.alt} fill className='object-contain rounded-lg' sizes='90vw' />
+                </div>
               </div>
             </div>
           </div>
