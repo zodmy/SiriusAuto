@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil, HiOutlineTruck } from 'react-icons/hi';
+import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi';
+import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
 import ImageManager from '@/components/ImageManager';
 import Image from 'next/image';
@@ -1201,10 +1202,20 @@ export default function ManageProductsPage() {
                           )}
                         </div>
                       </div>
-                    </div>
+                    </div>{' '}
                     <div className='flex gap-1'>
-                      <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю'>
-                        <HiOutlineTruck size={18} />
+                      {' '}
+                      <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
+                        <LuCar size={18} />
+                      </button>
+                      <button
+                        onClick={() => {
+                          /* TODO: Add supply handler */
+                        }}
+                        className='text-purple-600 hover:text-purple-800 cursor-pointer'
+                        title='Поставки товару'
+                      >
+                        <HiOutlinePlus size={18} />
                       </button>
                       <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
                         <HiOutlinePencil size={18} />
@@ -1332,7 +1343,7 @@ export default function ManageProductsPage() {
                           {product.averageRating !== null && product.averageRating > 0 && <div className='text-xs text-yellow-600 mt-1'>★ {product.averageRating.toFixed(1)}</div>}
                           {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
                             <div className='text-xs text-blue-600 mt-1 flex items-center gap-1'>
-                              <HiOutlineTruck size={12} /> {product.compatibleVehicles.length} авто
+                              <LuCar size={12} /> {product.compatibleVehicles.length} авто
                             </div>
                           )}
                         </td>
@@ -1347,11 +1358,21 @@ export default function ManageProductsPage() {
                         </td>
                         <td className='px-3 py-3'>
                           <span className='font-medium text-gray-900 break-words'>{product.manufacturer.name}</span>
-                        </td>
+                        </td>{' '}
                         <td className='px-3 py-3 text-right'>
                           <div className='flex justify-end gap-1 flex-wrap'>
-                            <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з автомобілями'>
-                              <HiOutlineTruck size={16} />
+                            {' '}
+                            <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
+                              <LuCar size={16} />
+                            </button>
+                            <button
+                              onClick={() => {
+                                /* TODO: Add supply handler */
+                              }}
+                              className='text-purple-600 hover:text-purple-800 cursor-pointer'
+                              title='Поставки товару'
+                            >
+                              <HiOutlinePlus size={16} />
                             </button>
                             <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
                               <HiOutlinePencil size={16} />
