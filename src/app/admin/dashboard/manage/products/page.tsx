@@ -1322,7 +1322,7 @@ export default function ManageProductsPage() {
                   ) : (
                     filteredProducts.map((product) => (
                       <tr key={product.id} className='hover:bg-gray-50'>
-                        <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>{' '}
+                        <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>
                         <td className='px-2 py-3'>
                           {product.imageUrl ? (
                             <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity' onClick={() => handleOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
@@ -1345,7 +1345,7 @@ export default function ManageProductsPage() {
                           )}
                         </td>
                         <td className='px-3 py-3'>
-                          <span className='font-semibold text-green-600 break-words'>{product.price} грн</span>{' '}
+                          <span className='font-semibold text-green-600 break-words'>{product.price} грн</span>
                         </td>
                         <td className='px-3 py-3'>
                           <span className={`font-medium break-words ${product.stockQuantity === 0 ? 'text-red-600' : product.stockQuantity < 10 ? 'text-yellow-600' : 'text-gray-900'}`}>{product.stockQuantity} шт</span>
@@ -1355,7 +1355,7 @@ export default function ManageProductsPage() {
                         </td>
                         <td className='px-3 py-3'>
                           <span className='font-medium text-gray-900 break-words'>{product.manufacturer.name}</span>
-                        </td>{' '}
+                        </td>
                         <td className='px-3 py-3 text-right'>
                           <div className='flex justify-end gap-1 flex-wrap'>
                             {' '}

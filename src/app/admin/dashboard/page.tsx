@@ -3,32 +3,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HiOutlineCog, HiOutlineTag, HiOutlineCube, HiOutlineOfficeBuilding, HiOutlineLogout } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
-import { useEffect, useState } from 'react';
+import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAdmin, isLoading } = useAdminAuth();
 
-  useEffect(() => {
-    const verifyAdmin = async () => {
-      try {
-        const response = await fetch('/api/admin/check-auth');
-        if (!response.ok) {
-          router.push('/admin');
-          return;
-        }
-        const data = await response.json();
-        if (!data.isAdmin) {
-          router.push('/admin');
-          return;
-        }
-        setIsLoading(false);
-      } catch {
-        router.push('/admin');
-      }
-    };
-    verifyAdmin();
-  }, [router]);
   const handleLogout = async () => {
     try {
       document.cookie = 'adminToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax';
@@ -58,6 +38,10 @@ export default function AdminDashboard() {
         <div className='text-gray-600'>Завантаження...</div>
       </div>
     );
+  }
+
+  if (!isAdmin) {
+    return null;
   }
 
   return (

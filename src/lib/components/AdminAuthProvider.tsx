@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AdminAuthContextType {
@@ -18,6 +18,7 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const effectRan = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -44,7 +45,11 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
         }
       }
     };
-    verifyAccess();
+
+    if (effectRan.current === false) {
+      verifyAccess();
+      effectRan.current = true;
+    }
 
     return () => {
       isMounted = false;

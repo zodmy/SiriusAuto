@@ -34,7 +34,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    // Не робимо запит авторизації на адмін сторінках
     if (pathname?.startsWith('/admin')) {
       setIsInitialCheckComplete(true);
       return;
