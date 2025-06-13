@@ -5,9 +5,13 @@ export async function POST() {
     const response = NextResponse.json({
       success: true,
       message: 'Успішно вийшли з системи'
+<<<<<<< Updated upstream
+    }); response.cookies.set('adminToken', '', {
+=======
     });
 
-    response.cookies.set('token', '', {
+    response.cookies.set('adminToken', '', {
+>>>>>>> Stashed changes
       expires: new Date(0),
       path: '/',
       httpOnly: true,

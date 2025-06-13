@@ -17,9 +17,13 @@ export async function POST(req: NextRequest) {
     if (passwordMatch) {
       const token = jwt.sign({ role: 'admin' }, process.env.JWT_SECRET!, {
         expiresIn: '1d',
+<<<<<<< Updated upstream
+      }); const cookie = serialize('adminToken', token, {
+=======
       });
 
-      const cookie = serialize('token', token, {
+      const cookie = serialize('adminToken', token, {
+>>>>>>> Stashed changes
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         path: '/',

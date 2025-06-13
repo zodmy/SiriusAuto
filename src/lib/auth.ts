@@ -5,10 +5,10 @@ import { redirect } from 'next/navigation';
 
 async function getTokenFromRequestOrCookies(req?: NextRequest): Promise<string | undefined> {
   if (req) {
-    return req.cookies.get('token')?.value;
+    return req.cookies.get('adminToken')?.value;
   } else {
     const cookieStore = await cookies();
-    return cookieStore.get('token')?.value;
+    return cookieStore.get('adminToken')?.value;
   }
 }
 
