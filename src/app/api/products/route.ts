@@ -24,6 +24,40 @@ export async function GET() {
             name: true,
           },
         },
+        compatibleVehicles: {
+          include: {
+            carMake: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            carModel: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            carYear: {
+              select: {
+                id: true,
+                year: true,
+              },
+            },
+            carBodyType: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            carEngine: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
     return NextResponse.json(products);

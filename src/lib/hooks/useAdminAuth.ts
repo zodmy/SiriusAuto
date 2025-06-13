@@ -36,7 +36,7 @@ export function useAdminAuth(options: UseAdminAuthOptions = {}) {
         }
       } catch (err) {
         if (!isMounted) return;
-        console.error('Failed to verify admin status:', err);
+        console.error('Не вдалося перевірити статус адміністратора:', err);
         setIsAdmin(false);
         router.push(redirectPath);
       } finally {
