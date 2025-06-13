@@ -1,10 +1,10 @@
 import { AdminAuthProvider } from '@/lib/components/AdminAuthProvider';
 import { ReactNode } from 'react';
 
-interface AdminLayoutProps {
+interface AdminDashboardLayoutProps {
   children: ReactNode;
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminDashboardLayout({ children }: AdminDashboardLayoutProps) {
   return <AdminAuthProvider>{children}</AdminAuthProvider>;
 }
