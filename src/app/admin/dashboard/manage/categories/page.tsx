@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { HiOutlineTag, HiOutlineArrowLeft, HiOutlineTrash, HiOutlinePlus, HiOutlineSearch } from 'react-icons/hi';
-import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
+import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 import React from 'react';
 
 interface Category {

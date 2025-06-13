@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { HiOutlineSearch, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiOutlineCheck, HiOutlineX, HiOutlineArrowLeft } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
-import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
+import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 
 interface CarMake {
   id: number;

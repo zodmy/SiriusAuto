@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
-import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
+import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 import ImageManager from '@/components/ImageManager';
 import Image from 'next/image';
 import React from 'react';
