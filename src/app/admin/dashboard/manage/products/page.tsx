@@ -665,21 +665,40 @@ export default function ManageProductsPage() {
     },
     [formData]
   );
+  const getCompatibilityLevelDescription = useCallback(
+    (carMakeId: string, carModelId: string, carYearId: string, carBodyTypeId: string, carEngineId: string) => {
+      const make = carMakes.find((m) => m.id === parseInt(carMakeId));
+      const makeName = make?.name || '';
 
-  const getCompatibilityLevelDescription = useCallback((carMakeId: string, carModelId: string, carYearId: string, carBodyTypeId: string, carEngineId: string) => {
-    if (carEngineId) {
-      return 'Точна сумісність - конкретний двигун';
-    } else if (carBodyTypeId) {
-      return 'Сумісність з усіма двигунами цього кузова';
-    } else if (carYearId) {
-      return 'Сумісність з усіма кузовами та двигунами цього року';
-    } else if (carModelId) {
-      return 'Сумісність з усіма роками, кузовами та двигунами цієї моделі';
-    } else if (carMakeId) {
-      return 'Сумісність з усіма автомобілями цієї марки';
-    }
-    return '';
-  }, []);
+      if (carEngineId) {
+        const model = carModels.find((m) => m.id === parseInt(carModelId));
+        const year = carYears.find((y) => y.id === parseInt(carYearId));
+        const bodyType = carBodyTypes.find((bt) => bt.id === parseInt(carBodyTypeId));
+        const engine = carEngines.find((e) => e.id === parseInt(carEngineId));
+
+        return `Сумісність з ${makeName} ${model?.name || ''} ${year?.year || ''} ${bodyType?.name || ''} ${engine?.name || ''}`.trim();
+      } else if (carBodyTypeId) {
+        const model = carModels.find((m) => m.id === parseInt(carModelId));
+        const year = carYears.find((y) => y.id === parseInt(carYearId));
+        const bodyType = carBodyTypes.find((bt) => bt.id === parseInt(carBodyTypeId));
+
+        return `Сумісність з усіма двигунами ${makeName} ${model?.name || ''} ${year?.year || ''} ${bodyType?.name || ''}`.trim();
+      } else if (carYearId) {
+        const model = carModels.find((m) => m.id === parseInt(carModelId));
+        const year = carYears.find((y) => y.id === parseInt(carYearId));
+
+        return `Сумісність з усіма автомобілями ${makeName} ${model?.name || ''} ${year?.year || ''}`.trim();
+      } else if (carModelId) {
+        const model = carModels.find((m) => m.id === parseInt(carModelId));
+
+        return `Сумісність з усіма автомобілями ${makeName} ${model?.name || ''}`.trim();
+      } else if (carMakeId) {
+        return `Сумісність з усіма автомобілями ${makeName}`;
+      }
+      return '';
+    },
+    [carMakes, carModels, carYears, carBodyTypes, carEngines]
+  );
 
   const getModelsForMake = useCallback(
     (makeId: number) => {
@@ -705,6 +724,38 @@ export default function ManageProductsPage() {
   const getEnginesForBodyType = useCallback(
     (bodyTypeId: number) => {
       return carEngines.filter((engine) => engine.bodyTypeId === bodyTypeId);
+    },
+    [carEngines]
+  );
+
+  const getModelsForMakeEdit = useCallback(
+    (makeId: string) => {
+      if (!makeId) return carModels;
+      return carModels.filter((model) => model.makeId === parseInt(makeId));
+    },
+    [carModels]
+  );
+
+  const getYearsForModelEdit = useCallback(
+    (modelId: string) => {
+      if (!modelId) return carYears;
+      return carYears.filter((year) => year.modelId === parseInt(modelId));
+    },
+    [carYears]
+  );
+
+  const getBodyTypesForYearEdit = useCallback(
+    (yearId: string) => {
+      if (!yearId) return carBodyTypes;
+      return carBodyTypes.filter((bodyType) => bodyType.yearId === parseInt(yearId));
+    },
+    [carBodyTypes]
+  );
+
+  const getEnginesForBodyTypeEdit = useCallback(
+    (bodyTypeId: string) => {
+      if (!bodyTypeId) return carEngines;
+      return carEngines.filter((engine) => engine.bodyTypeId === parseInt(bodyTypeId));
     },
     [carEngines]
   );
@@ -827,9 +878,8 @@ export default function ManageProductsPage() {
                 <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
               </div>
               <div className='mb-6 border-t border-gray-200 pt-6'>
-                <h4 className='text-md font-semibold text-gray-800 mb-4'>Сумісність з автомобілями</h4>
-
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4'>
+                <h4 className='text-md font-semibold text-gray-800 mb-4'>Сумісність з автомобілями</h4>{' '}
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Марка</label>
                     <select
@@ -946,20 +996,19 @@ export default function ManageProductsPage() {
                           {engine.name}
                         </option>
                       ))}
-                    </select>
+                    </select>{' '}
                   </div>{' '}
-                  {newProductCompatibilityData.carMakeId && (
-                    <div className='col-span-5 bg-blue-50 border border-blue-200 rounded-lg p-3'>
-                      <p className='text-sm text-blue-800 font-medium'>Рівень сумісності: {getCompatibilityLevelDescription(newProductCompatibilityData.carMakeId, newProductCompatibilityData.carModelId, newProductCompatibilityData.carYearId, newProductCompatibilityData.carBodyTypeId, newProductCompatibilityData.carEngineId)}</p>
-                    </div>
-                  )}
                   <div className='flex items-end'>
-                    <button onClick={handleAddCompatibilityToNewProduct} disabled={!newProductCompatibilityData.carMakeId} className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
+                    <button onClick={handleAddCompatibilityToNewProduct} disabled={!newProductCompatibilityData.carMakeId} className='w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
                       Додати
                     </button>
                   </div>
                 </div>
-
+                <div className='mb-4'>
+                  <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 h-[3rem] flex items-center'>
+                    <p className={`text-sm font-medium ${newProductCompatibilityData.carMakeId ? 'text-blue-800' : 'text-gray-500'}`}>{newProductCompatibilityData.carMakeId ? `${getCompatibilityLevelDescription(newProductCompatibilityData.carMakeId, newProductCompatibilityData.carModelId, newProductCompatibilityData.carYearId, newProductCompatibilityData.carBodyTypeId, newProductCompatibilityData.carEngineId)}` : 'Оберіть марку автомобіля для відображення рівня сумісності'}</p>
+                  </div>
+                </div>
                 {formData.compatibilities.length > 0 && (
                   <div>
                     <h5 className='text-sm font-medium text-gray-700 mb-2'>Додані сумісності:</h5>
@@ -1207,7 +1256,7 @@ export default function ManageProductsPage() {
                               <HiOutlineTrash size={18} />
                             </button>
                           </div>
-                        </td>
+                        </td>{' '}
                       </tr>
                     ))
                   )}
@@ -1226,9 +1275,8 @@ export default function ManageProductsPage() {
                 </button>
               </div>
               <div className='border-b border-gray-200 pb-6 mb-6'>
-                <h4 className='text-md font-semibold text-gray-800 mb-4'>Додати сумісність</h4>
-
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4'>
+                <h4 className='text-md font-semibold text-gray-800 mb-4'>Додати сумісність</h4>{' '}
+                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Марка автомобіля</label>
                     <select
@@ -1238,10 +1286,6 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carMakeId: makeId,
-                          carModelId: '',
-                          carYearId: '',
-                          carBodyTypeId: '',
-                          carEngineId: '',
                         });
                       }}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
@@ -1263,16 +1307,14 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carModelId: modelId,
-                          carYearId: '',
-                          carBodyTypeId: '',
-                          carEngineId: '',
                         });
                       }}
                       disabled={!compatibilityFormData.carMakeId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
+                      {' '}
                       <option value=''>Оберіть модель</option>
-                      {getModelsForMake(parseInt(compatibilityFormData.carMakeId || '0')).map((model) => (
+                      {getModelsForMakeEdit(compatibilityFormData.carMakeId).map((model) => (
                         <option key={model.id} value={model.id}>
                           {model.name}
                         </option>
@@ -1288,15 +1330,14 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carYearId: yearId,
-                          carBodyTypeId: '',
-                          carEngineId: '',
                         });
                       }}
                       disabled={!compatibilityFormData.carModelId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
+                      {' '}
                       <option value=''>Оберіть рік</option>
-                      {getYearsForModel(parseInt(compatibilityFormData.carModelId || '0')).map((year) => (
+                      {getYearsForModelEdit(compatibilityFormData.carModelId).map((year) => (
                         <option key={year.id} value={year.id}>
                           {year.year}
                         </option>
@@ -1312,14 +1353,14 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carBodyTypeId: bodyTypeId,
-                          carEngineId: '',
                         });
                       }}
                       disabled={!compatibilityFormData.carYearId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
+                      {' '}
                       <option value=''>Оберіть тип кузова</option>
-                      {getBodyTypesForYear(parseInt(compatibilityFormData.carYearId || '0')).map((bodyType) => (
+                      {getBodyTypesForYearEdit(compatibilityFormData.carYearId).map((bodyType) => (
                         <option key={bodyType.id} value={bodyType.id}>
                           {bodyType.name}
                         </option>
@@ -1339,23 +1380,24 @@ export default function ManageProductsPage() {
                       disabled={!compatibilityFormData.carBodyTypeId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
+                      {' '}
                       <option value=''>Оберіть двигун</option>{' '}
-                      {getEnginesForBodyType(parseInt(compatibilityFormData.carBodyTypeId || '0')).map((engine) => (
+                      {getEnginesForBodyTypeEdit(compatibilityFormData.carBodyTypeId).map((engine) => (
                         <option key={engine.id} value={engine.id}>
                           {engine.name}
                         </option>
                       ))}
-                    </select>
+                    </select>{' '}
                   </div>{' '}
-                  {compatibilityFormData.carMakeId && (
-                    <div className='col-span-5 bg-blue-50 border border-blue-200 rounded-lg p-3'>
-                      <p className='text-sm text-blue-800 font-medium'>Рівень сумісності: {getCompatibilityLevelDescription(compatibilityFormData.carMakeId, compatibilityFormData.carModelId, compatibilityFormData.carYearId, compatibilityFormData.carBodyTypeId, compatibilityFormData.carEngineId)}</p>
-                    </div>
-                  )}
                   <div className='flex items-end'>
-                    <button onClick={() => managingCompatibilityId && handleAddCompatibility(managingCompatibilityId)} disabled={!compatibilityFormData.carMakeId} className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
+                    <button onClick={() => managingCompatibilityId && handleAddCompatibility(managingCompatibilityId)} disabled={!compatibilityFormData.carMakeId} className='w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
                       Додати сумісність
                     </button>
+                  </div>
+                </div>
+                <div className='mb-4'>
+                  <div className='bg-blue-50 border border-blue-200 rounded-lg p-3 h-[3rem] flex items-center'>
+                    <p className={`text-sm font-medium ${compatibilityFormData.carMakeId ? 'text-blue-800' : 'text-gray-500'}`}>{compatibilityFormData.carMakeId ? `${getCompatibilityLevelDescription(compatibilityFormData.carMakeId, compatibilityFormData.carModelId, compatibilityFormData.carYearId, compatibilityFormData.carBodyTypeId, compatibilityFormData.carEngineId)}` : 'Оберіть марку автомобіля для відображення рівня сумісності'}</p>
                   </div>
                 </div>
               </div>
