@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
         expiresIn: '1d',
       });
 
-      const cookie = serialize('token', token, {
+      const cookie = serialize('adminToken', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         path: '/',

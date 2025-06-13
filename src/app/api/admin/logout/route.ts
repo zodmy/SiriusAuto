@@ -7,7 +7,7 @@ export async function POST() {
       message: 'Успішно вийшли з системи'
     });
 
-    response.cookies.set('token', '', {
+    response.cookies.set('adminToken', '', {
       expires: new Date(0),
       path: '/',
       httpOnly: true,
