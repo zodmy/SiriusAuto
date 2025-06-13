@@ -2,11 +2,6 @@ import sharp from 'sharp';
 import { promises as fs } from 'fs';
 import path from 'path';
 
-export const PRODUCT_IMAGE_SIZE = {
-  width: 400,
-  height: 400,
-};
-
 export const IMAGES_DIR = path.join(process.cwd(), 'public', 'images', 'products');
 
 export async function ensureImageDir() {
@@ -30,10 +25,6 @@ export async function processProductImage(
   const processedImagePath = path.join(IMAGES_DIR, webpFilename);
 
   await sharp(imageBuffer)
-    .resize(PRODUCT_IMAGE_SIZE.width, PRODUCT_IMAGE_SIZE.height, {
-      fit: 'cover',
-      position: 'center',
-    })
     .webp({
       quality: 85,
       effort: 4

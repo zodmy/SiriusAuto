@@ -124,7 +124,7 @@ export default function ImageManager({ productId, currentImageUrl, onImageUpdate
           <p className='text-xs text-gray-500'>
             Підтримувані формати: JPEG, PNG, WebP. Максимальний розмір: 10MB.
             <br />
-            Зображення буде автоматично обрізане до розміру 400×400 пікселів та конвертоване в WebP для оптимізації.
+            Зображення буде конвертоване в WebP для оптимізації, зберігаючи оригінальні розміри.
           </p>
         </div>
       </div>
