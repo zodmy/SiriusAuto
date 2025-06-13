@@ -44,13 +44,18 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
         }
       }
     };
-
     verifyAccess();
 
     return () => {
       isMounted = false;
     };
-  }, [router]);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoading && isAdmin === false) {
+      router.push('/admin');
+    }
+  }, [isAdmin, isLoading, router]);
 
   const value = {
     isAdmin,
@@ -60,26 +65,12 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
 }
 
-interface UseAdminAuthOptions {
-  redirectPath?: string;
-}
-
-export function useAdminAuth(options: UseAdminAuthOptions = {}) {
-  const { redirectPath = '/admin' } = options;
+export function useAdminAuth() {
   const context = useContext(AdminAuthContext);
-  const router = useRouter();
-  
+
   if (context === undefined) {
     throw new Error('useAdminAuth must be used within an AdminAuthProvider');
   }
-  
-  const { isAdmin, isLoading } = context;
-  
-  useEffect(() => {
-    if (!isLoading && isAdmin === false) {
-      router.push(redirectPath);
-    }
-  }, [isAdmin, isLoading, router, redirectPath]);
-  
-  return { isAdmin, isLoading };
-};
+
+  return context;
+}

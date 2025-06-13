@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface User {
   id: number;
@@ -29,12 +29,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialCheckComplete, setIsInitialCheckComplete] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
+    // Не робимо запит авторизації на адмін сторінках
+    if (pathname?.startsWith('/admin')) {
+      setIsInitialCheckComplete(true);
+      return;
+    }
+
     checkAuthStatus();
-  }, []);
+  }, [pathname]);
 
   const checkAuthStatus = async () => {
     try {
