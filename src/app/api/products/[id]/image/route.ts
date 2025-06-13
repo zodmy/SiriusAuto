@@ -41,7 +41,7 @@ export async function POST(
         { error: 'Непідтримуваний тип файлу. Дозволені: JPEG, PNG, WebP' },
         { status: 400 }
       );
-    } const maxSize = 10 * 1024 * 1024; // 10MB
+    } const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       return NextResponse.json(
         { error: 'Розмір файлу перевищує 10MB' },
@@ -49,10 +49,8 @@ export async function POST(
       );
     }
 
-    // Additional validation for image dimensions
     const imageBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Validate that it's actually an image
     try {
       const metadata = await sharp(imageBuffer).metadata();
 
@@ -63,7 +61,6 @@ export async function POST(
         );
       }
 
-      // Check minimum dimensions
       if (metadata.width < 100 || metadata.height < 100) {
         return NextResponse.json(
           { error: 'Зображення занадто мале. Мінімальний розмір: 100×100 пікселів' },
@@ -77,7 +74,6 @@ export async function POST(
       );
     }
 
-    // Remove old image if exists
     if (product.imageUrl) {
       await deleteProductImage(product.imageUrl);
     }

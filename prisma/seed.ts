@@ -786,12 +786,12 @@ async function main() {
       data: {
         name: 'Моторна олива Castrol GTX 5W-30',
         description: 'Напівсинтетична моторна олива для бензинових двигунів. Забезпечує надійний захист двигуна.',
-        price: 1600.00, // Price for the main variant (e.g., 5L)
+        price: 1600.00,
         stockQuantity: 40,
         imageUrl: getNextProductImage(),
         categoryId: oilCategory!.id,
         manufacturerId: manufacturers.find(m => m.name === 'Castrol')!.id,
-        isVariant: false, // This is the parent product
+        isVariant: false,
         variants: {
           create: [
             {
@@ -907,7 +907,7 @@ async function main() {
         stockQuantity: 50,
         imageUrl: getNextProductImage(),
         categoryId: lampsCategory!.id,
-        manufacturerId: manufacturers.find(m => m.name === 'Hella')!.id, // Assuming Philips is under Hella or similar, adjust if needed
+        manufacturerId: manufacturers.find(m => m.name === 'Hella')!.id,
         isVariant: false,
         productOptions: { create: [{ name: 'Цоколь', value: 'H7' }, { name: 'Тип', value: 'Галогенна' }, { name: 'Потужність', value: '55W' }, { name: 'Напруга', value: '12V' }] }
       }
@@ -920,7 +920,7 @@ async function main() {
         stockQuantity: 30,
         imageUrl: getNextProductImage(),
         categoryId: lampsCategory!.id,
-        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id, // Assuming Osram is under Bosch or similar, adjust if needed
+        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id,
         isVariant: false, productOptions: { create: [{ name: 'Цоколь', value: 'H4' }, { name: 'Тип', value: 'LED' }, { name: 'Колірна температура', value: '6000K' }, { name: 'Напруга', value: '12V/24V' }] }
       }
     }),
@@ -1262,7 +1262,6 @@ async function main() {
 
   const compatibilities = []
 
-  // Example: Air filter for Toyota Camry 2018 2.0L
   const productAirFilterBosch = products.find(p => p.name === 'Повітряний фільтр Bosch S0123')
   const carToyotaCamry2018_20L = allCarYears.find(cy =>
     cy.model.make.name === 'Toyota' &&
@@ -1287,7 +1286,6 @@ async function main() {
     )
   }
 
-  // Example: Brake pads for BMW X5 2019 3.0L Turbo
   const productBrakesBrembo = products.find(p => p.name === 'Гальмівні колодки Brembo P 83 140')
   const carBmwX5_2019_30Turbo = allCarYears.find(cy =>
     cy.model.make.name === 'BMW' &&
@@ -1312,7 +1310,6 @@ async function main() {
     )
   }
 
-  // Example: Oil for VW Golf 2018 1.4L TSI
   const productOilShell = products.find(p => p.name === 'Моторна олива Shell Helix Ultra 5W-40')
   const carVWGolf2018_14TSI = allCarYears.find(cy =>
     cy.model.make.name === 'Volkswagen' &&
@@ -1337,7 +1334,6 @@ async function main() {
     )
   }
 
-  // Add more compatibilities for variety
   const productSparkPlugNGK = products.find(p => p.name === 'Свічка запалювання NGK BKR6E-11');
   const carFordFocus2018_10EcoBoost = allCarYears.find(cy =>
     cy.model.make.name === 'Ford' &&
@@ -1385,7 +1381,6 @@ async function main() {
       }));
   }
 
-  // Додавання сумісності для нових продуктів
   const productBrakeDiscBrembo = products.find(p => p.name === 'Гальмівний диск Brembo 09.5844.11');
   const carBmw3Series2019 = allCarYears.find(cy =>
     cy.model.make.name === 'BMW' &&

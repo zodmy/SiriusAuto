@@ -422,13 +422,12 @@ export default function ManageProductsPage() {
     if (!data.manufacturerId) return 'Оберіть виробника';
     if (data.isVariant && !data.baseProductId) return 'Для варіанту оберіть базовий товар';
 
-    // Validate image file if provided
     if (data.imageFile) {
       const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
       if (!allowedTypes.includes(data.imageFile.type)) {
         return 'Непідтримуваний тип файлу зображення. Дозволені: JPEG, PNG, WebP';
       }
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      const maxSize = 10 * 1024 * 1024;
       if (data.imageFile.size > maxSize) {
         return 'Розмір файлу зображення перевищує 10MB';
       }
@@ -488,7 +487,6 @@ export default function ManageProductsPage() {
         }
       }
 
-      // Upload image if provided
       if (formData.imageFile) {
         const imageFormData = new FormData();
         imageFormData.append('image', formData.imageFile);
@@ -1134,8 +1132,18 @@ export default function ManageProductsPage() {
                   <div className='flex items-start justify-between gap-3'>
                     <div className='flex gap-3 flex-1'>
                       {product.imageUrl ? (
-                        <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0'>
-                          <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-cover' />
+                        <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center'>
+                          <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-contain' />
+                          <button
+                            type='button'
+                            onClick={() => {
+                              if (product.imageUrl) window.open(product.imageUrl, '_blank');
+                            }}
+                            className='absolute bottom-0.5 right-0.5 bg-white border border-gray-300 rounded px-1 py-0.5 text-[9px] text-gray-700 shadow hover:bg-gray-100 transition'
+                            title='Переглянути повністю'
+                          >
+                            Переглянути
+                          </button>
                         </div>
                       ) : (
                         <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
@@ -1289,8 +1297,18 @@ export default function ManageProductsPage() {
                         <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>
                         <td className='px-2 py-3'>
                           {product.imageUrl ? (
-                            <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto'>
-                              <Image src={product.imageUrl} alt={product.name} width={40} height={40} className='w-full h-full object-cover' />
+                            <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center'>
+                              <Image src={product.imageUrl} alt={product.name} width={40} height={40} className='w-full h-full object-contain' />
+                              <button
+                                type='button'
+                                onClick={() => {
+                                  if (product.imageUrl) window.open(product.imageUrl, '_blank');
+                                }}
+                                className='absolute bottom-0.5 right-0.5 bg-white border border-gray-300 rounded px-1 py-0.5 text-[9px] text-gray-700 shadow hover:bg-gray-100 transition'
+                                title='Переглянути повністю'
+                              >
+                                Переглянути
+                              </button>
                             </div>
                           ) : (
                             <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mx-auto'>
