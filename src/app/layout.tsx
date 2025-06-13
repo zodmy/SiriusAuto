@@ -33,7 +33,7 @@ export default function RootLayout({
         <meta name='apple-mobile-web-app-capable' content='yes' />
         <meta name='mobile-web-app-capable' content='yes' />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased m-0 p-0 overflow-x-hidden w-full min-h-screen bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100 font-sans`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased m-0 p-0 overflow-x-hidden w-full min-h-screen bg-white text-gray-900 font-sans`}>
         <Providers>{children}</Providers>
       </body>
     </html>
