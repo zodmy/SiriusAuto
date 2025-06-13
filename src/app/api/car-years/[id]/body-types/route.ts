@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const yearId = parseInt(params.id, 10);
+    const { id } = await params;
+    const yearId = parseInt(id, 10);
     if (isNaN(yearId)) {
       return NextResponse.json({ error: 'Невалідний ID року випуску' }, { status: 400 });
     }
