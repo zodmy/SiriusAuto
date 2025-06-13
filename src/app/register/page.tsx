@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth } from '@/lib/components/AuthProvider';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { HiEye, HiEyeOff } from 'react-icons/hi';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -15,29 +15,17 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isInitialCheckComplete: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (userData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName?: string;
-  }) => Promise<{ success: boolean; error?: string }>;
+  register: (userData: { email: string; password: string; firstName: string; lastName?: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  const standaloneAuth = useAuthHook();
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-  if (context) {
-    return context;
-  }
-
-  return standaloneAuth;
-};
-
-function useAuthHook() {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isInitialCheckComplete, setIsInitialCheckComplete] = useState(false);
   const router = useRouter();
@@ -47,6 +35,7 @@ function useAuthHook() {
   useEffect(() => {
     checkAuthStatus();
   }, []);
+
   const checkAuthStatus = async () => {
     try {
       const response = await fetch('/api/auth/me', {
@@ -92,12 +81,7 @@ function useAuthHook() {
     }
   };
 
-  const register = async (userData: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName?: string;
-  }) => {
+  const register = async (userData: { email: string; password: string; firstName: string; lastName?: string }) => {
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -134,7 +118,8 @@ function useAuthHook() {
       router.push('/');
     }
   };
-  return {
+
+  const value = {
     user,
     isAuthenticated,
     isInitialCheckComplete,
@@ -142,4 +127,14 @@ function useAuthHook() {
     register,
     logout,
   };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

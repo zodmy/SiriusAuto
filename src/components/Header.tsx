@@ -7,7 +7,7 @@ import { HiMenu, HiX } from 'react-icons/hi';
 import { FaUser } from 'react-icons/fa';
 import { BsCart3 } from 'react-icons/bs';
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth } from '@/lib/components/AuthProvider';
 import { useCart } from '@/lib/hooks/useCart';
 
 const Header = () => {
