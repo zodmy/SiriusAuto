@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil, HiOutlineTruck } from 'react-icons/hi';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
+import ImageManager from '@/components/ImageManager';
+import Image from 'next/image';
 import React from 'react';
 
 interface Product {
@@ -11,6 +13,7 @@ interface Product {
   description: string | null;
   price: string;
   stockQuantity: number;
+  imageUrl: string | null;
   categoryId: number;
   manufacturerId: number;
   isVariant: boolean;
@@ -99,28 +102,31 @@ interface Manufacturer {
 const ProductSkeleton = () => (
   <div className='animate-pulse'>
     <div className='hidden sm:block'>
-      <table className='min-w-full divide-y divide-gray-200'>
+      <table className='w-full divide-y divide-gray-200 table-fixed'>
         <thead className='bg-gray-100'>
           <tr>
-            <th className='px-4 py-3 text-left'>
+            <th className='px-2 py-3 text-left w-12'>
               <div className='h-4 bg-gray-300 rounded w-8'></div>
             </th>
-            <th className='px-6 py-3 text-left'>
-              <div className='h-4 bg-gray-300 rounded w-24'></div>
+            <th className='px-2 py-3 text-left w-16'>
+              <div className='h-4 bg-gray-300 rounded w-12'></div>
             </th>
-            <th className='px-6 py-3 text-left'>
+            <th className='px-3 py-3 text-left w-1/4'>
               <div className='h-4 bg-gray-300 rounded w-16'></div>
             </th>
-            <th className='px-6 py-3 text-left'>
-              <div className='h-4 bg-gray-300 rounded w-20'></div>
+            <th className='px-3 py-3 text-left w-20'>
+              <div className='h-4 bg-gray-300 rounded w-12'></div>
             </th>
-            <th className='px-6 py-3 text-left'>
+            <th className='px-3 py-3 text-left w-16'>
               <div className='h-4 bg-gray-300 rounded w-16'></div>
             </th>
-            <th className='px-6 py-3 text-left'>
-              <div className='h-4 bg-gray-300 rounded w-20'></div>
+            <th className='px-3 py-3 text-left w-1/6'>
+              <div className='h-4 bg-gray-300 rounded w-16'></div>
             </th>
-            <th className='px-6 py-3 text-right'>
+            <th className='px-3 py-3 text-left w-1/6'>
+              <div className='h-4 bg-gray-300 rounded w-16'></div>
+            </th>
+            <th className='px-3 py-3 text-right w-24'>
               <div className='h-4 bg-gray-300 rounded w-12 ml-auto'></div>
             </th>
           </tr>
@@ -128,28 +134,33 @@ const ProductSkeleton = () => (
         <tbody className='bg-white divide-y divide-gray-100'>
           {[...Array(5)].map((_, i) => (
             <tr key={i} className='hover:bg-gray-50'>
-              <td className='px-4 py-3'>
+              <td className='px-2 py-3'>
                 <div className='h-4 bg-gray-300 rounded w-8'></div>
               </td>
-              <td className='px-6 py-3'>
-                <div className='h-4 bg-gray-300 rounded w-32'></div>
+              <td className='px-2 py-3'>
+                <div className='h-10 w-10 bg-gray-300 rounded mx-auto'></div>
               </td>
-              <td className='px-6 py-3'>
+              <td className='px-3 py-3'>
+                <div className='h-4 bg-gray-300 rounded w-full mb-1'></div>
+                <div className='h-3 bg-gray-300 rounded w-3/4'></div>
+              </td>
+              <td className='px-3 py-3'>
                 <div className='h-4 bg-gray-300 rounded w-16'></div>
               </td>
-              <td className='px-6 py-3'>
-                <div className='h-4 bg-gray-300 rounded w-24'></div>
+              <td className='px-3 py-3'>
+                <div className='h-4 bg-gray-300 rounded w-12'></div>
               </td>
-              <td className='px-6 py-3'>
-                <div className='h-4 bg-gray-300 rounded w-16'></div>
+              <td className='px-3 py-3'>
+                <div className='h-4 bg-gray-300 rounded w-full'></div>
               </td>
-              <td className='px-6 py-3'>
-                <div className='h-4 bg-gray-300 rounded w-20'></div>
+              <td className='px-3 py-3'>
+                <div className='h-4 bg-gray-300 rounded w-full'></div>
               </td>
-              <td className='px-6 py-3 text-right'>
-                <div className='flex justify-end gap-2'>
-                  <div className='h-5 w-5 bg-gray-300 rounded'></div>
-                  <div className='h-5 w-5 bg-gray-300 rounded'></div>
+              <td className='px-3 py-3 text-right'>
+                <div className='flex justify-end gap-1'>
+                  <div className='h-4 w-4 bg-gray-300 rounded'></div>
+                  <div className='h-4 w-4 bg-gray-300 rounded'></div>
+                  <div className='h-4 w-4 bg-gray-300 rounded'></div>
                 </div>
               </td>
             </tr>
@@ -186,6 +197,7 @@ interface ProductFormData {
   manufacturerId: string;
   isVariant: boolean;
   baseProductId: string;
+  imageFile: File | null;
   compatibilities: Array<{
     carMakeId: string;
     carModelId: string;
@@ -204,6 +216,7 @@ const initialFormData: ProductFormData = {
   manufacturerId: '',
   isVariant: false,
   baseProductId: '',
+  imageFile: null,
   compatibilities: [],
 };
 
@@ -399,7 +412,6 @@ export default function ManageProductsPage() {
       return 0;
     });
   }, [products, debouncedSearch, sortBy, sortDir, normalizeString]);
-
   const validateFormData = (data: ProductFormData): string | null => {
     if (!data.name.trim()) return 'Введіть назву товару';
     if (!data.price.trim()) return 'Введіть ціну товару';
@@ -409,6 +421,19 @@ export default function ManageProductsPage() {
     if (!data.categoryId) return 'Оберіть категорію';
     if (!data.manufacturerId) return 'Оберіть виробника';
     if (data.isVariant && !data.baseProductId) return 'Для варіанту оберіть базовий товар';
+
+    // Validate image file if provided
+    if (data.imageFile) {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(data.imageFile.type)) {
+        return 'Непідтримуваний тип файлу зображення. Дозволені: JPEG, PNG, WebP';
+      }
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (data.imageFile.size > maxSize) {
+        return 'Розмір файлу зображення перевищує 10MB';
+      }
+    }
+
     return null;
   };
   const handleAddProduct = useCallback(async () => {
@@ -463,6 +488,21 @@ export default function ManageProductsPage() {
         }
       }
 
+      // Upload image if provided
+      if (formData.imageFile) {
+        const imageFormData = new FormData();
+        imageFormData.append('image', formData.imageFile);
+
+        const imageRes = await fetch(`/api/products/${newProduct.id}/image`, {
+          method: 'POST',
+          body: imageFormData,
+        });
+
+        if (!imageRes.ok) {
+          console.warn('Товар створено, але зображення не вдалося завантажити');
+        }
+      }
+
       setFormData(initialFormData);
       setShowCreateForm(false);
       await fetchProducts();
@@ -481,11 +521,11 @@ export default function ManageProductsPage() {
       manufacturerId: product.manufacturerId.toString(),
       isVariant: product.isVariant,
       baseProductId: product.baseProductId?.toString() || '',
+      imageFile: null,
       compatibilities: [],
     });
     setEditError(null);
   }, []);
-
   const handleCancelEdit = useCallback(() => {
     setEditingProductId(null);
     setEditFormData(initialFormData);
@@ -760,6 +800,10 @@ export default function ManageProductsPage() {
     [carEngines]
   );
 
+  const handleImageUpdate = useCallback((productId: number, newImageUrl: string | null) => {
+    setProducts((prevProducts) => prevProducts.map((product) => (product.id === productId ? { ...product, imageUrl: newImageUrl } : product)));
+  }, []);
+
   if (isVerifyingAuth) {
     return (
       <div className='min-h-screen bg-gray-50 p-4 flex justify-center items-center'>
@@ -778,11 +822,9 @@ export default function ManageProductsPage() {
 
   const filteredProducts = getFilteredProducts();
   const baseProducts = products.filter((p) => !p.isVariant);
-
   return (
     <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
-      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full sm:max-w-6xl mx-auto border border-gray-200'>
-        {' '}
+      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200'>
         <div className='mb-3'>
           <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300 cursor-pointer'>
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
@@ -803,7 +845,7 @@ export default function ManageProductsPage() {
             <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук товарів...' value={search} onChange={(e) => setSearch(e.target.value)} />
             <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
           </div>
-        </div>{' '}
+        </div>
         <div className='mb-6'>
           <button onClick={() => setShowCreateForm(!showCreateForm)} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 flex items-center gap-2 transition-colors shadow font-semibold cursor-pointer'>
             <HiOutlinePlus size={20} />
@@ -862,9 +904,9 @@ export default function ManageProductsPage() {
               </div>
               {formData.isVariant && (
                 <div className='mb-4'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>{' '}
                   <select value={formData.baseProductId} onChange={(e) => setFormData({ ...formData, baseProductId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть базовий товар</option>{' '}
+                    <option value=''>Оберіть базовий товар</option>
                     {baseProducts.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name}
@@ -877,8 +919,17 @@ export default function ManageProductsPage() {
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Опис</label>
                 <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
               </div>
+              <div className='mb-4'>
+                <label className='block text-sm font-medium text-gray-700 mb-1'>Зображення товару</label>
+                <input type='file' accept='image/jpeg,image/png,image/webp' onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100' />
+                <p className='text-xs text-gray-500 mt-1'>
+                  Підтримувані формати: JPEG, PNG, WebP. Максимальний розмір: 10MB.
+                  <br />
+                  Зображення буде автоматично обрізане до розміру 400×400 пікселів та конвертоване в WebP.
+                </p>
+              </div>{' '}
               <div className='mb-6 border-t border-gray-200 pt-6'>
-                <h4 className='text-md font-semibold text-gray-800 mb-4'>Сумісність з автомобілями</h4>{' '}
+                <h4 className='text-md font-semibold text-gray-800 mb-4'>Сумісність з автомобілями</h4>
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Марка</label>
@@ -990,14 +1041,14 @@ export default function ManageProductsPage() {
                       disabled={!newProductCompatibilityData.carBodyTypeId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
-                      <option value=''>Оберіть двигун</option>{' '}
+                      <option value=''>Оберіть двигун</option>
                       {getEnginesForBodyType(parseInt(newProductCompatibilityData.carBodyTypeId || '0')).map((engine) => (
                         <option key={engine.id} value={engine.id}>
                           {engine.name}
                         </option>
                       ))}
-                    </select>{' '}
-                  </div>{' '}
+                    </select>
+                  </div>
                   <div className='flex items-end'>
                     <button onClick={handleAddCompatibilityToNewProduct} disabled={!newProductCompatibilityData.carMakeId} className='w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
                       Додати
@@ -1011,9 +1062,9 @@ export default function ManageProductsPage() {
                 </div>
                 {formData.compatibilities.length > 0 && (
                   <div>
+                    {' '}
                     <h5 className='text-sm font-medium text-gray-700 mb-2'>Додані сумісності:</h5>
                     <div className='space-y-2'>
-                      {' '}
                       {formData.compatibilities.map((compatibility, index) => {
                         const make = carMakes.find((m) => m.id.toString() === compatibility.carMakeId);
                         const model = compatibility.carModelId ? carModels.find((m) => m.id.toString() === compatibility.carModelId) : null;
@@ -1044,8 +1095,8 @@ export default function ManageProductsPage() {
                     </div>
                   </div>
                 )}
-              </div>
-              {createError && <div className='text-red-600 text-sm font-medium mb-4 px-1'>{createError}</div>}{' '}
+              </div>{' '}
+              {createError && <div className='text-red-600 text-sm font-medium mb-4 px-1'>{createError}</div>}
               <div className='flex gap-2'>
                 <button onClick={handleAddProduct} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Додати товар {formData.compatibilities.length > 0 && `(${formData.compatibilities.length} сумісностей)`}
@@ -1080,35 +1131,47 @@ export default function ManageProductsPage() {
             <div className='flex flex-col gap-3'>
               {filteredProducts.map((product) => (
                 <div key={product.id} className='rounded-xl border border-gray-200 bg-white shadow-sm p-3'>
-                  <div className='flex items-start justify-between gap-2'>
-                    <div className='flex-1'>
-                      <div className='font-bold text-gray-900 text-base mb-1'>
-                        {product.name}
-                        {product.isVariant && product.baseProduct && <span className='ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded'>Варіант: {product.baseProduct.name}</span>}
-                      </div>
-                      <div className='text-sm text-gray-600 space-y-1'>
-                        <div>
-                          Ціна: <span className='font-semibold text-green-600'>{product.price} грн</span>
-                        </div>{' '}
-                        <div>
-                          На складі: <span className='font-medium'>{product.stockQuantity} шт</span>
+                  <div className='flex items-start justify-between gap-3'>
+                    <div className='flex gap-3 flex-1'>
+                      {product.imageUrl ? (
+                        <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0'>
+                          <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-cover' />
                         </div>
-                        <div>
-                          Категорія: <span className='font-medium'>{product.category.name}</span>
+                      ) : (
+                        <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
+                          <span className='text-xs text-gray-400'>Немає</span>
                         </div>
-                        <div>
-                          Виробник: <span className='font-medium'>{product.manufacturer.name}</span>
+                      )}
+                      <div className='flex-1'>
+                        <div className='font-bold text-gray-900 text-base mb-1'>
+                          {product.name}
+                          {product.isVariant && product.baseProduct && <span className='ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded'>Варіант: {product.baseProduct.name}</span>}
                         </div>
-                        {product.averageRating !== null && product.averageRating > 0 && (
+                        <div className='text-sm text-gray-600 space-y-1'>
+                          {' '}
                           <div>
-                            Рейтинг: <span className='font-medium text-yellow-600'>★ {product.averageRating.toFixed(1)}</span>
+                            Ціна: <span className='font-semibold text-green-600'>{product.price} грн</span>
                           </div>
-                        )}
-                        {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
                           <div>
-                            Автомобілів: <span className='font-medium text-blue-600'>{product.compatibleVehicles.length} сумісних</span>
+                            На складі: <span className='font-medium'>{product.stockQuantity} шт</span>
                           </div>
-                        )}{' '}
+                          <div>
+                            Категорія: <span className='font-medium'>{product.category.name}</span>
+                          </div>
+                          <div>
+                            Виробник: <span className='font-medium'>{product.manufacturer.name}</span>
+                          </div>
+                          {product.averageRating !== null && product.averageRating > 0 && (
+                            <div>
+                              Рейтинг: <span className='font-medium text-yellow-600'>★ {product.averageRating.toFixed(1)}</span>
+                            </div>
+                          )}{' '}
+                          {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
+                            <div>
+                              Автомобілів: <span className='font-medium text-blue-600'>{product.compatibleVehicles.length} сумісних</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className='flex gap-1'>
@@ -1127,17 +1190,17 @@ export default function ManageProductsPage() {
               ))}
             </div>
           )}
-        </div>
-        <div className='bg-white rounded-lg shadow border border-gray-200 -mx-2 px-2 sm:mx-0 sm:px-0 hidden sm:block'>
+        </div>{' '}
+        <div className='bg-white rounded-lg shadow border border-gray-200 w-full hidden sm:block'>
           {isLoading ? (
             <ProductSkeleton />
           ) : (
-            <div className='overflow-x-auto'>
-              <table className='min-w-full divide-y divide-gray-200 text-sm'>
+            <div className='w-full'>
+              <table className='w-full divide-y divide-gray-200 text-sm table-fixed'>
                 <thead className='bg-gray-100'>
                   <tr>
                     <th
-                      className='px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-16'
+                      className='px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-12'
                       onClick={() => {
                         if (sortBy === 'id') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
                         else {
@@ -1148,8 +1211,9 @@ export default function ManageProductsPage() {
                     >
                       ID {sortBy === 'id' && (sortDir === 'asc' ? '▲' : '▼')}
                     </th>
+                    <th className='px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16'>Фото</th>
                     <th
-                      className='px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none'
+                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/4'
                       onClick={() => {
                         if (sortBy === 'name') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
                         else {
@@ -1161,7 +1225,7 @@ export default function ManageProductsPage() {
                       Назва {sortBy === 'name' && (sortDir === 'asc' ? '▲' : '▼')}
                     </th>
                     <th
-                      className='px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none'
+                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-20'
                       onClick={() => {
                         if (sortBy === 'price') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
                         else {
@@ -1170,10 +1234,11 @@ export default function ManageProductsPage() {
                         }
                       }}
                     >
+                      {' '}
                       Ціна {sortBy === 'price' && (sortDir === 'asc' ? '▲' : '▼')}
                     </th>
                     <th
-                      className='px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none'
+                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-16'
                       onClick={() => {
                         if (sortBy === 'stockQuantity') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
                         else {
@@ -1185,7 +1250,7 @@ export default function ManageProductsPage() {
                       Склад {sortBy === 'stockQuantity' && (sortDir === 'asc' ? '▲' : '▼')}
                     </th>
                     <th
-                      className='px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none'
+                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/6'
                       onClick={() => {
                         if (sortBy === 'category') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
                         else {
@@ -1197,7 +1262,7 @@ export default function ManageProductsPage() {
                       Категорія {sortBy === 'category' && (sortDir === 'asc' ? '▲' : '▼')}
                     </th>
                     <th
-                      className='px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none'
+                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/6'
                       onClick={() => {
                         if (sortBy === 'manufacturer') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
                         else {
@@ -1208,53 +1273,64 @@ export default function ManageProductsPage() {
                     >
                       Виробник {sortBy === 'manufacturer' && (sortDir === 'asc' ? '▲' : '▼')}
                     </th>
-                    <th className='px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-32'>Дії</th>
+                    <th className='px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-24'>Дії</th>
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-100 max-h-[400px] overflow-y-auto'>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className='px-6 py-4 text-center text-gray-700 font-semibold'>
+                      <td colSpan={8} className='px-6 py-4 text-center text-gray-700 font-semibold'>
                         {debouncedSearch ? 'Товарів за запитом не знайдено' : 'Товарів не знайдено'}
                       </td>
                     </tr>
                   ) : (
                     filteredProducts.map((product) => (
                       <tr key={product.id} className='hover:bg-gray-50'>
-                        <td className='px-4 py-3 whitespace-nowrap font-semibold text-gray-900'>{product.id}</td>
-                        <td className='px-6 py-3 max-w-xs'>
-                          <div className='font-semibold text-gray-900 truncate'>{product.name}</div>
-                          {product.isVariant && product.baseProduct && <div className='text-xs text-blue-600 mt-1'>Варіант: {product.baseProduct.name}</div>}
+                        <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>
+                        <td className='px-2 py-3'>
+                          {product.imageUrl ? (
+                            <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto'>
+                              <Image src={product.imageUrl} alt={product.name} width={40} height={40} className='w-full h-full object-cover' />
+                            </div>
+                          ) : (
+                            <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mx-auto'>
+                              <span className='text-xs text-gray-400'>Немає</span>
+                            </div>
+                          )}
+                        </td>
+                        <td className='px-3 py-3'>
+                          <div className='font-semibold text-gray-900 break-words'>{product.name}</div>
+                          {product.isVariant && product.baseProduct && <div className='text-xs text-blue-600 mt-1 break-words'>Варіант: {product.baseProduct.name}</div>}
                           {product.averageRating !== null && product.averageRating > 0 && <div className='text-xs text-yellow-600 mt-1'>★ {product.averageRating.toFixed(1)}</div>}
                           {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
                             <div className='text-xs text-blue-600 mt-1 flex items-center gap-1'>
                               <HiOutlineTruck size={12} /> {product.compatibleVehicles.length} авто
                             </div>
                           )}
-                        </td>{' '}
-                        <td className='px-6 py-3 whitespace-nowrap'>
-                          <span className='font-semibold text-green-600'>{product.price} грн</span>
                         </td>
-                        <td className='px-6 py-3 whitespace-nowrap'>
-                          <span className={`font-medium ${product.stockQuantity === 0 ? 'text-red-600' : product.stockQuantity < 10 ? 'text-yellow-600' : 'text-gray-900'}`}>{product.stockQuantity} шт</span>
+                        <td className='px-3 py-3'>
+                          <span className='font-semibold text-green-600 break-words'>{product.price} грн</span>{' '}
                         </td>
-                        <td className='px-6 py-3 whitespace-nowrap'>
-                          <span className='font-medium text-gray-900'>{product.category.name}</span>
+                        <td className='px-3 py-3'>
+                          <span className={`font-medium break-words ${product.stockQuantity === 0 ? 'text-red-600' : product.stockQuantity < 10 ? 'text-yellow-600' : 'text-gray-900'}`}>{product.stockQuantity} шт</span>
                         </td>
-                        <td className='px-6 py-3 whitespace-nowrap'>
-                          <span className='font-medium text-gray-900'>{product.manufacturer.name}</span>
+                        <td className='px-3 py-3'>
+                          <span className='font-medium text-gray-900 break-words'>{product.category.name}</span>
                         </td>
-                        <td className='px-6 py-3 whitespace-nowrap text-right'>
-                          <div className='flex justify-end gap-2'>
+                        <td className='px-3 py-3'>
+                          <span className='font-medium text-gray-900 break-words'>{product.manufacturer.name}</span>
+                        </td>
+                        <td className='px-3 py-3 text-right'>
+                          <div className='flex justify-end gap-1 flex-wrap'>
                             <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з автомобілями'>
-                              <HiOutlineTruck size={18} />
+                              <HiOutlineTruck size={16} />
                             </button>
                             <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
-                              <HiOutlinePencil size={18} />
+                              <HiOutlinePencil size={16} />
                             </button>
                             <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
-                              <HiOutlineTrash size={18} />
-                            </button>{' '}
+                              <HiOutlineTrash size={16} />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -1269,15 +1345,14 @@ export default function ManageProductsPage() {
           <div className='fixed inset-0 flex items-center justify-center p-4 z-50' style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
             <div className='bg-white rounded-lg shadow-2xl border-2 border-gray-300 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto'>
               <div className='flex justify-between items-center mb-4'>
-                <h3 className='text-lg font-semibold text-gray-900'>Керування сумісністю з автомобілями - Товар #{managingCompatibilityId}</h3>{' '}
+                <h3 className='text-lg font-semibold text-gray-900'>Керування сумісністю з автомобілями - Товар #{managingCompatibilityId}</h3>
                 <button onClick={() => setManagingCompatibilityId(null)} className='text-gray-500 hover:text-gray-700 cursor-pointer'>
                   ✕
                 </button>
               </div>
               <div className='border-b border-gray-200 pb-6 mb-6'>
-                <h4 className='text-md font-semibold text-gray-800 mb-4'>Додати сумісність</h4>{' '}
+                <h4 className='text-md font-semibold text-gray-800 mb-4'>Додати сумісність</h4>
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4'>
-                  {' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Марка автомобіля</label>
                     <select
@@ -1302,7 +1377,7 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>{' '}
+                  </div>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Модель</label>
                     <select
@@ -1320,7 +1395,6 @@ export default function ManageProductsPage() {
                       disabled={!compatibilityFormData.carMakeId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
-                      {' '}
                       <option value=''>Оберіть модель</option>
                       {getModelsForMakeEdit(compatibilityFormData.carMakeId).map((model) => (
                         <option key={model.id} value={model.id}>
@@ -1328,7 +1402,7 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>{' '}
+                  </div>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Рік</label>
                     <select
@@ -1345,7 +1419,6 @@ export default function ManageProductsPage() {
                       disabled={!compatibilityFormData.carModelId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
-                      {' '}
                       <option value=''>Оберіть рік</option>
                       {getYearsForModelEdit(compatibilityFormData.carModelId).map((year) => (
                         <option key={year.id} value={year.id}>
@@ -1353,7 +1426,7 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>{' '}
+                  </div>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Тип кузова</label>
                     <select
@@ -1369,7 +1442,6 @@ export default function ManageProductsPage() {
                       disabled={!compatibilityFormData.carYearId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
-                      {' '}
                       <option value=''>Оберіть тип кузова</option>
                       {getBodyTypesForYearEdit(compatibilityFormData.carYearId).map((bodyType) => (
                         <option key={bodyType.id} value={bodyType.id}>
@@ -1391,15 +1463,14 @@ export default function ManageProductsPage() {
                       disabled={!compatibilityFormData.carBodyTypeId}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
                     >
-                      {' '}
-                      <option value=''>Оберіть двигун</option>{' '}
+                      <option value=''>Оберіть двигун</option>
                       {getEnginesForBodyTypeEdit(compatibilityFormData.carBodyTypeId).map((engine) => (
                         <option key={engine.id} value={engine.id}>
                           {engine.name}
                         </option>
                       ))}
-                    </select>{' '}
-                  </div>{' '}
+                    </select>
+                  </div>
                   <div className='flex items-end'>
                     <button onClick={() => managingCompatibilityId && handleAddCompatibility(managingCompatibilityId)} disabled={!compatibilityFormData.carMakeId} className='w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
                       Додати сумісність
@@ -1450,7 +1521,7 @@ export default function ManageProductsPage() {
               </div>
             </div>
           </div>
-        )}{' '}
+        )}
         {editingProductId && (
           <div className='fixed inset-0 flex items-center justify-center p-4 z-50' style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
             <div className='bg-white rounded-lg shadow-2xl border-2 border-gray-300 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
@@ -1520,6 +1591,9 @@ export default function ManageProductsPage() {
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Опис</label>
                 <textarea value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
+              </div>
+              <div className='mb-4'>
+                <ImageManager productId={editingProductId} currentImageUrl={products.find((p) => p.id === editingProductId)?.imageUrl || null} onImageUpdate={(newImageUrl) => editingProductId && handleImageUpdate(editingProductId, newImageUrl)} />
               </div>
               {editError && <div className='text-red-600 text-sm font-medium mb-4 px-1'>{editError}</div>}{' '}
               <div className='flex gap-2'>
