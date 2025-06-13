@@ -9,11 +9,22 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
-    }
-
-    const product = await prisma.product.findUnique({
+    } const product = await prisma.product.findUnique({
       where: { id: productId },
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        stockQuantity: true,
+        imageUrl: true,
+        categoryId: true,
+        manufacturerId: true,
+        isVariant: true,
+        baseProductId: true,
+        averageRating: true,
+        createdAt: true,
+        updatedAt: true,
         category: {
           select: {
             id: true,

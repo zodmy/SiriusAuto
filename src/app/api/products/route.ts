@@ -5,7 +5,20 @@ import { checkAdmin } from '@/lib/auth';
 export async function GET() {
   try {
     const products = await prisma.product.findMany({
-      include: {
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        stockQuantity: true,
+        imageUrl: true,
+        categoryId: true,
+        manufacturerId: true,
+        isVariant: true,
+        baseProductId: true,
+        averageRating: true,
+        createdAt: true,
+        updatedAt: true,
         category: {
           select: {
             id: true,
