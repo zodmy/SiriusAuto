@@ -682,7 +682,7 @@ export default function ManageProductsPage() {
         const year = carYears.find((y) => y.id === parseInt(carYearId));
         const bodyType = carBodyTypes.find((bt) => bt.id === parseInt(carBodyTypeId));
 
-        return `Сумісність з усіма двигунами ${makeName} ${model?.name || ''} ${year?.year || ''} ${bodyType?.name || ''}`.trim();
+        return `Сумісність з усіма автомобілями ${makeName} ${model?.name || ''} ${year?.year || ''} ${bodyType?.name || ''}`.trim();
       } else if (carYearId) {
         const model = carModels.find((m) => m.id === parseInt(carModelId));
         const year = carYears.find((y) => y.id === parseInt(carYearId));
@@ -1231,10 +1231,10 @@ export default function ManageProductsPage() {
                               <HiOutlineTruck size={12} /> {product.compatibleVehicles.length} авто
                             </div>
                           )}
-                        </td>
+                        </td>{' '}
                         <td className='px-6 py-3 whitespace-nowrap'>
                           <span className='font-semibold text-green-600'>{product.price} грн</span>
-                        </td>{' '}
+                        </td>
                         <td className='px-6 py-3 whitespace-nowrap'>
                           <span className={`font-medium ${product.stockQuantity === 0 ? 'text-red-600' : product.stockQuantity < 10 ? 'text-yellow-600' : 'text-gray-900'}`}>{product.stockQuantity} шт</span>
                         </td>
@@ -1254,9 +1254,9 @@ export default function ManageProductsPage() {
                             </button>
                             <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
                               <HiOutlineTrash size={18} />
-                            </button>
+                            </button>{' '}
                           </div>
-                        </td>{' '}
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1277,6 +1277,7 @@ export default function ManageProductsPage() {
               <div className='border-b border-gray-200 pb-6 mb-6'>
                 <h4 className='text-md font-semibold text-gray-800 mb-4'>Додати сумісність</h4>{' '}
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4'>
+                  {' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Марка автомобіля</label>
                     <select
@@ -1286,6 +1287,10 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carMakeId: makeId,
+                          carModelId: '',
+                          carYearId: '',
+                          carBodyTypeId: '',
+                          carEngineId: '',
                         });
                       }}
                       className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
@@ -1297,7 +1302,7 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Модель</label>
                     <select
@@ -1307,6 +1312,9 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carModelId: modelId,
+                          carYearId: '',
+                          carBodyTypeId: '',
+                          carEngineId: '',
                         });
                       }}
                       disabled={!compatibilityFormData.carMakeId}
@@ -1320,7 +1328,7 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Рік</label>
                     <select
@@ -1330,6 +1338,8 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carYearId: yearId,
+                          carBodyTypeId: '',
+                          carEngineId: '',
                         });
                       }}
                       disabled={!compatibilityFormData.carModelId}
@@ -1343,7 +1353,7 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Тип кузова</label>
                     <select
@@ -1353,6 +1363,7 @@ export default function ManageProductsPage() {
                         setCompatibilityFormData({
                           ...compatibilityFormData,
                           carBodyTypeId: bodyTypeId,
+                          carEngineId: '',
                         });
                       }}
                       disabled={!compatibilityFormData.carYearId}
