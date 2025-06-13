@@ -45,7 +45,6 @@ function useAuthHook() {
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    // Розпочинаємо тиху перевірку після монтування компонента
     checkAuthStatus();
   }, []);
   const checkAuthStatus = async () => {
@@ -61,7 +60,7 @@ function useAuthHook() {
         setUser(null);
       }
     } catch (error) {
-      console.error('Error checking auth status:', error);
+      console.error('Помилка перевірки статусу автентифікації:', error);
       setUser(null);
     } finally {
       setIsInitialCheckComplete(true);
@@ -88,7 +87,7 @@ function useAuthHook() {
         return { success: false, error: data.error || 'Помилка входу' };
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Помилка входу:', error);
       return { success: false, error: 'Мережева помилка' };
     }
   };

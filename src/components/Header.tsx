@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { BiCategory } from 'react-icons/bi';
 import { AiOutlineShoppingCart } from 'react-icons/ai';
 import { HiMenu, HiX } from 'react-icons/hi';
+import { FaUser } from 'react-icons/fa';
+import { BsCart3 } from 'react-icons/bs';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCart } from '@/lib/hooks/useCart';
@@ -70,11 +72,9 @@ const Header = () => {
                     <div className='animate-pulse bg-gray-600 h-4 w-16 rounded'></div>
                   </div>
                 ) : isAuthenticated && user ? (
-                  <Link href='/profile' className='bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-md text-sm font-medium flex items-center cursor-pointer'>
-                    <svg className='w-5 h-5 mr-1' fill='currentColor' viewBox='0 0 20 20'>
-                      <path fillRule='evenodd' d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z' clipRule='evenodd' />
-                    </svg>
-                    {user.firstName}
+                  <Link href='/profile' className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center cursor-pointer min-w-0' style={{ height: 40 }}>
+                    <FaUser className='w-5 h-5' />
+                    <span className='ml-2 truncate'>{user.firstName}</span>
                   </Link>
                 ) : (
                   <div className='flex space-x-2'>
@@ -103,14 +103,7 @@ const Header = () => {
                       </div>
                       {isEmpty() ? (
                         <div className='flex flex-col items-center justify-center py-8'>
-                          <svg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'>
-                            <rect width='80' height='80' rx='40' fill='#F1F5F9' />
-                            <path d='M24 32h32l-4 20a6 6 0 01-6 5H34a6 6 0 01-6-5l-4-20z' stroke='#64748B' strokeWidth='2' fill='#fff' />
-                            <circle cx='32' cy='40' r='2' fill='#64748B' />
-                            <circle cx='48' cy='40' r='2' fill='#64748B' />
-                            <path d='M36 50c2 2 6 2 8 0' stroke='#64748B' strokeWidth='2' strokeLinecap='round' />
-                            <path d='M28 28v-2a4 4 0 014-4h16a4 4 0 014 4v2' stroke='#64748B' strokeWidth='2' />
-                          </svg>
+                          <BsCart3 size={80} className='text-gray-400' />
                           <p className='text-sm text-gray-600 mt-4'>Ваш кошик порожній.</p>
                         </div>
                       ) : (
@@ -205,9 +198,7 @@ const Header = () => {
               </div>
             ) : isAuthenticated && user ? (
               <Link href='/profile' onClick={() => setIsMobileMenuOpen(false)} className='flex items-center w-full text-left px-3 py-2 rounded-md hover:bg-gray-600 transition-colors'>
-                <svg className='w-5 h-5 mr-2' fill='currentColor' viewBox='0 0 20 20'>
-                  <path fillRule='evenodd' d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z' clipRule='evenodd' />
-                </svg>
+                <FaUser className='w-5 h-5 mr-2' />
                 {user.firstName}
               </Link>
             ) : (
@@ -235,14 +226,7 @@ const Header = () => {
             </div>
             {isEmpty() ? (
               <div className='flex flex-col items-center justify-center py-8'>
-                <svg width='80' height='80' viewBox='0 0 80 80' fill='none' xmlns='http://www.w3.org/2000/svg'>
-                  <rect width='80' height='80' rx='40' fill='#F1F5F9' />
-                  <path d='M24 32h32l-4 20a6 6 0 01-6 5H34a6 6 0 01-6-5l-4-20z' stroke='#64748B' strokeWidth='2' fill='#fff' />
-                  <circle cx='32' cy='40' r='2' fill='#64748B' />
-                  <circle cx='48' cy='40' r='2' fill='#64748B' />
-                  <path d='M36 50c2 2 6 2 8 0' stroke='#64748B' strokeWidth='2' strokeLinecap='round' />
-                  <path d='M28 28v-2a4 4 0 014-4h16a4 4 0 014 4v2' stroke='#64748B' strokeWidth='2' />
-                </svg>
+                <BsCart3 size={80} className='text-gray-400' />
                 <p className='text-sm text-gray-600 mt-4'>Ваш кошик порожній.</p>
               </div>
             ) : (

@@ -1,7 +1,8 @@
-import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import SiriusAutoLogoDynamic from '@/components/SiriusAutoLogoDynamic';
+import Link from 'next/link';
+import { HiCheckCircle, HiClock, HiInformationCircle } from 'react-icons/hi';
 
 export default function Home() {
   return (
@@ -38,9 +39,7 @@ export default function Home() {
             <div className='grid grid-cols-1 md:grid-cols-3 gap-8'>
               <div className='text-center p-6'>
                 <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
-                  </svg>
+                  <HiCheckCircle className='w-8 h-8 text-blue-600' />
                 </div>
                 <h3 className='text-xl font-semibold text-gray-900 mb-2'>Гарантія якості</h3>
                 <p className='text-gray-600'>Всі запчастини проходять ретельну перевірку та мають офіційну гарантію</p>
@@ -48,9 +47,7 @@ export default function Home() {
 
               <div className='text-center p-6'>
                 <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
-                  </svg>
+                  <HiClock className='w-8 h-8 text-blue-600' />
                 </div>
                 <h3 className='text-xl font-semibold text-gray-900 mb-2'>Швидка доставка</h3>
                 <p className='text-gray-600'>Доставляємо замовлення по всій Україні протягом 1-3 робочих днів</p>
@@ -58,12 +55,10 @@ export default function Home() {
 
               <div className='text-center p-6'>
                 <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4'>
-                  <svg className='w-8 h-8 text-blue-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z' />
-                  </svg>
+                  <HiInformationCircle className='w-8 h-8 text-blue-600' />
                 </div>
-                <h3 className='text-xl font-semibold text-gray-900 mb-2'>Підтримка 24/7</h3>
-                <p className='text-gray-600'>Наші фахівці готові допомогти вам у виборі запчастин цілодобово</p>
+                <h3 className='text-xl font-semibold text-gray-900 mb-2'>Підтримка клієнтів</h3>
+                <p className='text-gray-600'>Наша команда завжди готова допомогти вам з вибором та консультацією</p>
               </div>
             </div>
           </div>
