@@ -54,41 +54,41 @@ const Header = () => {
             <Link href='/' className='flex items-center'>
               <Image src='/SiriusAutoLogo.svg' alt='Sirius Auto Logo' width={150} height={40} />
             </Link>
-            <Link href='/products' className='bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-md text-sm font-medium flex items-center cursor-pointer'>
-              <BiCategory className='mr-1' />
+            <Link href='/products' className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md text-sm font-medium flex items-center cursor-pointer h-10'>
+              <BiCategory className='mr-1' size={20} />
               Каталог
             </Link>
           </div>
           <div className='absolute inset-0 flex justify-center items-center pointer-events-none'>
             <div className='w-1/2 max-w-xl pointer-events-auto'>
-              <input type='text' placeholder='Пошук товарів...' className='bg-gray-700 text-white placeholder-gray-400 px-4 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae]' />
+              <input type='text' placeholder='Пошук товарів...' className='bg-gray-700 text-white placeholder-gray-400 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae] h-10' />
             </div>
           </div>
           <nav className='flex items-center z-10'>
             <ul className='flex items-center space-x-3'>
               <li className='relative'>
                 {!isInitialCheckComplete ? (
-                  <div className='bg-gray-700 px-3 py-2 rounded-md text-sm font-medium'>
+                  <div className='bg-gray-700 px-3 rounded-md text-sm font-medium h-10 flex items-center'>
                     <div className='animate-pulse bg-gray-600 h-4 w-16 rounded'></div>
                   </div>
                 ) : isAuthenticated && user ? (
-                  <Link href='/profile' className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center cursor-pointer min-w-0' style={{ height: 40 }}>
+                  <Link href='/profile' className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md flex items-center cursor-pointer min-w-0 h-10'>
                     <FaUser className='w-5 h-5' />
                     <span className='ml-2 truncate'>{user.firstName}</span>
                   </Link>
                 ) : (
                   <div className='flex space-x-2'>
-                    <Link href='/login' className='bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-md text-sm font-medium cursor-pointer'>
+                    <Link href='/login' className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md text-sm font-medium flex items-center cursor-pointer h-10'>
                       Увійти
                     </Link>
-                    <Link href='/register' className='bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded-md text-sm font-medium cursor-pointer'>
-                      Реєстрація
+                    <Link href='/register' className='bg-blue-600 hover:bg-blue-700 px-3 rounded-md text-sm font-medium flex items-center cursor-pointer h-10'>
+                      Зареєструватися
                     </Link>
                   </div>
                 )}
               </li>
               <li className='relative'>
-                <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md text-sm font-medium flex items-center cursor-pointer relative' aria-label='Open cart'>
+                <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md text-sm font-medium flex items-center cursor-pointer relative h-10' aria-label='Open cart'>
                   <AiOutlineShoppingCart size={24} />
                   {getTotalItems() > 0 && <span className='absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{getTotalItems()}</span>}
                 </button>
@@ -167,20 +167,20 @@ const Header = () => {
 
       <div className='md:hidden p-4'>
         <div className='flex items-center justify-between'>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center justify-center' aria-label='Toggle menu'>
+          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md flex items-center justify-center h-10' aria-label='Toggle menu'>
             {isMobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>{' '}
           <Link href='/' className='flex items-center'>
             <Image src='/SiriusAutoLogo.svg' alt='Sirius Auto Logo' width={120} height={32} />
           </Link>
-          <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 p-2 rounded-md flex items-center justify-center relative' aria-label='Open cart'>
+          <button ref={cartButtonRef} onClick={() => setIsCartOpen(!isCartOpen)} className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md flex items-center justify-center relative h-10' aria-label='Open cart'>
             <AiOutlineShoppingCart size={24} />
             {getTotalItems() > 0 && <span className='absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{getTotalItems()}</span>}
           </button>
         </div>
 
         <div className='mt-3'>
-          <input type='text' placeholder='Пошук товарів...' className='bg-gray-700 text-white placeholder-gray-400 px-4 py-2 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae]' />
+          <input type='text' placeholder='Пошук товарів...' className='bg-gray-700 text-white placeholder-gray-400 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae] h-10' />
         </div>
       </div>
 
@@ -188,7 +188,7 @@ const Header = () => {
         <div ref={mobileMenuRef} className='md:hidden bg-gray-700 border-t border-gray-600'>
           <nav className='px-4 py-3 space-y-3'>
             <Link href='/products' onClick={() => setIsMobileMenuOpen(false)} className='flex items-center w-full text-left px-3 py-2 rounded-md hover:bg-gray-600 transition-colors'>
-              <BiCategory className='mr-2' />
+              <BiCategory className='mr-2' size={20} />
               Каталог
             </Link>
 

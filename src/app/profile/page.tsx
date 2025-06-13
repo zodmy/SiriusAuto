@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -57,19 +57,14 @@ export default function ProfilePage() {
   });
   const router = useRouter();
   const { isAuthenticated, isInitialCheckComplete: authReady, logout } = useAuth();
+
   useEffect(() => {
     if (authReady && !isAuthenticated) {
       router.push('/login');
-      return;
     }
+  }, [authReady, isAuthenticated, router]);
 
-    if (isAuthenticated) {
-      fetchProfile();
-      fetchOrders();
-    }
-  }, [isAuthenticated, authReady, router]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const response = await fetch('/api/profile', {
         credentials: 'include',
@@ -89,14 +84,14 @@ export default function ProfilePage() {
         setError('Помилка завантаження профілю');
       }
     } catch (error) {
-      console.error('Profile fetch error:', error);
+      console.error('Помилка отримання профілю:', error);
       setError('Мережева помилка');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setOrdersLoading(true);
       const response = await fetch('/api/orders/my', {
@@ -107,14 +102,57 @@ export default function ProfilePage() {
         const data = await response.json();
         setOrders(data);
       } else {
-        console.error('Failed to fetch orders');
+        console.error('Не вдалося отримати замовлення');
       }
     } catch (error) {
-      console.error('Orders fetch error:', error);
+      console.error('Помилка отримання замовлень:', error);
     } finally {
       setOrdersLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (authReady && isAuthenticated) {
+      fetchProfile();
+      fetchOrders();
+    }
+  }, [authReady, isAuthenticated, fetchProfile, fetchOrders]);
+
+  if (!authReady) {
+    return (
+      <div className='flex flex-col min-h-screen'>
+        <Header />
+        <main className='flex-grow flex items-center justify-center'>
+          <div className='text-xl'>Перевірка автентифікації...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className='flex flex-col min-h-screen'>
+        <Header />
+        <main className='flex-grow flex items-center justify-center'>
+          <div className='text-xl'>Перенаправлення на сторінку входу...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className='flex flex-col min-h-screen'>
+        <Header />
+        <main className='flex-grow flex items-center justify-center'>
+          <div className='text-xl'>Завантаження даних профілю...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -202,7 +240,7 @@ export default function ProfilePage() {
         setError(data.error || 'Помилка оновлення профілю');
       }
     } catch (error) {
-      console.error('Profile update error:', error);
+      console.error('Помилка оновлення профілю:', error);
       setError('Мережева помилка');
     } finally {
       setIsSubmitting(false);
@@ -260,24 +298,11 @@ export default function ProfilePage() {
 
   if (isLoading) {
     return (
-      <div className='flex flex-col min-h-screen bg-gray-50'>
+      <div className='flex flex-col min-h-screen'>
         <Header />
-        <div className='flex-grow flex items-center justify-center'>
-          <div className='w-full max-w-2xl mx-auto'>
-            <div className='bg-white shadow rounded-lg p-6'>
-              <div className='h-6 w-1/3 bg-gray-200 rounded mb-6 animate-pulse'></div>
-              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 mb-6'>
-                <div className='h-5 w-2/3 bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-5 w-2/3 bg-gray-200 rounded animate-pulse'></div>
-              </div>
-              <div className='h-5 w-1/2 bg-gray-200 rounded mb-4 animate-pulse'></div>
-              <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
-                <div className='h-5 w-2/3 bg-gray-200 rounded animate-pulse'></div>
-                <div className='h-5 w-2/3 bg-gray-200 rounded animate-pulse'></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <main className='flex-grow flex items-center justify-center'>
+          <div className='text-xl'>Завантаження даних профілю...</div>
+        </main>
         <Footer />
       </div>
     );
@@ -400,11 +425,7 @@ export default function ProfilePage() {
                         <div className='mt-1 relative'>
                           <input id='currentPassword' name='currentPassword' type={showPasswords.current ? 'text' : 'password'} value={formData.currentPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
                           <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => togglePasswordVisibility('current')}>
-                            {showPasswords.current ? (
-                              <HiEyeOff className='h-5 w-5 text-gray-400' />
-                            ) : (
-                              <HiEye className='h-5 w-5 text-gray-400' />
-                            )}
+                            {showPasswords.current ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
                           </button>
                         </div>
                       </div>
@@ -416,11 +437,7 @@ export default function ProfilePage() {
                         <div className='mt-1 relative'>
                           <input id='newPassword' name='newPassword' type={showPasswords.new ? 'text' : 'password'} value={formData.newPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' placeholder='Мін. 6 символів' />
                           <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => togglePasswordVisibility('new')}>
-                            {showPasswords.new ? (
-                              <HiEyeOff className='h-5 w-5 text-gray-400' />
-                            ) : (
-                              <HiEye className='h-5 w-5 text-gray-400' />
-                            )}
+                            {showPasswords.new ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
                           </button>
                         </div>
                       </div>
@@ -432,11 +449,7 @@ export default function ProfilePage() {
                         <div className='mt-1 relative'>
                           <input id='confirmNewPassword' name='confirmNewPassword' type={showPasswords.confirm ? 'text' : 'password'} value={formData.confirmNewPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
                           <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => togglePasswordVisibility('confirm')}>
-                            {showPasswords.confirm ? (
-                              <HiEyeOff className='h-5 w-5 text-gray-400' />
-                            ) : (
-                              <HiEye className='h-5 w-5 text-gray-400' />
-                            )}
+                            {showPasswords.confirm ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
                           </button>
                         </div>
                       </div>
