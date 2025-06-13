@@ -368,19 +368,16 @@ export default function ManageProductsPage() {
       console.error('Помилка завантаження двигунів:', error);
     }
   }, []);
-
   useEffect(() => {
-    if (isAdmin && !isVerifyingAuth) {
-      fetchProducts();
-      fetchCategories();
-      fetchManufacturers();
-      fetchCarMakes();
-      fetchAllCarModels();
-      fetchAllCarYears();
-      fetchAllCarBodyTypes();
-      fetchAllCarEngines();
-    }
-  }, [isAdmin, isVerifyingAuth, fetchProducts, fetchCategories, fetchManufacturers, fetchCarMakes, fetchAllCarModels, fetchAllCarYears, fetchAllCarBodyTypes, fetchAllCarEngines]);
+    const loadData = async () => {
+      if (!isAdmin || isVerifyingAuth) return;
+
+      await Promise.all([fetchProducts(), fetchCategories(), fetchManufacturers(), fetchCarMakes(), fetchAllCarModels(), fetchAllCarYears(), fetchAllCarBodyTypes(), fetchAllCarEngines()]);
+    };
+
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, isVerifyingAuth]);
 
   useEffect(() => {
     const handler = setTimeout(() => {

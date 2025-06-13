@@ -108,12 +108,26 @@ export default function ManageManufacturersPage() {
       setIsLoading(false);
     }
   }, []);
-
   useEffect(() => {
-    if (isAdmin && !isVerifyingAuth) {
-      fetchManufacturers();
-    }
-  }, [isAdmin, isVerifyingAuth, fetchManufacturers]);
+    const loadManufacturers = async () => {
+      if (!isAdmin || isVerifyingAuth) return;
+
+      try {
+        const res = await fetch('/api/manufacturers');
+        if (!res.ok) {
+          throw new Error('Не вдалося завантажити виробників');
+        }
+        const data = await res.json();
+        setManufacturers(data);
+      } catch (error) {
+        console.error('Помилка завантаження виробників:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadManufacturers();
+  }, [isAdmin, isVerifyingAuth]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
