@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi';
+import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil, HiOutlineTruck } from 'react-icons/hi';
 import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
 import React from 'react';
 
@@ -685,8 +685,9 @@ export default function ManageProductsPage() {
   return (
     <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
       <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full sm:max-w-6xl mx-auto border border-gray-200'>
+        {' '}
         <div className='mb-3'>
-          <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300'>
+          <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300 cursor-pointer'>
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
             На головну
           </a>
@@ -705,9 +706,9 @@ export default function ManageProductsPage() {
             <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук товарів...' value={search} onChange={(e) => setSearch(e.target.value)} />
             <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
           </div>
-        </div>
+        </div>{' '}
         <div className='mb-6'>
-          <button onClick={() => setShowCreateForm(!showCreateForm)} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 flex items-center gap-2 transition-colors shadow font-semibold'>
+          <button onClick={() => setShowCreateForm(!showCreateForm)} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 flex items-center gap-2 transition-colors shadow font-semibold cursor-pointer'>
             <HiOutlinePlus size={20} />
             {showCreateForm ? 'Скасувати' : 'Додати товар'}
           </button>
@@ -766,12 +767,12 @@ export default function ManageProductsPage() {
                 <div className='mb-4'>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>
                   <select value={formData.baseProductId} onChange={(e) => setFormData({ ...formData, baseProductId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть базовий товар</option>
+                    <option value=''>Оберіть базовий товар</option>{' '}
                     {baseProducts.map((product) => (
                       <option key={product.id} value={product.id}>
                         {product.name}
                       </option>
-                    ))}{' '}
+                    ))}
                   </select>
                 </div>
               )}
@@ -809,7 +810,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Модель</label>
                     <select
@@ -836,7 +836,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Рік</label>
                     <select
@@ -862,7 +861,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Тип кузова</label>
                     <select
@@ -887,7 +885,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Двигун</label>
                     <select
@@ -908,10 +905,9 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-
+                  </div>{' '}
                   <div className='flex items-end'>
-                    <button onClick={handleAddCompatibilityToNewProduct} disabled={!newProductCompatibilityData.carEngineId} className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed'>
+                    <button onClick={handleAddCompatibilityToNewProduct} disabled={!newProductCompatibilityData.carEngineId} className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
                       Додати
                     </button>
                   </div>
@@ -930,10 +926,11 @@ export default function ManageProductsPage() {
 
                         return (
                           <div key={index} className='flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50'>
+                            {' '}
                             <div className='text-sm text-gray-900'>
                               {make?.name} {model?.name} ({year?.year}) • {bodyType?.name} • {engine?.name}
                             </div>
-                            <button onClick={() => handleRemoveCompatibilityFromNewProduct(index)} className='text-red-600 hover:text-red-800' title='Видалити'>
+                            <button onClick={() => handleRemoveCompatibilityFromNewProduct(index)} className='text-red-600 hover:text-red-800 cursor-pointer' title='Видалити'>
                               ✕
                             </button>
                           </div>
@@ -945,7 +942,7 @@ export default function ManageProductsPage() {
               </div>
               {createError && <div className='text-red-600 text-sm font-medium mb-4 px-1'>{createError}</div>}{' '}
               <div className='flex gap-2'>
-                <button onClick={handleAddProduct} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 font-semibold transition-colors'>
+                <button onClick={handleAddProduct} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Додати товар {formData.compatibilities.length > 0 && `(${formData.compatibilities.length} сумісностей)`}
                 </button>
                 <button
@@ -961,7 +958,7 @@ export default function ManageProductsPage() {
                       carEngineId: '',
                     });
                   }}
-                  className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors'
+                  className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'
                 >
                   Скасувати
                 </button>
@@ -987,36 +984,36 @@ export default function ManageProductsPage() {
                       <div className='text-sm text-gray-600 space-y-1'>
                         <div>
                           Ціна: <span className='font-semibold text-green-600'>{product.price} грн</span>
-                        </div>
+                        </div>{' '}
                         <div>
                           На складі: <span className='font-medium'>{product.stockQuantity} шт</span>
-                        </div>{' '}
+                        </div>
                         <div>
                           Категорія: <span className='font-medium'>{product.category.name}</span>
                         </div>
                         <div>
                           Виробник: <span className='font-medium'>{product.manufacturer.name}</span>
                         </div>
-                        {product.averageRating && (
+                        {product.averageRating !== null && product.averageRating > 0 && (
                           <div>
                             Рейтинг: <span className='font-medium text-yellow-600'>★ {product.averageRating.toFixed(1)}</span>
                           </div>
-                        )}{' '}
+                        )}
                         {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
                           <div>
                             Автомобілів: <span className='font-medium text-blue-600'>{product.compatibleVehicles.length} сумісних</span>
                           </div>
-                        )}
+                        )}{' '}
                       </div>
                     </div>
                     <div className='flex gap-1'>
-                      <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 hover:cursor-pointer' title='Керування сумісністю'>
-                        🚗
+                      <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю'>
+                        <HiOutlineTruck size={18} />
                       </button>
-                      <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 hover:cursor-pointer'>
+                      <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
                         <HiOutlinePencil size={18} />
                       </button>
-                      <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer'>
+                      <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
                         <HiOutlineTrash size={18} />
                       </button>
                     </div>
@@ -1123,8 +1120,12 @@ export default function ManageProductsPage() {
                         <td className='px-6 py-3 max-w-xs'>
                           <div className='font-semibold text-gray-900 truncate'>{product.name}</div>
                           {product.isVariant && product.baseProduct && <div className='text-xs text-blue-600 mt-1'>Варіант: {product.baseProduct.name}</div>}
-                          {product.averageRating && <div className='text-xs text-yellow-600 mt-1'>★ {product.averageRating.toFixed(1)}</div>}
-                          {product.compatibleVehicles && product.compatibleVehicles.length > 0 && <div className='text-xs text-blue-600 mt-1'>🚗 {product.compatibleVehicles.length} авто</div>}
+                          {product.averageRating !== null && product.averageRating > 0 && <div className='text-xs text-yellow-600 mt-1'>★ {product.averageRating.toFixed(1)}</div>}
+                          {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
+                            <div className='text-xs text-blue-600 mt-1 flex items-center gap-1'>
+                              <HiOutlineTruck size={12} /> {product.compatibleVehicles.length} авто
+                            </div>
+                          )}
                         </td>
                         <td className='px-6 py-3 whitespace-nowrap'>
                           <span className='font-semibold text-green-600'>{product.price} грн</span>
@@ -1134,19 +1135,19 @@ export default function ManageProductsPage() {
                         </td>
                         <td className='px-6 py-3 whitespace-nowrap'>
                           <span className='font-medium text-gray-900'>{product.category.name}</span>
-                        </td>{' '}
+                        </td>
                         <td className='px-6 py-3 whitespace-nowrap'>
                           <span className='font-medium text-gray-900'>{product.manufacturer.name}</span>
                         </td>
                         <td className='px-6 py-3 whitespace-nowrap text-right'>
                           <div className='flex justify-end gap-2'>
-                            <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 hover:cursor-pointer' title='Керування сумісністю з автомобілями'>
-                              🚗
+                            <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з автомобілями'>
+                              <HiOutlineTruck size={18} />
                             </button>
-                            <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 hover:cursor-pointer'>
+                            <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
                               <HiOutlinePencil size={18} />
                             </button>
-                            <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 hover:cursor-pointer'>
+                            <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
                               <HiOutlineTrash size={18} />
                             </button>
                           </div>
@@ -1159,17 +1160,15 @@ export default function ManageProductsPage() {
             </div>
           )}
         </div>
-
         {managingCompatibilityId && (
           <div className='fixed inset-0 flex items-center justify-center p-4 z-50' style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
             <div className='bg-white rounded-lg shadow-2xl border-2 border-gray-300 p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto'>
               <div className='flex justify-between items-center mb-4'>
-                <h3 className='text-lg font-semibold text-gray-900'>Керування сумісністю з автомобілями - Товар #{managingCompatibilityId}</h3>
-                <button onClick={() => setManagingCompatibilityId(null)} className='text-gray-500 hover:text-gray-700'>
+                <h3 className='text-lg font-semibold text-gray-900'>Керування сумісністю з автомобілями - Товар #{managingCompatibilityId}</h3>{' '}
+                <button onClick={() => setManagingCompatibilityId(null)} className='text-gray-500 hover:text-gray-700 cursor-pointer'>
                   ✕
                 </button>
               </div>
-
               <div className='border-b border-gray-200 pb-6 mb-6'>
                 <h4 className='text-md font-semibold text-gray-800 mb-4'>Додати сумісність</h4>
 
@@ -1200,7 +1199,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Модель</label>
                     <select
@@ -1227,7 +1225,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Рік</label>
                     <select
@@ -1253,7 +1250,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Тип кузова</label>
                     <select
@@ -1278,7 +1274,6 @@ export default function ManageProductsPage() {
                       ))}
                     </select>
                   </div>
-
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Двигун</label>
                     <select
@@ -1299,16 +1294,14 @@ export default function ManageProductsPage() {
                         </option>
                       ))}
                     </select>
-                  </div>
-
+                  </div>{' '}
                   <div className='flex items-end'>
-                    <button onClick={() => handleAddCompatibility(managingCompatibilityId)} disabled={!compatibilityFormData.carEngineId} className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed'>
+                    <button onClick={() => handleAddCompatibility(managingCompatibilityId)} disabled={!compatibilityFormData.carEngineId} className='bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
                       Додати сумісність
                     </button>
                   </div>
                 </div>
               </div>
-
               <div>
                 <h4 className='text-md font-semibold text-gray-800 mb-4'>Існуючі сумісності</h4>
                 {(() => {
@@ -1329,9 +1322,9 @@ export default function ManageProductsPage() {
                             </div>
                             <div className='text-sm text-gray-600'>
                               {compatibility.carBodyType.name} • {compatibility.carEngine.name}
-                            </div>
+                            </div>{' '}
                           </div>
-                          <button onClick={() => handleDeleteCompatibility(compatibility.id)} className='text-red-600 hover:text-red-800 ml-3' title='Видалити сумісність'>
+                          <button onClick={() => handleDeleteCompatibility(compatibility.id)} className='text-red-600 hover:text-red-800 ml-3 cursor-pointer' title='Видалити сумісність'>
                             <HiOutlineTrash size={18} />
                           </button>
                         </div>
@@ -1339,10 +1332,9 @@ export default function ManageProductsPage() {
                     </div>
                   );
                 })()}
-              </div>
-
+              </div>{' '}
               <div className='flex justify-end mt-6 pt-6 border-t border-gray-200'>
-                <button onClick={() => setManagingCompatibilityId(null)} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors'>
+                <button onClick={() => setManagingCompatibilityId(null)} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Закрити
                 </button>
               </div>
@@ -1353,7 +1345,6 @@ export default function ManageProductsPage() {
           <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
             <div className='bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Редагувати товар</h3>
-
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Назва товару *</label>
@@ -1401,7 +1392,6 @@ export default function ManageProductsPage() {
                   </label>
                 </div>
               </div>
-
               {editFormData.isVariant && (
                 <div className='mb-4'>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>
@@ -1417,19 +1407,16 @@ export default function ManageProductsPage() {
                   </select>
                 </div>
               )}
-
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Опис</label>
                 <textarea value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
               </div>
-
-              {editError && <div className='text-red-600 text-sm font-medium mb-4 px-1'>{editError}</div>}
-
+              {editError && <div className='text-red-600 text-sm font-medium mb-4 px-1'>{editError}</div>}{' '}
               <div className='flex gap-2'>
-                <button onClick={() => handleSaveEditProduct(editingProductId)} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 font-semibold transition-colors'>
+                <button onClick={() => handleSaveEditProduct(editingProductId)} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Зберегти
                 </button>
-                <button onClick={handleCancelEdit} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors'>
+                <button onClick={handleCancelEdit} className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Скасувати
                 </button>
               </div>
