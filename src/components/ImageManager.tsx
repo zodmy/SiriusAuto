@@ -101,16 +101,14 @@ export default function ImageManager({ productId, currentImageUrl, onImageUpdate
       )}
 
       <div className='flex items-start gap-4'>
+        {' '}
         {currentImageUrl ? (
           <div className='relative group'>
             <div className='w-32 h-32 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center'>
               <Image src={currentImageUrl} alt='Зображення товару' width={128} height={128} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             </div>
-            <button onClick={handleDeleteImage} disabled={isUploading} className='absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center' title='Видалити зображення'>
+            <button onClick={handleDeleteImage} disabled={isUploading} className='absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center' title='Видалити зображення'>
               ×
-            </button>
-            <button type='button' onClick={() => window.open(currentImageUrl, '_blank')} className='absolute bottom-2 right-2 bg-white border border-gray-300 rounded px-2 py-1 text-xs text-gray-700 shadow hover:bg-gray-100 transition' title='Переглянути повністю'>
-              Переглянути
             </button>
           </div>
         ) : (
@@ -118,9 +116,8 @@ export default function ImageManager({ productId, currentImageUrl, onImageUpdate
             <span className='text-sm text-gray-500'>Немає зображення</span>
           </div>
         )}
-
         <div className='flex-1 space-y-2'>
-          <input ref={fileInputRef} type='file' accept='image/jpeg,image/png,image/webp' onChange={handleFileSelect} disabled={isUploading} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed' />{' '}
+          <input ref={fileInputRef} type='file' accept='image/jpeg,image/png,image/webp' onChange={handleFileSelect} disabled={isUploading} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer file:cursor-pointer' />{' '}
           <p className='text-xs text-gray-500'>
             Підтримувані формати: JPEG, PNG, WebP. Максимальний розмір: 10MB.
             <br />
