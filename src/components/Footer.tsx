@@ -4,7 +4,6 @@ const Footer = () => {
   return (
     <footer className='bg-gray-800 text-white'>
       <div className='max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8'>
-        {/* Desktop Layout */}
         <div className='hidden md:flex md:justify-between md:items-center text-sm'>
           <div className='flex items-center space-x-6'>
             <div className='flex items-center'>
@@ -29,7 +28,6 @@ const Footer = () => {
           <div className='text-gray-400 text-sm'>© 2024 Sirius Auto. Всі права захищені.</div>
         </div>
 
-        {/* Mobile Layout */}
         <div className='md:hidden space-y-4'>
           <div className='space-y-3'>
             <div className='flex items-center'>
