@@ -1,12 +1,21 @@
 'use client';
 
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
 import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 import ImageManager from '@/components/ImageManager';
 import Image from 'next/image';
 import React from 'react';
+
+const normalizeString = (str: string) => {
+  return str
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+};
+
+const searchCache = new Map<string, Product[]>();
 
 interface Product {
   id: number;
@@ -185,9 +194,275 @@ const ProductSkeleton = () => (
           </div>
         </div>
       ))}
-    </div>
+    </div>{' '}
   </div>
 );
+
+const SearchInput = React.memo(({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+  const handleChange = useCallback(
+    (newValue: string) => {
+      setLocalValue(newValue);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      const isMobile = window?.innerWidth <= 768;
+      const timeout = isMobile ? 100 : 200;
+
+      timeoutRef.current = setTimeout(() => {
+        onChange(newValue);
+      }, timeout);
+    },
+    [onChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div className='relative'>
+      <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white text-base sm:text-lg font-semibold' placeholder={placeholder} value={localValue} onChange={(e) => handleChange(e.target.value)} autoComplete='off' spellCheck='false' />
+      <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
+    </div>
+  );
+});
+
+SearchInput.displayName = 'SearchInput';
+
+const MobileProductCard = React.memo(({ product, onEdit, onDelete, onManageCompatibility, onOpenImageModal }: { product: Product; onEdit: (product: Product) => void; onDelete: (id: number) => void; onManageCompatibility: (id: number) => void; onOpenImageModal: (imageUrl: string, productName: string) => void }) => (
+  <div className='rounded-xl border border-gray-200 bg-white p-3' style={{ boxShadow: 'none' }}>
+    <div className='flex items-start justify-between gap-3'>
+      <div className='flex gap-3 flex-1'>
+        {product.imageUrl ? (
+          <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer' onClick={() => onOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
+            <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-contain' loading='lazy' placeholder='blur' blurDataURL='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Sh7+0DaGhiK7TGylUpNzuq/CdmQAaTNWz4Ey7qdZwCNBDOcgHlkfYYtRQBzrR9iPZd' />
+          </div>
+        ) : (
+          <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
+            <span className='text-xs text-gray-400'>Немає</span>
+          </div>
+        )}
+        <div className='flex-1'>
+          <div className='font-bold text-gray-900 text-base mb-1'>
+            {product.name}
+            {product.isVariant && product.baseProduct && <span className='ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded'>Варіант: {product.baseProduct.name}</span>}
+          </div>
+          <div className='text-sm text-gray-600 mb-1'>
+            {product.category.name} • {product.manufacturer.name}
+          </div>
+          <div className='flex items-center gap-2 mb-1'>
+            <span className='font-semibold text-pink-600'>₴{product.price}</span>
+            <span className='text-sm text-gray-500'>Склад: {product.stockQuantity} шт.</span>
+          </div>
+          <div className='text-xs text-gray-500'>Рейтинг: {product.averageRating ? `${product.averageRating}/5` : 'Немає'}</div>
+        </div>
+      </div>
+      <div className='flex flex-col gap-1'>
+        <button onClick={() => onEdit(product)} className='p-2 text-blue-600 rounded-lg' title='Редагувати'>
+          <HiOutlinePencil size={16} />
+        </button>
+        <button onClick={() => onDelete(product.id)} className='p-2 text-red-600 rounded-lg' title='Видалити'>
+          <HiOutlineTrash size={16} />
+        </button>
+        <button onClick={() => onManageCompatibility(product.id)} className='p-2 text-green-600 rounded-lg' title='Сумісність'>
+          <LuCar size={16} />
+        </button>
+      </div>
+    </div>
+  </div>
+));
+
+MobileProductCard.displayName = 'MobileProductCard';
+
+const VirtualizedMobileList = React.memo(({ products, onEdit, onDelete, onManageCompatibility, onOpenImageModal }: { products: Product[]; onEdit: (product: Product) => void; onDelete: (id: number) => void; onManageCompatibility: (id: number) => void; onOpenImageModal: (imageUrl: string, productName: string) => void }) => {
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!containerRef.current) return;
+
+      const container = containerRef.current;
+      const scrollTop = container.scrollTop;
+      const itemHeight = 120; // Приблизна висота одного елемента
+      const containerHeight = container.clientHeight;
+
+      const start = Math.floor(scrollTop / itemHeight);
+      const end = Math.min(start + Math.ceil(containerHeight / itemHeight) + 2, products.length);
+
+      setVisibleRange({ start, end });
+    };
+
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll);
+      handleScroll(); // Початкове встановлення
+    }
+
+    return () => {
+      if (container) {
+        container.removeEventListener('scroll', handleScroll);
+      }
+    };
+  }, [products.length]);
+
+  if (products.length <= 20) {
+    return (
+      <div className='flex flex-col gap-3'>
+        {products.map((product) => (
+          <MobileProductCard key={product.id} product={product} onEdit={onEdit} onDelete={onDelete} onManageCompatibility={onManageCompatibility} onOpenImageModal={onOpenImageModal} />
+        ))}
+      </div>
+    );
+  }
+
+  const visibleProducts = products.slice(visibleRange.start, visibleRange.end);
+  const totalHeight = products.length * 120;
+  const offsetY = visibleRange.start * 120;
+
+  return (
+    <div ref={containerRef} className='flex flex-col gap-3 overflow-y-auto' style={{ height: '70vh', maxHeight: '600px' }}>
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        <div style={{ transform: `translateY(${offsetY}px)` }}>
+          {visibleProducts.map((product) => (
+            <div key={product.id} style={{ marginBottom: '12px' }}>
+              <MobileProductCard product={product} onEdit={onEdit} onDelete={onDelete} onManageCompatibility={onManageCompatibility} onOpenImageModal={onOpenImageModal} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+VirtualizedMobileList.displayName = 'VirtualizedMobileList';
+
+const FormInput = React.memo(({ label, type = 'text', value, onChange, placeholder, required = false, min, step, rows }: { label: string; type?: string; value: string; onChange: (value: string) => void; placeholder?: string; required?: boolean; min?: string; step?: string; rows?: number }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleInputChange = useCallback(
+    (newValue: string) => {
+      setLocalValue(newValue);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        onChange(newValue);
+      }, 150);
+    },
+    [onChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return (
+    <div>
+      <label className='block text-sm font-medium text-gray-700 mb-1'>
+        {label} {required && '*'}
+      </label>
+      {type === 'textarea' ? <textarea value={localValue} onChange={(e) => handleInputChange(e.target.value)} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder={placeholder} rows={rows || 3} /> : <input type={type} value={localValue} onChange={(e) => handleInputChange(e.target.value)} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder={placeholder} min={min} step={step} />}
+    </div>
+  );
+});
+
+FormInput.displayName = 'FormInput';
+
+const OptimizedInput = React.memo(({ type = 'text', value, onChange, className, placeholder, min, step, ...props }: { type?: string; value: string; onChange: (value: string) => void; className?: string; placeholder?: string; min?: string; step?: string; [key: string]: unknown }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = useCallback(
+    (newValue: string) => {
+      setLocalValue(newValue);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        onChange(newValue);
+      }, 100);
+    },
+    [onChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return <input type={type} value={localValue} onChange={(e) => handleChange(e.target.value)} className={className} placeholder={placeholder} min={min} step={step} {...props} />;
+});
+
+OptimizedInput.displayName = 'OptimizedInput';
+
+const OptimizedTextarea = React.memo(({ value, onChange, className, placeholder, rows, ...props }: { value: string; onChange: (value: string) => void; className?: string; placeholder?: string; rows?: number; [key: string]: unknown }) => {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  const handleChange = useCallback(
+    (newValue: string) => {
+      setLocalValue(newValue);
+
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        onChange(newValue);
+      }, 100);
+    },
+    [onChange]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return <textarea value={localValue} onChange={(e) => handleChange(e.target.value)} className={className} placeholder={placeholder} rows={rows} {...props} />;
+});
+
+OptimizedTextarea.displayName = 'OptimizedTextarea';
 
 interface ProductFormData {
   name: string;
@@ -224,12 +499,6 @@ const initialFormData: ProductFormData = {
 export default function ManageProductsPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
-  const normalizeString = useCallback((str: string) => {
-    return str
-      .normalize('NFD')
-      .replace(/\p{Diacritic}/gu, '')
-      .toLowerCase();
-  }, []);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);
@@ -239,7 +508,6 @@ export default function ManageProductsPage() {
   const [carBodyTypes, setCarBodyTypes] = useState<CarBodyType[]>([]);
   const [carEngines, setCarEngines] = useState<CarEngine[]>([]);
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [formData, setFormData] = useState<ProductFormData>(initialFormData);
   const [createError, setCreateError] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
@@ -273,7 +541,6 @@ export default function ManageProductsPage() {
   const [manufacturerSearchFocused, setManufacturerSearchFocused] = useState(false);
   const [baseProductSearch, setBaseProductSearch] = useState('');
   const [baseProductSearchFocused, setBaseProductSearchFocused] = useState(false);
-
   const [editCategorySearch, setEditCategorySearch] = useState('');
   const [editCategorySearchFocused, setEditCategorySearchFocused] = useState(false);
   const [editManufacturerSearch, setEditManufacturerSearch] = useState('');
@@ -281,12 +548,28 @@ export default function ManageProductsPage() {
   const [editBaseProductSearch, setEditBaseProductSearch] = useState('');
   const [editBaseProductSearchFocused, setEditBaseProductSearchFocused] = useState(false);
 
+  const [carMakeSearch, setCarMakeSearch] = useState('');
+  const [carMakeSearchFocused, setCarMakeSearchFocused] = useState(false);
+  const [carModelSearch, setCarModelSearch] = useState('');
+  const [carModelSearchFocused, setCarModelSearchFocused] = useState(false);
+  const [carYearSearch, setCarYearSearch] = useState('');
+  const [carYearSearchFocused, setCarYearSearchFocused] = useState(false);
+  const [carBodyTypeSearch, setCarBodyTypeSearch] = useState('');
+  const [carBodyTypeSearchFocused, setCarBodyTypeSearchFocused] = useState(false);
+  const [carEngineSearch, setCarEngineSearch] = useState('');
+  const [carEngineSearchFocused, setCarEngineSearchFocused] = useState(false);
+
   const categoryInputRef = useRef<HTMLInputElement | null>(null);
   const manufacturerInputRef = useRef<HTMLInputElement | null>(null);
   const baseProductInputRef = useRef<HTMLInputElement | null>(null);
   const editCategoryInputRef = useRef<HTMLInputElement | null>(null);
   const editManufacturerInputRef = useRef<HTMLInputElement | null>(null);
   const editBaseProductInputRef = useRef<HTMLInputElement | null>(null);
+  const carMakeInputRef = useRef<HTMLInputElement | null>(null);
+  const carModelInputRef = useRef<HTMLInputElement | null>(null);
+  const carYearInputRef = useRef<HTMLInputElement | null>(null);
+  const carBodyTypeInputRef = useRef<HTMLInputElement | null>(null);
+  const carEngineInputRef = useRef<HTMLInputElement | null>(null);
   const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch('/api/products');
@@ -295,6 +578,7 @@ export default function ManageProductsPage() {
       }
       const data = await res.json();
       setProducts(data);
+      searchCache.clear();
     } catch (error) {
       console.error('Помилка завантаження товарів:', error);
     } finally {
@@ -395,15 +679,8 @@ export default function ManageProductsPage() {
 
       await Promise.all([fetchProducts(), fetchCategories(), fetchManufacturers(), fetchCarMakes(), fetchAllCarModels(), fetchAllCarYears(), fetchAllCarBodyTypes(), fetchAllCarEngines()]);
     };
-
     loadData();
   }, [isAdmin, isVerifyingAuth, fetchProducts, fetchCategories, fetchManufacturers, fetchCarMakes, fetchAllCarModels, fetchAllCarYears, fetchAllCarBodyTypes, fetchAllCarEngines]);
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-    }, 400);
-    return () => clearTimeout(handler);
-  }, [search]);
 
   useEffect(() => {
     function handleDocumentClick(event: MouseEvent) {
@@ -428,26 +705,51 @@ export default function ManageProductsPage() {
       if (editManufacturerSearchFocused && editManufacturerInputRef.current && !editManufacturerInputRef.current.contains(target)) {
         setEditManufacturerSearchFocused(false);
       }
-
       if (editBaseProductSearchFocused && editBaseProductInputRef.current && !editBaseProductInputRef.current.contains(target)) {
         setEditBaseProductSearchFocused(false);
+      }
+
+      if (carMakeSearchFocused && carMakeInputRef.current && !carMakeInputRef.current.contains(target)) {
+        setCarMakeSearchFocused(false);
+      }
+
+      if (carModelSearchFocused && carModelInputRef.current && !carModelInputRef.current.contains(target)) {
+        setCarModelSearchFocused(false);
+      }
+
+      if (carYearSearchFocused && carYearInputRef.current && !carYearInputRef.current.contains(target)) {
+        setCarYearSearchFocused(false);
+      }
+
+      if (carBodyTypeSearchFocused && carBodyTypeInputRef.current && !carBodyTypeInputRef.current.contains(target)) {
+        setCarBodyTypeSearchFocused(false);
+      }
+
+      if (carEngineSearchFocused && carEngineInputRef.current && !carEngineInputRef.current.contains(target)) {
+        setCarEngineSearchFocused(false);
       }
     }
 
     document.addEventListener('mousedown', handleDocumentClick);
     return () => document.removeEventListener('mousedown', handleDocumentClick);
-  }, [categorySearchFocused, manufacturerSearchFocused, baseProductSearchFocused, editCategorySearchFocused, editManufacturerSearchFocused, editBaseProductSearchFocused]);
+  }, [categorySearchFocused, manufacturerSearchFocused, baseProductSearchFocused, editCategorySearchFocused, editManufacturerSearchFocused, editBaseProductSearchFocused, carMakeSearchFocused, carModelSearchFocused, carYearSearchFocused, carBodyTypeSearchFocused, carEngineSearchFocused]);
+  const filteredProducts = useMemo(() => {
+    const searchTerm = search.trim();
 
-  const getFilteredProducts = useCallback(() => {
-    const searchTerm = normalizeString(debouncedSearch.trim());
+    const cacheKey = `${searchTerm}-${sortBy}-${sortDir}-${products.length}`;
+
+    if (searchCache.has(cacheKey)) {
+      return searchCache.get(cacheKey)!;
+    }
 
     let filtered = products;
 
     if (searchTerm) {
-      filtered = products.filter((product) => normalizeString(product.name).includes(searchTerm) || normalizeString(product.category.name).includes(searchTerm) || normalizeString(product.manufacturer.name).includes(searchTerm) || (product.description && normalizeString(product.description).includes(searchTerm)));
+      const normalizedSearchTerm = normalizeString(searchTerm);
+      filtered = products.filter((product) => normalizeString(product.name).includes(normalizedSearchTerm) || normalizeString(product.category.name).includes(normalizedSearchTerm) || normalizeString(product.manufacturer.name).includes(normalizedSearchTerm) || (product.description && normalizeString(product.description).includes(normalizedSearchTerm)));
     }
 
-    return [...filtered].sort((a, b) => {
+    const result = [...filtered].sort((a, b) => {
       if (sortBy === 'id') {
         return sortDir === 'asc' ? a.id - b.id : b.id - a.id;
       } else if (sortBy === 'name') {
@@ -462,8 +764,17 @@ export default function ManageProductsPage() {
         return sortDir === 'asc' ? a.manufacturer.name.localeCompare(b.manufacturer.name) : b.manufacturer.name.localeCompare(a.manufacturer.name);
       }
       return 0;
-    });
-  }, [products, debouncedSearch, sortBy, sortDir, normalizeString]);
+    }); // Зберігаємо в кеш (обмежуємо розмір кешу)
+    if (searchCache.size > 50) {
+      const firstKey = searchCache.keys().next().value;
+      if (firstKey) {
+        searchCache.delete(firstKey);
+      }
+    }
+    searchCache.set(cacheKey, result);
+
+    return result;
+  }, [products, search, sortBy, sortDir]);
 
   const validateFormData = (data: ProductFormData): string | null => {
     if (!data.name.trim()) return 'Введіть назву товару';
@@ -562,6 +873,17 @@ export default function ManageProductsPage() {
       setCategorySearchFocused(false);
       setManufacturerSearchFocused(false);
       setBaseProductSearchFocused(false);
+
+      setCarMakeSearch('');
+      setCarModelSearch('');
+      setCarYearSearch('');
+      setCarBodyTypeSearch('');
+      setCarEngineSearch('');
+      setCarMakeSearchFocused(false);
+      setCarModelSearchFocused(false);
+      setCarYearSearchFocused(false);
+      setCarBodyTypeSearchFocused(false);
+      setCarEngineSearchFocused(false);
 
       await fetchProducts();
     } catch {
@@ -888,23 +1210,66 @@ export default function ManageProductsPage() {
       const normalizedSearch = normalizeString(searchTerm.trim());
       return categories.filter((c) => normalizeString(c.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
     },
-    [categories, normalizeString]
+    [categories]
   );
   const getFilteredManufacturers = useCallback(
     (searchTerm: string) => {
       const normalizedSearch = normalizeString(searchTerm.trim());
       return manufacturers.filter((m) => normalizeString(m.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
     },
-    [manufacturers, normalizeString]
+    [manufacturers]
   );
-
   const getFilteredBaseProducts = useCallback(
     (searchTerm: string) => {
       const normalizedSearch = normalizeString(searchTerm.trim());
       const baseProducts = products.filter((p) => !p.isVariant);
       return baseProducts.filter((p) => normalizeString(p.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
     },
-    [products, normalizeString]
+    [products]
+  );
+
+  const getFilteredCarMakes = useCallback(
+    (searchTerm: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      return carMakes.filter((make) => normalizeString(make.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [carMakes]
+  );
+
+  const getFilteredCarModels = useCallback(
+    (searchTerm: string, makeId: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      const modelsForMake = makeId ? getModelsForMake(parseInt(makeId)) : carModels;
+      return modelsForMake.filter((model) => normalizeString(model.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [carModels, getModelsForMake]
+  );
+
+  const getFilteredCarYears = useCallback(
+    (searchTerm: string, modelId: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      const yearsForModel = modelId ? getYearsForModel(parseInt(modelId)) : carYears;
+      return yearsForModel.filter((year) => normalizeString(year.year.toString()).includes(normalizedSearch)).sort((a, b) => b.year - a.year);
+    },
+    [carYears, getYearsForModel]
+  );
+
+  const getFilteredCarBodyTypes = useCallback(
+    (searchTerm: string, yearId: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      const bodyTypesForYear = yearId ? getBodyTypesForYear(parseInt(yearId)) : carBodyTypes;
+      return bodyTypesForYear.filter((bodyType) => normalizeString(bodyType.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [carBodyTypes, getBodyTypesForYear]
+  );
+
+  const getFilteredCarEngines = useCallback(
+    (searchTerm: string, bodyTypeId: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      const enginesForBodyType = bodyTypeId ? getEnginesForBodyType(parseInt(bodyTypeId)) : carEngines;
+      return enginesForBodyType.filter((engine) => normalizeString(engine.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [carEngines, getEnginesForBodyType]
   );
 
   useEffect(() => {
@@ -940,10 +1305,8 @@ export default function ManageProductsPage() {
       </div>
     );
   }
-  const filteredProducts = getFilteredProducts();
-
   return (
-    <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
+    <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh', WebkitOverflowScrolling: 'touch' }}>
       <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200'>
         <div className='mb-3'>
           <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300 cursor-pointer'>
@@ -956,17 +1319,15 @@ export default function ManageProductsPage() {
             <HiOutlineShoppingBag className='inline-block mr-1' size={24} />
           </span>
           Керування товарами
-        </h2>
+        </h2>{' '}
         <div className='mb-3 sm:mb-6'>
           <label htmlFor='search' className='block text-gray-900 font-semibold mb-1 sm:mb-2 text-base sm:text-lg'>
             Пошук товарів
           </label>
-          <div className='relative'>
-            <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white shadow-sm text-base sm:text-lg font-semibold' placeholder='Пошук товарів...' value={search} onChange={(e) => setSearch(e.target.value)} />
-            <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
-          </div>
+          <SearchInput value={search} onChange={setSearch} placeholder='Пошук товарів...' />
         </div>
         <div className='mb-6'>
+          {' '}
           <button
             onClick={() => {
               if (showCreateForm) {
@@ -977,6 +1338,16 @@ export default function ManageProductsPage() {
                 setCategorySearchFocused(false);
                 setManufacturerSearchFocused(false);
                 setBaseProductSearchFocused(false);
+                setCarMakeSearch('');
+                setCarModelSearch('');
+                setCarYearSearch('');
+                setCarBodyTypeSearch('');
+                setCarEngineSearch('');
+                setCarMakeSearchFocused(false);
+                setCarModelSearchFocused(false);
+                setCarYearSearchFocused(false);
+                setCarBodyTypeSearchFocused(false);
+                setCarEngineSearchFocused(false);
                 setCreateError(null);
               }
               setShowCreateForm(!showCreateForm);
@@ -986,22 +1357,21 @@ export default function ManageProductsPage() {
             <HiOutlinePlus size={20} />
             {showCreateForm ? 'Скасувати' : 'Додати товар'}
           </button>
-
           {showCreateForm && (
             <div className='mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Додати новий товар</h3>
+              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Додати новий товар</h3>{' '}
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Назва товару *</label>
-                  <input type='text' value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Назва товару' />
+                  <OptimizedInput type='text' value={formData.name} onChange={(value) => setFormData({ ...formData, name: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Назва товару' />
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Ціна *</label>
-                  <input type='number' step='0.01' min='0' value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0.00' />
+                  <OptimizedInput type='number' step='0.01' min='0' value={formData.price} onChange={(value) => setFormData({ ...formData, price: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0.00' />
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Кількість на складі *</label>
-                  <input type='number' min='0' value={formData.stockQuantity} onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0' />
+                  <OptimizedInput type='number' min='0' value={formData.stockQuantity} onChange={(value) => setFormData({ ...formData, stockQuantity: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0' />
                 </div>{' '}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Категорія *</label>
@@ -1028,11 +1398,13 @@ export default function ManageProductsPage() {
                     />{' '}
                     {categorySearchFocused && (
                       <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {' '}
                         {getFilteredCategories(categorySearch).map((category) => (
                           <div
                             key={category.id}
                             className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setFormData({ ...formData, categoryId: category.id.toString() });
                               setCategorySearch(category.name);
                               setCategorySearchFocused(false);
@@ -1070,11 +1442,13 @@ export default function ManageProductsPage() {
                     />{' '}
                     {manufacturerSearchFocused && (
                       <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {' '}
                         {getFilteredManufacturers(manufacturerSearch).map((manufacturer) => (
                           <div
                             key={manufacturer.id}
                             className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setFormData({ ...formData, manufacturerId: manufacturer.id.toString() });
                               setManufacturerSearch(manufacturer.name);
                               setManufacturerSearchFocused(false);
@@ -1120,11 +1494,13 @@ export default function ManageProductsPage() {
                     />{' '}
                     {baseProductSearchFocused && (
                       <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {' '}
                         {getFilteredBaseProducts(baseProductSearch).map((product) => (
                           <div
                             key={product.id}
                             className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setFormData({ ...formData, baseProductId: product.id.toString() });
                               setBaseProductSearch(product.name);
                               setBaseProductSearchFocused(false);
@@ -1137,14 +1513,16 @@ export default function ManageProductsPage() {
                     )}
                   </div>
                 </div>
-              )}
+              )}{' '}
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Опис</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
+                <OptimizedTextarea value={formData.description} onChange={(value) => setFormData({ ...formData, description: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
               </div>{' '}
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Зображення товару</label>
-                <input type='file' accept='image/jpeg,image/png,image/webp' onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className='w-auto text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100' />
+                <div className='inline-block'>
+                  <input type='file' accept='image/jpeg,image/png,image/webp' onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className='text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 file:cursor-pointer cursor-pointer' />
+                </div>
                 <p className='text-xs text-gray-500 mt-1'>
                   Підтримувані формати: JPEG, PNG, WebP. Максимальний розмір: 10MB.
                   <br />
@@ -1154,123 +1532,281 @@ export default function ManageProductsPage() {
               <div className='mb-6 border-t border-gray-200 pt-6'>
                 <h4 className='text-md font-semibold text-gray-800 mb-4'>Сумісність з автомобілями</h4>
                 <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-4'>
+                  {' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Марка</label>
-                    <select
-                      value={newProductCompatibilityData.carMakeId}
-                      onChange={(e) => {
-                        const makeId = e.target.value;
-                        setNewProductCompatibilityData({
-                          ...newProductCompatibilityData,
-                          carMakeId: makeId,
-                          carModelId: '',
-                          carYearId: '',
-                          carBodyTypeId: '',
-                          carEngineId: '',
-                        });
-                      }}
-                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
-                    >
-                      <option value=''>Оберіть марку</option>
-                      {carMakes.map((make) => (
-                        <option key={make.id} value={make.id}>
-                          {make.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <div className='relative'>
+                      <input
+                        ref={carMakeInputRef}
+                        type='text'
+                        value={carMakeSearch}
+                        onChange={(e) => setCarMakeSearch(e.target.value)}
+                        onFocus={() => setCarMakeSearchFocused(true)}
+                        onBlur={() => {
+                          setTimeout(() => setCarMakeSearchFocused(false), 200);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setCarMakeSearchFocused(false);
+                            setCarMakeSearch('');
+                            setNewProductCompatibilityData({
+                              ...newProductCompatibilityData,
+                              carMakeId: '',
+                              carModelId: '',
+                              carYearId: '',
+                              carBodyTypeId: '',
+                              carEngineId: '',
+                            });
+                          }
+                        }}
+                        placeholder='Пошук марки...'
+                        className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                      />
+                      {carMakeSearchFocused && (
+                        <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                          {' '}
+                          {getFilteredCarMakes(carMakeSearch).map((make) => (
+                            <div
+                              key={make.id}
+                              className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setNewProductCompatibilityData({
+                                  ...newProductCompatibilityData,
+                                  carMakeId: make.id.toString(),
+                                  carModelId: '',
+                                  carYearId: '',
+                                  carBodyTypeId: '',
+                                  carEngineId: '',
+                                });
+                                setCarMakeSearch(make.name);
+                                setCarMakeSearchFocused(false);
+                                setCarModelSearch('');
+                                setCarYearSearch('');
+                                setCarBodyTypeSearch('');
+                                setCarEngineSearch('');
+                              }}
+                            >
+                              {make.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Модель</label>
-                    <select
-                      value={newProductCompatibilityData.carModelId}
-                      onChange={(e) => {
-                        const modelId = e.target.value;
-                        setNewProductCompatibilityData({
-                          ...newProductCompatibilityData,
-                          carModelId: modelId,
-                          carYearId: '',
-                          carBodyTypeId: '',
-                          carEngineId: '',
-                        });
-                      }}
-                      disabled={!newProductCompatibilityData.carMakeId}
-                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
-                    >
-                      <option value=''>Оберіть модель</option>
-                      {getModelsForMake(parseInt(newProductCompatibilityData.carMakeId || '0')).map((model) => (
-                        <option key={model.id} value={model.id}>
-                          {model.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <div className='relative'>
+                      <input
+                        ref={carModelInputRef}
+                        type='text'
+                        value={carModelSearch}
+                        onChange={(e) => setCarModelSearch(e.target.value)}
+                        onFocus={() => setCarModelSearchFocused(true)}
+                        onBlur={() => {
+                          setTimeout(() => setCarModelSearchFocused(false), 200);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setCarModelSearchFocused(false);
+                            setCarModelSearch('');
+                            setNewProductCompatibilityData({
+                              ...newProductCompatibilityData,
+                              carModelId: '',
+                              carYearId: '',
+                              carBodyTypeId: '',
+                              carEngineId: '',
+                            });
+                          }
+                        }}
+                        disabled={!newProductCompatibilityData.carMakeId}
+                        placeholder='Пошук моделі...'
+                        className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
+                      />
+                      {carModelSearchFocused && newProductCompatibilityData.carMakeId && (
+                        <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                          {' '}
+                          {getFilteredCarModels(carModelSearch, newProductCompatibilityData.carMakeId).map((model) => (
+                            <div
+                              key={model.id}
+                              className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setNewProductCompatibilityData({
+                                  ...newProductCompatibilityData,
+                                  carModelId: model.id.toString(),
+                                  carYearId: '',
+                                  carBodyTypeId: '',
+                                  carEngineId: '',
+                                });
+                                setCarModelSearch(model.name);
+                                setCarModelSearchFocused(false);
+                                setCarYearSearch('');
+                                setCarBodyTypeSearch('');
+                                setCarEngineSearch('');
+                              }}
+                            >
+                              {model.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Рік</label>
-                    <select
-                      value={newProductCompatibilityData.carYearId}
-                      onChange={(e) => {
-                        const yearId = e.target.value;
-                        setNewProductCompatibilityData({
-                          ...newProductCompatibilityData,
-                          carYearId: yearId,
-                          carBodyTypeId: '',
-                          carEngineId: '',
-                        });
-                      }}
-                      disabled={!newProductCompatibilityData.carModelId}
-                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
-                    >
-                      <option value=''>Оберіть рік</option>
-                      {getYearsForModel(parseInt(newProductCompatibilityData.carModelId || '0')).map((year) => (
-                        <option key={year.id} value={year.id}>
-                          {year.year}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <div className='relative'>
+                      <input
+                        ref={carYearInputRef}
+                        type='text'
+                        value={carYearSearch}
+                        onChange={(e) => setCarYearSearch(e.target.value)}
+                        onFocus={() => setCarYearSearchFocused(true)}
+                        onBlur={() => {
+                          setTimeout(() => setCarYearSearchFocused(false), 200);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setCarYearSearchFocused(false);
+                            setCarYearSearch('');
+                            setNewProductCompatibilityData({
+                              ...newProductCompatibilityData,
+                              carYearId: '',
+                              carBodyTypeId: '',
+                              carEngineId: '',
+                            });
+                          }
+                        }}
+                        disabled={!newProductCompatibilityData.carModelId}
+                        placeholder='Пошук року...'
+                        className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
+                      />
+                      {carYearSearchFocused && newProductCompatibilityData.carModelId && (
+                        <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                          {' '}
+                          {getFilteredCarYears(carYearSearch, newProductCompatibilityData.carModelId).map((year) => (
+                            <div
+                              key={year.id}
+                              className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setNewProductCompatibilityData({
+                                  ...newProductCompatibilityData,
+                                  carYearId: year.id.toString(),
+                                  carBodyTypeId: '',
+                                  carEngineId: '',
+                                });
+                                setCarYearSearch(year.year.toString());
+                                setCarYearSearchFocused(false);
+                                setCarBodyTypeSearch('');
+                                setCarEngineSearch('');
+                              }}
+                            >
+                              {year.year}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Тип кузова</label>
-                    <select
-                      value={newProductCompatibilityData.carBodyTypeId}
-                      onChange={(e) => {
-                        const bodyTypeId = e.target.value;
-                        setNewProductCompatibilityData({
-                          ...newProductCompatibilityData,
-                          carBodyTypeId: bodyTypeId,
-                          carEngineId: '',
-                        });
-                      }}
-                      disabled={!newProductCompatibilityData.carYearId}
-                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
-                    >
-                      <option value=''>Оберіть тип кузова</option>
-                      {getBodyTypesForYear(parseInt(newProductCompatibilityData.carYearId || '0')).map((bodyType) => (
-                        <option key={bodyType.id} value={bodyType.id}>
-                          {bodyType.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <div className='relative'>
+                      <input
+                        ref={carBodyTypeInputRef}
+                        type='text'
+                        value={carBodyTypeSearch}
+                        onChange={(e) => setCarBodyTypeSearch(e.target.value)}
+                        onFocus={() => setCarBodyTypeSearchFocused(true)}
+                        onBlur={() => {
+                          setTimeout(() => setCarBodyTypeSearchFocused(false), 200);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setCarBodyTypeSearchFocused(false);
+                            setCarBodyTypeSearch('');
+                            setNewProductCompatibilityData({
+                              ...newProductCompatibilityData,
+                              carBodyTypeId: '',
+                              carEngineId: '',
+                            });
+                          }
+                        }}
+                        disabled={!newProductCompatibilityData.carYearId}
+                        placeholder='Пошук типу кузова...'
+                        className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
+                      />
+                      {carBodyTypeSearchFocused && newProductCompatibilityData.carYearId && (
+                        <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                          {' '}
+                          {getFilteredCarBodyTypes(carBodyTypeSearch, newProductCompatibilityData.carYearId).map((bodyType) => (
+                            <div
+                              key={bodyType.id}
+                              className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setNewProductCompatibilityData({ ...newProductCompatibilityData, carBodyTypeId: bodyType.id.toString(), carEngineId: '' });
+                                setCarBodyTypeSearch(bodyType.name);
+                                setCarBodyTypeSearchFocused(false);
+                                setCarEngineSearch('');
+                              }}
+                            >
+                              {bodyType.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>{' '}
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Двигун</label>
-                    <select
-                      value={newProductCompatibilityData.carEngineId}
-                      onChange={(e) =>
-                        setNewProductCompatibilityData({
-                          ...newProductCompatibilityData,
-                          carEngineId: e.target.value,
-                        })
-                      }
-                      disabled={!newProductCompatibilityData.carBodyTypeId}
-                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
-                    >
-                      <option value=''>Оберіть двигун</option>
-                      {getEnginesForBodyType(parseInt(newProductCompatibilityData.carBodyTypeId || '0')).map((engine) => (
-                        <option key={engine.id} value={engine.id}>
-                          {engine.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className='relative'>
+                      <input
+                        ref={carEngineInputRef}
+                        type='text'
+                        value={carEngineSearch}
+                        onChange={(e) => setCarEngineSearch(e.target.value)}
+                        onFocus={() => setCarEngineSearchFocused(true)}
+                        onBlur={() => {
+                          setTimeout(() => setCarEngineSearchFocused(false), 200);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Escape') {
+                            setCarEngineSearchFocused(false);
+                            setCarEngineSearch('');
+                            setNewProductCompatibilityData({
+                              ...newProductCompatibilityData,
+                              carEngineId: '',
+                            });
+                          }
+                        }}
+                        disabled={!newProductCompatibilityData.carBodyTypeId}
+                        placeholder='Пошук двигуна...'
+                        className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 disabled:bg-gray-100'
+                      />
+                      {carEngineSearchFocused && newProductCompatibilityData.carBodyTypeId && (
+                        <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                          {' '}
+                          {getFilteredCarEngines(carEngineSearch, newProductCompatibilityData.carBodyTypeId).map((engine) => (
+                            <div
+                              key={engine.id}
+                              className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setNewProductCompatibilityData({
+                                  ...newProductCompatibilityData,
+                                  carEngineId: engine.id.toString(),
+                                });
+                                setCarEngineSearch(engine.name);
+                                setCarEngineSearchFocused(false);
+                              }}
+                            >
+                              {engine.name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className='flex items-end'>
                     <button onClick={handleAddCompatibilityToNewProduct} disabled={!newProductCompatibilityData.carMakeId} className='w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white rounded-lg px-4 py-2 font-semibold transition-colors disabled:cursor-not-allowed cursor-pointer'>
@@ -1323,7 +1859,7 @@ export default function ManageProductsPage() {
               <div className='flex gap-2'>
                 <button onClick={handleAddProduct} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'>
                   Додати товар {formData.compatibilities.length > 0 && `(${formData.compatibilities.length} сумісностей)`}
-                </button>
+                </button>{' '}
                 <button
                   onClick={() => {
                     setShowCreateForm(false);
@@ -1336,6 +1872,22 @@ export default function ManageProductsPage() {
                       carBodyTypeId: '',
                       carEngineId: '',
                     });
+                    setCategorySearch('');
+                    setManufacturerSearch('');
+                    setBaseProductSearch('');
+                    setCategorySearchFocused(false);
+                    setManufacturerSearchFocused(false);
+                    setBaseProductSearchFocused(false);
+                    setCarMakeSearch('');
+                    setCarModelSearch('');
+                    setCarYearSearch('');
+                    setCarBodyTypeSearch('');
+                    setCarEngineSearch('');
+                    setCarMakeSearchFocused(false);
+                    setCarModelSearchFocused(false);
+                    setCarYearSearchFocused(false);
+                    setCarBodyTypeSearchFocused(false);
+                    setCarEngineSearchFocused(false);
                   }}
                   className='bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg px-4 py-2 font-semibold transition-colors cursor-pointer'
                 >
@@ -1345,80 +1897,7 @@ export default function ManageProductsPage() {
             </div>
           )}
         </div>
-        <div className='sm:hidden'>
-          {isLoading ? (
-            <ProductSkeleton />
-          ) : filteredProducts.length === 0 ? (
-            <div className='text-center text-gray-700 font-semibold py-6'>Нічого не знайдено</div>
-          ) : (
-            <div className='flex flex-col gap-3'>
-              {filteredProducts.map((product) => (
-                <div key={product.id} className='rounded-xl border border-gray-200 bg-white shadow-sm p-3'>
-                  <div className='flex items-start justify-between gap-3'>
-                    <div className='flex gap-3 flex-1'>
-                      {' '}
-                      {product.imageUrl ? (
-                        <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity' onClick={() => handleOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
-                          <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-contain' />
-                        </div>
-                      ) : (
-                        <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0'>
-                          <span className='text-xs text-gray-400'>Немає</span>
-                        </div>
-                      )}
-                      <div className='flex-1'>
-                        <div className='font-bold text-gray-900 text-base mb-1'>
-                          {product.name}
-                          {product.isVariant && product.baseProduct && <span className='ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded'>Варіант: {product.baseProduct.name}</span>}
-                        </div>
-                        <div className='text-sm text-gray-600 space-y-1'>
-                          {' '}
-                          <div>
-                            Ціна: <span className='font-semibold text-green-600'>{product.price} грн</span>
-                          </div>
-                          <div>
-                            На складі: <span className='font-medium'>{product.stockQuantity} шт</span>
-                          </div>
-                          <div>
-                            Категорія: <span className='font-medium'>{product.category.name}</span>
-                          </div>
-                          <div>
-                            Виробник: <span className='font-medium'>{product.manufacturer.name}</span>
-                          </div>
-                          {product.averageRating !== null && product.averageRating > 0 && (
-                            <div>
-                              Рейтинг: <span className='font-medium text-yellow-600'>★ {product.averageRating.toFixed(1)}</span>
-                            </div>
-                          )}{' '}
-                          {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
-                            <div>
-                              Автомобілів: <span className='font-medium text-blue-600'>{product.compatibleVehicles.length} сумісних</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>{' '}
-                    <div className='flex gap-1'>
-                      {' '}
-                      <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
-                        <LuCar size={18} />
-                      </button>
-                      <button onClick={() => {}} className='text-purple-600 hover:text-purple-800 cursor-pointer' title='Поставки товару'>
-                        <HiOutlinePlus size={18} />
-                      </button>
-                      <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
-                        <HiOutlinePencil size={18} />
-                      </button>
-                      <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
-                        <HiOutlineTrash size={18} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>{' '}
+        <div className='sm:hidden'>{isLoading ? <ProductSkeleton /> : filteredProducts.length === 0 ? <div className='text-center text-gray-700 font-semibold py-6'>Нічого не знайдено</div> : <VirtualizedMobileList products={filteredProducts} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onManageCompatibility={handleManageCompatibility} onOpenImageModal={handleOpenImageModal} />}</div>{' '}
         <div className='bg-white rounded-lg shadow border border-gray-200 w-full hidden sm:block'>
           {isLoading ? (
             <ProductSkeleton />
@@ -1508,7 +1987,7 @@ export default function ManageProductsPage() {
                   {filteredProducts.length === 0 ? (
                     <tr>
                       <td colSpan={8} className='px-6 py-4 text-center text-gray-700 font-semibold'>
-                        {debouncedSearch ? 'Товарів за запитом не знайдено' : 'Товарів не знайдено'}
+                        {search ? 'Товарів за запитом не знайдено' : 'Товарів не знайдено'}
                       </td>
                     </tr>
                   ) : (
@@ -1757,19 +2236,19 @@ export default function ManageProductsPage() {
         {editingProductId && (
           <div className='fixed inset-0 flex items-center justify-center p-4 z-50' style={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
             <div className='bg-white rounded-lg shadow-2xl border-2 border-gray-300 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
-              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Редагувати товар</h3>
+              <h3 className='text-lg font-semibold text-gray-900 mb-4'>Редагувати товар</h3>{' '}
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Назва товару *</label>
-                  <input type='text' value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Назва товару' />
+                  <OptimizedInput type='text' value={editFormData.name} onChange={(value) => setEditFormData({ ...editFormData, name: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Назва товару' />
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Ціна *</label>
-                  <input type='number' step='0.01' min='0' value={editFormData.price} onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0.00' />
+                  <OptimizedInput type='number' step='0.01' min='0' value={editFormData.price} onChange={(value) => setEditFormData({ ...editFormData, price: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0.00' />
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Кількість на складі *</label>
-                  <input type='number' min='0' value={editFormData.stockQuantity} onChange={(e) => setEditFormData({ ...editFormData, stockQuantity: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0' />
+                  <OptimizedInput type='number' min='0' value={editFormData.stockQuantity} onChange={(value) => setEditFormData({ ...editFormData, stockQuantity: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0' />
                 </div>{' '}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Категорія *</label>
@@ -1794,11 +2273,13 @@ export default function ManageProductsPage() {
                     />{' '}
                     {editCategorySearchFocused && (
                       <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {' '}
                         {getFilteredCategories(editCategorySearch).map((category) => (
                           <div
                             key={category.id}
                             className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setEditFormData({ ...editFormData, categoryId: category.id.toString() });
                               setEditCategorySearch(category.name);
                               setEditCategorySearchFocused(false);
@@ -1834,11 +2315,13 @@ export default function ManageProductsPage() {
                     />{' '}
                     {editManufacturerSearchFocused && (
                       <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {' '}
                         {getFilteredManufacturers(editManufacturerSearch).map((manufacturer) => (
                           <div
                             key={manufacturer.id}
                             className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
-                            onClick={() => {
+                            onMouseDown={(e) => {
+                              e.preventDefault();
                               setEditFormData({ ...editFormData, manufacturerId: manufacturer.id.toString() });
                               setEditManufacturerSearch(manufacturer.name);
                               setEditManufacturerSearchFocused(false);
@@ -1888,7 +2371,8 @@ export default function ManageProductsPage() {
                             <div
                               key={product.id}
                               className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
-                              onClick={() => {
+                              onMouseDown={(e) => {
+                                e.preventDefault();
                                 setEditFormData({ ...editFormData, baseProductId: product.id.toString() });
                                 setEditBaseProductSearch(product.name);
                                 setEditBaseProductSearchFocused(false);
@@ -1901,10 +2385,10 @@ export default function ManageProductsPage() {
                     )}
                   </div>
                 </div>
-              )}
+              )}{' '}
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Опис</label>
-                <textarea value={editFormData.description} onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
+                <OptimizedTextarea value={editFormData.description} onChange={(value) => setEditFormData({ ...editFormData, description: value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
               </div>
               <div className='mb-4'>
                 <ImageManager productId={editingProductId} currentImageUrl={products.find((p) => p.id === editingProductId)?.imageUrl || null} onImageUpdate={(newImageUrl) => editingProductId && handleImageUpdate(editingProductId, newImageUrl)} />
