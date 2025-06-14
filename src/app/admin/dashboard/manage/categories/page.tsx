@@ -130,8 +130,7 @@ export default function ManageCategoriesPage() {
     if (isAdmin && !isVerifyingAuth) {
       fetchCategories();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, isVerifyingAuth]);
+  }, [isAdmin, isVerifyingAuth, fetchCategories]);
 
   useEffect(() => {
     const handler = setTimeout(() => {

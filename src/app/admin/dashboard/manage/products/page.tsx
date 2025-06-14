@@ -376,8 +376,7 @@ export default function ManageProductsPage() {
     };
 
     loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin, isVerifyingAuth]);
+  }, [isAdmin, isVerifyingAuth, fetchProducts, fetchCategories, fetchManufacturers, fetchCarMakes, fetchAllCarModels, fetchAllCarYears, fetchAllCarBodyTypes, fetchAllCarEngines]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -1205,13 +1204,7 @@ export default function ManageProductsPage() {
                       <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
                         <LuCar size={18} />
                       </button>
-                      <button
-                        onClick={() => {
-                          /* TODO: Add supply handler */
-                        }}
-                        className='text-purple-600 hover:text-purple-800 cursor-pointer'
-                        title='Поставки товару'
-                      >
+                      <button onClick={() => {}} className='text-purple-600 hover:text-purple-800 cursor-pointer' title='Поставки товару'>
                         <HiOutlinePlus size={18} />
                       </button>
                       <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
@@ -1362,13 +1355,7 @@ export default function ManageProductsPage() {
                             <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
                               <LuCar size={16} />
                             </button>
-                            <button
-                              onClick={() => {
-                                /* TODO: Add supply handler */
-                              }}
-                              className='text-purple-600 hover:text-purple-800 cursor-pointer'
-                              title='Поставки товару'
-                            >
+                            <button onClick={() => {}} className='text-purple-600 hover:text-purple-800 cursor-pointer' title='Поставки товару'>
                               <HiOutlinePlus size={16} />
                             </button>
                             <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
