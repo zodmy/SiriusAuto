@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
@@ -266,6 +266,27 @@ export default function ManageProductsPage() {
   });
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+
+  const [categorySearch, setCategorySearch] = useState('');
+  const [categorySearchFocused, setCategorySearchFocused] = useState(false);
+  const [manufacturerSearch, setManufacturerSearch] = useState('');
+  const [manufacturerSearchFocused, setManufacturerSearchFocused] = useState(false);
+  const [baseProductSearch, setBaseProductSearch] = useState('');
+  const [baseProductSearchFocused, setBaseProductSearchFocused] = useState(false);
+
+  const [editCategorySearch, setEditCategorySearch] = useState('');
+  const [editCategorySearchFocused, setEditCategorySearchFocused] = useState(false);
+  const [editManufacturerSearch, setEditManufacturerSearch] = useState('');
+  const [editManufacturerSearchFocused, setEditManufacturerSearchFocused] = useState(false);
+  const [editBaseProductSearch, setEditBaseProductSearch] = useState('');
+  const [editBaseProductSearchFocused, setEditBaseProductSearchFocused] = useState(false);
+
+  const categoryInputRef = useRef<HTMLInputElement | null>(null);
+  const manufacturerInputRef = useRef<HTMLInputElement | null>(null);
+  const baseProductInputRef = useRef<HTMLInputElement | null>(null);
+  const editCategoryInputRef = useRef<HTMLInputElement | null>(null);
+  const editManufacturerInputRef = useRef<HTMLInputElement | null>(null);
+  const editBaseProductInputRef = useRef<HTMLInputElement | null>(null);
   const fetchProducts = useCallback(async () => {
     try {
       const res = await fetch('/api/products');
@@ -377,13 +398,45 @@ export default function ManageProductsPage() {
 
     loadData();
   }, [isAdmin, isVerifyingAuth, fetchProducts, fetchCategories, fetchManufacturers, fetchCarMakes, fetchAllCarModels, fetchAllCarYears, fetchAllCarBodyTypes, fetchAllCarEngines]);
-
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
     }, 400);
     return () => clearTimeout(handler);
   }, [search]);
+
+  useEffect(() => {
+    function handleDocumentClick(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+
+      if (categorySearchFocused && categoryInputRef.current && !categoryInputRef.current.contains(target)) {
+        setCategorySearchFocused(false);
+      }
+
+      if (manufacturerSearchFocused && manufacturerInputRef.current && !manufacturerInputRef.current.contains(target)) {
+        setManufacturerSearchFocused(false);
+      }
+
+      if (baseProductSearchFocused && baseProductInputRef.current && !baseProductInputRef.current.contains(target)) {
+        setBaseProductSearchFocused(false);
+      }
+
+      if (editCategorySearchFocused && editCategoryInputRef.current && !editCategoryInputRef.current.contains(target)) {
+        setEditCategorySearchFocused(false);
+      }
+
+      if (editManufacturerSearchFocused && editManufacturerInputRef.current && !editManufacturerInputRef.current.contains(target)) {
+        setEditManufacturerSearchFocused(false);
+      }
+
+      if (editBaseProductSearchFocused && editBaseProductInputRef.current && !editBaseProductInputRef.current.contains(target)) {
+        setEditBaseProductSearchFocused(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleDocumentClick);
+    return () => document.removeEventListener('mousedown', handleDocumentClick);
+  }, [categorySearchFocused, manufacturerSearchFocused, baseProductSearchFocused, editCategorySearchFocused, editManufacturerSearchFocused, editBaseProductSearchFocused]);
 
   const getFilteredProducts = useCallback(() => {
     const searchTerm = normalizeString(debouncedSearch.trim());
@@ -411,6 +464,7 @@ export default function ManageProductsPage() {
       return 0;
     });
   }, [products, debouncedSearch, sortBy, sortDir, normalizeString]);
+
   const validateFormData = (data: ProductFormData): string | null => {
     if (!data.name.trim()) return 'Введіть назву товару';
     if (!data.price.trim()) return 'Введіть ціну товару';
@@ -499,9 +553,16 @@ export default function ManageProductsPage() {
           console.warn('Товар створено, але зображення не вдалося завантажити');
         }
       }
-
       setFormData(initialFormData);
       setShowCreateForm(false);
+
+      setCategorySearch('');
+      setManufacturerSearch('');
+      setBaseProductSearch('');
+      setCategorySearchFocused(false);
+      setManufacturerSearchFocused(false);
+      setBaseProductSearchFocused(false);
+
       await fetchProducts();
     } catch {
       setCreateError('Помилка мережі');
@@ -521,12 +582,24 @@ export default function ManageProductsPage() {
       imageFile: null,
       compatibilities: [],
     });
+
+    setEditCategorySearch(product.category.name);
+    setEditManufacturerSearch(product.manufacturer.name);
+    setEditBaseProductSearch(product.baseProduct?.name || '');
+
     setEditError(null);
   }, []);
   const handleCancelEdit = useCallback(() => {
     setEditingProductId(null);
     setEditFormData(initialFormData);
     setEditError(null);
+
+    setEditCategorySearch('');
+    setEditManufacturerSearch('');
+    setEditBaseProductSearch('');
+    setEditCategorySearchFocused(false);
+    setEditManufacturerSearchFocused(false);
+    setEditBaseProductSearchFocused(false);
   }, []);
 
   const handleSaveEditProduct = useCallback(
@@ -810,6 +883,30 @@ export default function ManageProductsPage() {
     setSelectedImage(null);
   }, []);
 
+  const getFilteredCategories = useCallback(
+    (searchTerm: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      return categories.filter((c) => normalizeString(c.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [categories, normalizeString]
+  );
+  const getFilteredManufacturers = useCallback(
+    (searchTerm: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      return manufacturers.filter((m) => normalizeString(m.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [manufacturers, normalizeString]
+  );
+
+  const getFilteredBaseProducts = useCallback(
+    (searchTerm: string) => {
+      const normalizedSearch = normalizeString(searchTerm.trim());
+      const baseProducts = products.filter((p) => !p.isVariant);
+      return baseProducts.filter((p) => normalizeString(p.name).includes(normalizedSearch)).sort((a, b) => a.name.localeCompare(b.name));
+    },
+    [products, normalizeString]
+  );
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && imageModalOpen) {
@@ -843,9 +940,8 @@ export default function ManageProductsPage() {
       </div>
     );
   }
-
   const filteredProducts = getFilteredProducts();
-  const baseProducts = products.filter((p) => !p.isVariant);
+
   return (
     <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh' }}>
       <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200'>
@@ -871,7 +967,22 @@ export default function ManageProductsPage() {
           </div>
         </div>
         <div className='mb-6'>
-          <button onClick={() => setShowCreateForm(!showCreateForm)} className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 flex items-center gap-2 transition-colors shadow font-semibold cursor-pointer'>
+          <button
+            onClick={() => {
+              if (showCreateForm) {
+                setFormData(initialFormData);
+                setCategorySearch('');
+                setManufacturerSearch('');
+                setBaseProductSearch('');
+                setCategorySearchFocused(false);
+                setManufacturerSearchFocused(false);
+                setBaseProductSearchFocused(false);
+                setCreateError(null);
+              }
+              setShowCreateForm(!showCreateForm);
+            }}
+            className='bg-pink-600 hover:bg-pink-700 text-white rounded-lg px-4 py-2 flex items-center gap-2 transition-colors shadow font-semibold cursor-pointer'
+          >
             <HiOutlinePlus size={20} />
             {showCreateForm ? 'Скасувати' : 'Додати товар'}
           </button>
@@ -884,72 +995,160 @@ export default function ManageProductsPage() {
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Назва товару *</label>
                   <input type='text' value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Назва товару' />
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Ціна *</label>
                   <input type='number' step='0.01' min='0' value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0.00' />
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Кількість на складі *</label>
                   <input type='number' min='0' value={formData.stockQuantity} onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0' />
-                </div>
-
+                </div>{' '}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Категорія *</label>
-                  <select value={formData.categoryId} onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть категорію</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+                  <div className='relative'>
+                    {' '}
+                    <input
+                      ref={categoryInputRef}
+                      type='text'
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      onFocus={() => setCategorySearchFocused(true)}
+                      onBlur={() => {
+                        setTimeout(() => setCategorySearchFocused(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setCategorySearchFocused(false);
+                          setCategorySearch('');
+                          setFormData({ ...formData, categoryId: '' });
+                        }
+                      }}
+                      placeholder='Пошук категорії...'
+                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                    />{' '}
+                    {categorySearchFocused && (
+                      <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {getFilteredCategories(categorySearch).map((category) => (
+                          <div
+                            key={category.id}
+                            className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                            onClick={() => {
+                              setFormData({ ...formData, categoryId: category.id.toString() });
+                              setCategorySearch(category.name);
+                              setCategorySearchFocused(false);
+                            }}
+                          >
+                            {category.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>{' '}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Виробник *</label>
-                  <select value={formData.manufacturerId} onChange={(e) => setFormData({ ...formData, manufacturerId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть виробника</option>
-                    {manufacturers.map((manufacturer) => (
-                      <option key={manufacturer.id} value={manufacturer.id}>
-                        {manufacturer.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className='relative'>
+                    {' '}
+                    <input
+                      ref={manufacturerInputRef}
+                      type='text'
+                      value={manufacturerSearch}
+                      onChange={(e) => setManufacturerSearch(e.target.value)}
+                      onFocus={() => setManufacturerSearchFocused(true)}
+                      onBlur={() => {
+                        setTimeout(() => setManufacturerSearchFocused(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setManufacturerSearchFocused(false);
+                          setManufacturerSearch('');
+                          setFormData({ ...formData, manufacturerId: '' });
+                        }
+                      }}
+                      placeholder='Пошук виробника...'
+                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                    />{' '}
+                    {manufacturerSearchFocused && (
+                      <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {getFilteredManufacturers(manufacturerSearch).map((manufacturer) => (
+                          <div
+                            key={manufacturer.id}
+                            className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                            onClick={() => {
+                              setFormData({ ...formData, manufacturerId: manufacturer.id.toString() });
+                              setManufacturerSearch(manufacturer.name);
+                              setManufacturerSearchFocused(false);
+                            }}
+                          >
+                            {manufacturer.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-
                 <div className='flex items-center'>
                   <input type='checkbox' id='isVariant' checked={formData.isVariant} onChange={(e) => setFormData({ ...formData, isVariant: e.target.checked, baseProductId: e.target.checked ? formData.baseProductId : '' })} className='h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded' />
                   <label htmlFor='isVariant' className='ml-2 block text-sm text-gray-900'>
                     Це варіант товару
                   </label>
                 </div>
-              </div>
+              </div>{' '}
               {formData.isVariant && (
                 <div className='mb-4'>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>{' '}
-                  <select value={formData.baseProductId} onChange={(e) => setFormData({ ...formData, baseProductId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть базовий товар</option>
-                    {baseProducts.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
-                  </select>
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>
+                  <div className='relative'>
+                    {' '}
+                    <input
+                      ref={baseProductInputRef}
+                      type='text'
+                      value={baseProductSearch}
+                      onChange={(e) => setBaseProductSearch(e.target.value)}
+                      onFocus={() => setBaseProductSearchFocused(true)}
+                      onBlur={() => {
+                        setTimeout(() => setBaseProductSearchFocused(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setBaseProductSearchFocused(false);
+                          setBaseProductSearch('');
+                          setFormData({ ...formData, baseProductId: '' });
+                        }
+                      }}
+                      placeholder='Пошук базового товару...'
+                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                    />{' '}
+                    {baseProductSearchFocused && (
+                      <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {getFilteredBaseProducts(baseProductSearch).map((product) => (
+                          <div
+                            key={product.id}
+                            className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                            onClick={() => {
+                              setFormData({ ...formData, baseProductId: product.id.toString() });
+                              setBaseProductSearch(product.name);
+                              setBaseProductSearchFocused(false);
+                            }}
+                          >
+                            {product.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Опис</label>
                 <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Опис товару' rows={3} />
-              </div>
+              </div>{' '}
               <div className='mb-4'>
                 <label className='block text-sm font-medium text-gray-700 mb-1'>Зображення товару</label>
-                <input type='file' accept='image/jpeg,image/png,image/webp' onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100' />
+                <input type='file' accept='image/jpeg,image/png,image/webp' onChange={(e) => setFormData({ ...formData, imageFile: e.target.files?.[0] || null })} className='w-auto text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100' />
                 <p className='text-xs text-gray-500 mt-1'>
                   Підтримувані формати: JPEG, PNG, WebP. Максимальний розмір: 10MB.
                   <br />
-                  Зображення буде автоматично обрізане до розміру 400×400 пікселів та конвертоване в WebP.
+                  Зображення буде конвертоване в WebP.
                 </p>
               </div>{' '}
               <div className='mb-6 border-t border-gray-200 pt-6'>
@@ -1564,61 +1763,143 @@ export default function ManageProductsPage() {
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Назва товару *</label>
                   <input type='text' value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='Назва товару' />
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Ціна *</label>
                   <input type='number' step='0.01' min='0' value={editFormData.price} onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0.00' />
                 </div>
-
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Кількість на складі *</label>
                   <input type='number' min='0' value={editFormData.stockQuantity} onChange={(e) => setEditFormData({ ...editFormData, stockQuantity: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder='0' />
-                </div>
-
+                </div>{' '}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Категорія *</label>
-                  <select value={editFormData.categoryId} onChange={(e) => setEditFormData({ ...editFormData, categoryId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть категорію</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
+                  <div className='relative'>
+                    {' '}
+                    <input
+                      ref={editCategoryInputRef}
+                      type='text'
+                      value={editCategorySearch}
+                      onChange={(e) => setEditCategorySearch(e.target.value)}
+                      onFocus={() => setEditCategorySearchFocused(true)}
+                      onBlur={() => {
+                        setTimeout(() => setEditCategorySearchFocused(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setEditCategorySearchFocused(false);
+                        }
+                      }}
+                      placeholder='Пошук категорії...'
+                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                    />{' '}
+                    {editCategorySearchFocused && (
+                      <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {getFilteredCategories(editCategorySearch).map((category) => (
+                          <div
+                            key={category.id}
+                            className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                            onClick={() => {
+                              setEditFormData({ ...editFormData, categoryId: category.id.toString() });
+                              setEditCategorySearch(category.name);
+                              setEditCategorySearchFocused(false);
+                            }}
+                          >
+                            {category.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>{' '}
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Виробник *</label>
-                  <select value={editFormData.manufacturerId} onChange={(e) => setEditFormData({ ...editFormData, manufacturerId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть виробника</option>
-                    {manufacturers.map((manufacturer) => (
-                      <option key={manufacturer.id} value={manufacturer.id}>
-                        {manufacturer.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className='relative'>
+                    {' '}
+                    <input
+                      ref={editManufacturerInputRef}
+                      type='text'
+                      value={editManufacturerSearch}
+                      onChange={(e) => setEditManufacturerSearch(e.target.value)}
+                      onFocus={() => setEditManufacturerSearchFocused(true)}
+                      onBlur={() => {
+                        setTimeout(() => setEditManufacturerSearchFocused(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setEditManufacturerSearchFocused(false);
+                        }
+                      }}
+                      placeholder='Пошук виробника...'
+                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                    />{' '}
+                    {editManufacturerSearchFocused && (
+                      <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {getFilteredManufacturers(editManufacturerSearch).map((manufacturer) => (
+                          <div
+                            key={manufacturer.id}
+                            className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                            onClick={() => {
+                              setEditFormData({ ...editFormData, manufacturerId: manufacturer.id.toString() });
+                              setEditManufacturerSearch(manufacturer.name);
+                              setEditManufacturerSearchFocused(false);
+                            }}
+                          >
+                            {manufacturer.name}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
-
                 <div className='flex items-center'>
                   <input type='checkbox' id='editIsVariant' checked={editFormData.isVariant} onChange={(e) => setEditFormData({ ...editFormData, isVariant: e.target.checked, baseProductId: e.target.checked ? editFormData.baseProductId : '' })} className='h-4 w-4 text-pink-600 focus:ring-pink-500 border-gray-300 rounded' />
                   <label htmlFor='editIsVariant' className='ml-2 block text-sm text-gray-900'>
                     Це варіант товару
                   </label>
                 </div>
-              </div>
+              </div>{' '}
               {editFormData.isVariant && (
                 <div className='mb-4'>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Базовий товар *</label>
-                  <select value={editFormData.baseProductId} onChange={(e) => setEditFormData({ ...editFormData, baseProductId: e.target.value })} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'>
-                    <option value=''>Оберіть базовий товар</option>
-                    {baseProducts
-                      .filter((p) => p.id !== editingProductId)
-                      .map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name}
-                        </option>
-                      ))}
-                  </select>
+                  <div className='relative'>
+                    {' '}
+                    <input
+                      ref={editBaseProductInputRef}
+                      type='text'
+                      value={editBaseProductSearch}
+                      onChange={(e) => setEditBaseProductSearch(e.target.value)}
+                      onFocus={() => setEditBaseProductSearchFocused(true)}
+                      onBlur={() => {
+                        setTimeout(() => setEditBaseProductSearchFocused(false), 200);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          setEditBaseProductSearchFocused(false);
+                        }
+                      }}
+                      placeholder='Пошук базового товару...'
+                      className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400'
+                    />{' '}
+                    {editBaseProductSearchFocused && (
+                      <div className='absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto'>
+                        {getFilteredBaseProducts(editBaseProductSearch)
+                          .filter((p) => p.id !== editingProductId)
+                          .map((product) => (
+                            <div
+                              key={product.id}
+                              className='p-2 text-sm font-medium text-gray-900 hover:bg-pink-100 cursor-pointer'
+                              onClick={() => {
+                                setEditFormData({ ...editFormData, baseProductId: product.id.toString() });
+                                setEditBaseProductSearch(product.name);
+                                setEditBaseProductSearchFocused(false);
+                              }}
+                            >
+                              {product.name}
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
               <div className='mb-4'>
