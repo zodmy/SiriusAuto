@@ -65,7 +65,6 @@ interface SavedCarSelection {
   engineName: string;
 }
 
-// Функція для відображення рейтингу в зірках
 const renderStars = (rating: number) => {
   const stars = [];
   const fullStars = Math.floor(rating);

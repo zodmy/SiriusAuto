@@ -13,6 +13,12 @@ export async function GET(request: NextRequest) {
     const maxPrice = searchParams.get('maxPrice');
     const inStock = searchParams.get('inStock');
 
+    const carMake = searchParams.get('carMake');
+    const carModel = searchParams.get('carModel');
+    const carYear = searchParams.get('carYear');
+    const carBodyType = searchParams.get('carBodyType');
+    const carEngine = searchParams.get('carEngine');
+
     const where: Prisma.ProductWhereInput = {};
 
     if (categoryName) {
@@ -43,11 +49,21 @@ export async function GET(request: NextRequest) {
       if (maxPrice) {
         where.price.lte = parseFloat(maxPrice);
       }
-    }
-
-    if (inStock === 'true') {
+    } if (inStock === 'true') {
       where.stockQuantity = {
         gt: 0
+      };
+    }
+
+    if (carMake && carModel && carYear && carBodyType && carEngine) {
+      where.compatibleVehicles = {
+        some: {
+          carMake: { name: carMake },
+          carModel: { name: carModel },
+          carYear: { year: parseInt(carYear) },
+          carBodyType: { name: carBodyType },
+          carEngine: { name: carEngine }
+        }
       };
     }
 

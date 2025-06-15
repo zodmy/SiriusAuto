@@ -68,6 +68,7 @@ function ProductsPageContent() {
   const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [showAllProducts, setShowAllProducts] = useState<boolean>(false);
   useEffect(() => {
     if (urlSearchQuery) {
       const query = decodeURIComponent(urlSearchQuery);
@@ -118,9 +119,28 @@ function ProductsPageContent() {
     const fetchManufacturers = async () => {
       try {
         let url = '/api/manufacturers';
+        const params = new URLSearchParams();
+
         if (categoryName) {
-          url += `?category=${encodeURIComponent(categoryName)}`;
+          params.append('category', categoryName);
         }
+
+        if (savedCar && !showAllProducts) {
+          params.append('carMake', savedCar.makeName);
+          params.append('carModel', savedCar.modelName);
+          params.append('carYear', savedCar.year.toString());
+          params.append('carBodyType', savedCar.bodyTypeName);
+          params.append('carEngine', savedCar.engineName);
+        }
+
+        if (showAllProducts) {
+          params.append('showAllProducts', 'true');
+        }
+
+        if (params.toString()) {
+          url += `?${params.toString()}`;
+        }
+
         const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
@@ -132,7 +152,7 @@ function ProductsPageContent() {
       }
     };
     fetchManufacturers();
-  }, [categoryName]);
+  }, [categoryName, savedCar, showAllProducts]);
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -157,8 +177,7 @@ function ProductsPageContent() {
         if (inStockOnly) {
           params.append('inStock', 'true');
         }
-
-        if (savedCar) {
+        if (savedCar && !showAllProducts) {
           params.append('carMake', savedCar.makeName);
           params.append('carModel', savedCar.modelName);
           params.append('carYear', savedCar.year.toString());
@@ -186,7 +205,7 @@ function ProductsPageContent() {
       }
     };
     fetchProducts();
-  }, [categoryName, debouncedSearchQuery, sortBy, selectedManufacturers, priceRange, inStockOnly, savedCar]);
+  }, [categoryName, debouncedSearchQuery, sortBy, selectedManufacturers, priceRange, inStockOnly, savedCar, showAllProducts]);
   const breadcrumbs = () => {
     const crumbs = [{ name: 'Головна', href: '/' }];
 
@@ -310,8 +329,7 @@ function ProductsPageContent() {
                   <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
                     <HiFilter className='text-blue-600' />
                     Фільтри
-                  </h3>
-
+                  </h3>{' '}
                   <div className='space-y-6'>
                     <div>
                       <label className='flex items-center gap-2 cursor-pointer'>
@@ -319,40 +337,52 @@ function ProductsPageContent() {
                         <span className='text-sm font-medium text-gray-700'>Тільки в наявності</span>
                       </label>
                     </div>
+                    {savedCar && (
+                      <div>
+                        <label className='flex items-center gap-2 cursor-pointer'>
+                          <input type='checkbox' checked={showAllProducts} onChange={(e) => setShowAllProducts(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
+                          <span className='text-sm font-medium text-gray-700'>Показати всі товари</span>
+                        </label>
+                        <p className='text-xs text-gray-500 mt-1'>Показувати товари, несумісні з обраним автомобілем</p>
+                      </div>
+                    )}
                     <div>
                       <h4 className='text-sm font-medium text-gray-900 mb-3'>Ціна (₴)</h4>
                       <div className='flex gap-2'>
                         <input type='number' placeholder='Від' value={priceRange.min} onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
                         <input type='number' placeholder='До' value={priceRange.max} onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
-                      </div>
+                      </div>{' '}
                     </div>
-                    <div>
-                      <h4 className='text-sm font-medium text-gray-900 mb-3'>Виробник</h4>
-                      <div className='space-y-2 max-h-48 overflow-y-auto'>
-                        {manufacturers.map((manufacturer) => (
-                          <label key={manufacturer.id} className='flex items-center gap-2 cursor-pointer'>
-                            <input
-                              type='checkbox'
-                              checked={selectedManufacturers.includes(manufacturer.name)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedManufacturers([...selectedManufacturers, manufacturer.name]);
-                                } else {
-                                  setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer.name));
-                                }
-                              }}
-                              className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
-                            />
-                            <span className='text-sm text-gray-700'>{manufacturer.name}</span>
-                          </label>
-                        ))}
+                    {manufacturers.length > 0 && (
+                      <div>
+                        <h4 className='text-sm font-medium text-gray-900 mb-3'>Виробник</h4>
+                        <div className='space-y-2 max-h-48 overflow-y-auto'>
+                          {manufacturers.map((manufacturer) => (
+                            <label key={manufacturer.id} className='flex items-center gap-2 cursor-pointer'>
+                              <input
+                                type='checkbox'
+                                checked={selectedManufacturers.includes(manufacturer.name)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedManufacturers([...selectedManufacturers, manufacturer.name]);
+                                  } else {
+                                    setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer.name));
+                                  }
+                                }}
+                                className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+                              />
+                              <span className='text-sm text-gray-700'>{manufacturer.name}</span>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}{' '}
                     <button
                       onClick={() => {
                         setSelectedManufacturers([]);
                         setPriceRange({ min: '', max: '' });
                         setInStockOnly(false);
+                        setShowAllProducts(false);
                       }}
                       className='w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer'
                     >
@@ -364,7 +394,9 @@ function ProductsPageContent() {
 
               <div className='flex-1'>
                 <div className='bg-white rounded-lg shadow-sm p-6 mb-6'>
+                  {' '}
                   <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6'>
+                    {' '}
                     <div>
                       <h1 className='text-2xl font-bold text-gray-900'>{currentCategory ? currentCategory.name : 'Всі товари'}</h1>
                       {currentCategory?.description && <p className='text-gray-600 mt-1'>{currentCategory.description}</p>}
@@ -378,7 +410,6 @@ function ProductsPageContent() {
                       </button>
                     </div>
                   </div>
-
                   <div className='flex flex-col sm:flex-row gap-4'>
                     <form onSubmit={handleSearch} className='flex-1'>
                       <div className='relative'>
@@ -408,8 +439,7 @@ function ProductsPageContent() {
                 ) : products.length === 0 ? (
                   <div className='bg-white rounded-lg shadow-sm p-8 text-center'>
                     <HiTag className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3>
-                    <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : 'В цій категорії поки немає товарів'}</p>
+                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3> <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year}` : 'В цій категорії поки немає товарів'}</p>
                     {debouncedSearchQuery && (
                       <button
                         onClick={() => {
@@ -422,9 +452,9 @@ function ProductsPageContent() {
                           const queryString = params.toString();
                           router.push(`/products${queryString ? `?${queryString}` : ''}`);
                         }}
-                        className='text-blue-600 hover:text-blue-800 font-medium'
+                        className='text-blue-600 hover:text-blue-800 font-medium mr-4'
                       >
-                        Очистити пошук
+                        Очистити пошук{' '}
                       </button>
                     )}
                   </div>

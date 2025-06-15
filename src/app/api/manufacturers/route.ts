@@ -1,25 +1,63 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const categoryName = searchParams.get('category');
 
-    let manufacturers;
+    const carMake = searchParams.get('carMake');
+    const carModel = searchParams.get('carModel');
+    const carYear = searchParams.get('carYear');
+    const carBodyType = searchParams.get('carBodyType');
+    const carEngine = searchParams.get('carEngine'); const showAllProducts = searchParams.get('showAllProducts') === 'true';
+
+    const whereCondition: Prisma.ManufacturerWhereInput = {};
 
     if (categoryName) {
-      manufacturers = await prisma.manufacturer.findMany({
-        where: {
-          products: {
-            some: {
-              category: {
-                name: decodeURIComponent(categoryName)
-              }
-            }
+      whereCondition.products = {
+        some: {
+          category: {
+            name: decodeURIComponent(categoryName)
           }
-        },
+        }
+      };
+    }
+
+    if (carMake && carModel && carYear && carBodyType && carEngine && !showAllProducts) {
+      const compatibilityCondition = {
+        compatibleVehicles: {
+          some: {
+            carMake: { name: carMake },
+            carModel: { name: carModel },
+            carYear: { year: parseInt(carYear) },
+            carBodyType: { name: carBodyType },
+            carEngine: { name: carEngine }
+          }
+        }
+      }; if (categoryName) {
+        whereCondition.products = {
+          some: {
+            AND: [
+              { category: { name: decodeURIComponent(categoryName) } },
+              compatibilityCondition
+            ]
+          }
+        };
+      } else {
+        whereCondition.products = {
+          some: compatibilityCondition
+        };
+      }
+    }
+
+    let manufacturers;
+
+    if (Object.keys(whereCondition).length > 0) {
+      manufacturers = await prisma.manufacturer.findMany({
+        where: whereCondition,
         orderBy: {
           name: 'asc'
         }
