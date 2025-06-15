@@ -3,9 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const carEngines = await prisma.carEngine.findMany();
+    const { searchParams } = new URL(request.url);
+    const bodyTypeId = searchParams.get('bodyTypeId');
+
+    const whereClause = bodyTypeId ? { bodyTypeId: parseInt(bodyTypeId) } : {};
+
+    const carEngines = await prisma.carEngine.findMany({
+      where: whereClause,
+    });
     return NextResponse.json(carEngines);
   } catch (error) {
     console.error('Помилка отримання двигунів автомобілів:', error);

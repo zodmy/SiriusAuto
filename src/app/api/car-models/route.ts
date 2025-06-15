@@ -2,9 +2,16 @@ import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const carModels = await prisma.carModel.findMany();
+    const { searchParams } = new URL(request.url);
+    const makeId = searchParams.get('makeId');
+
+    const whereClause = makeId ? { makeId: parseInt(makeId) } : {};
+
+    const carModels = await prisma.carModel.findMany({
+      where: whereClause,
+    });
     return NextResponse.json(carModels, { status: 200 });
   } catch (error) {
     console.error('Помилка отримання моделей автомобілів:', error);

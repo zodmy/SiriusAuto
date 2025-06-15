@@ -3,9 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const carYears = await prisma.carYear.findMany();
+    const { searchParams } = new URL(request.url);
+    const modelId = searchParams.get('modelId');
+
+    const whereClause = modelId ? { modelId: parseInt(modelId) } : {};
+
+    const carYears = await prisma.carYear.findMany({
+      where: whereClause,
+      orderBy: { year: 'desc' },
+    });
     return NextResponse.json(carYears);
   } catch (error) {
     console.error('Помилка отримання років випуску автомобілів:', error);
