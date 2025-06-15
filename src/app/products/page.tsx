@@ -6,19 +6,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart } from 'react-icons/hi';
+import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart, HiFilter } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
-
-interface Category {
-  id: number;
-  name: string;
-  description?: string;
-  children: Category[];
-  parent?: {
-    id: number;
-    name: string;
-  };
-}
 
 interface Product {
   id: number;
@@ -55,9 +44,6 @@ export default function ProductsPage() {
   const router = useRouter();
   const categoryName = searchParams.get('category');
   const urlSearchQuery = searchParams.get('search');
-
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +51,11 @@ export default function ProductsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('name');
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
+  // Стани для фільтрів
+  const [manufacturers, setManufacturers] = useState<{ id: number; name: string }[]>([]);
+  const [selectedManufacturers, setSelectedManufacturers] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
+  const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   useEffect(() => {
     if (urlSearchQuery) {
       const query = decodeURIComponent(urlSearchQuery);
@@ -91,27 +82,27 @@ export default function ProductsPage() {
         console.error('Помилка завантаження збереженого автомобіля:', error);
       }
     }
-  }, []);
-
+  }, []); // Завантаження виробників
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchManufacturers = async () => {
       try {
-        const response = await fetch('/api/categories');
+        let url = '/api/manufacturers';
+        if (categoryName) {
+          url += `?category=${encodeURIComponent(categoryName)}`;
+        }
+        const response = await fetch(url);
         if (response.ok) {
           const data = await response.json();
-          setCategories(data);
-          if (categoryName) {
-            const category = data.find((cat: Category) => cat.name === decodeURIComponent(categoryName));
-            setCurrentCategory(category || null);
-          }
+          setManufacturers(data);
+          // Очищуємо обраних виробників при зміні категорії
+          setSelectedManufacturers([]);
         }
       } catch (error) {
-        console.error('Помилка завантаження категорій:', error);
+        console.error('Помилка завантаження виробників:', error);
       }
     };
-    fetchCategories();
+    fetchManufacturers();
   }, [categoryName]);
-
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -123,6 +114,18 @@ export default function ProductsPage() {
         }
         if (debouncedSearchQuery) {
           params.append('search', debouncedSearchQuery);
+        }
+        if (selectedManufacturers.length > 0) {
+          params.append('manufacturers', selectedManufacturers.join(','));
+        }
+        if (priceRange.min) {
+          params.append('minPrice', priceRange.min);
+        }
+        if (priceRange.max) {
+          params.append('maxPrice', priceRange.max);
+        }
+        if (inStockOnly) {
+          params.append('inStock', 'true');
         }
         params.append('sort', sortBy);
 
@@ -144,34 +147,20 @@ export default function ProductsPage() {
       }
     };
     fetchProducts();
-  }, [categoryName, debouncedSearchQuery, sortBy]);
-
+  }, [categoryName, debouncedSearchQuery, sortBy, selectedManufacturers, priceRange, inStockOnly]);
   const breadcrumbs = () => {
     const crumbs = [
       { name: 'Головна', href: '/' },
       { name: 'Товари', href: '/products' },
     ];
-    if (currentCategory) {
-      if (currentCategory.parent) {
-        crumbs.push({
-          name: currentCategory.parent.name,
-          href: `/products?category=${encodeURIComponent(currentCategory.parent.name)}`,
-        });
-      }
+    if (categoryName) {
       crumbs.push({
-        name: currentCategory.name,
-        href: `/products?category=${encodeURIComponent(currentCategory.name)}`,
+        name: decodeURIComponent(categoryName),
+        href: `/products?category=${encodeURIComponent(categoryName)}`,
       });
     }
 
     return crumbs;
-  };
-  const getSubcategories = () => {
-    if (!currentCategory) {
-      return categories.filter((cat) => !cat.parent) || [];
-    }
-
-    return currentCategory.children || [];
   };
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,38 +224,70 @@ export default function ProductsPage() {
             <aside className='lg:w-64'>
               <div className='bg-white rounded-lg shadow-sm p-6 sticky top-8'>
                 <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-                  <HiTag className='text-blue-600' />
-                  Категорії
+                  <HiFilter className='text-blue-600' />
+                  Фільтри
                 </h3>
 
-                <div className='space-y-2'>
-                  <Link href='/products' className={`block px-3 py-2 rounded-md transition-colors ${!currentCategory ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}>
-                    Всі товари
-                  </Link>
-
-                  {getSubcategories().map((category) => (
-                    <Link key={category.id} href={`/products?category=${encodeURIComponent(category.name)}`} className={`block px-3 py-2 rounded-md transition-colors ${currentCategory?.id === category.id ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}>
-                      {category.name}
-                      {category.children && category.children.length > 0 && <span className='text-xs text-gray-500 ml-2'>({category.children.length})</span>}
-                    </Link>
-                  ))}
-
-                  {currentCategory && currentCategory.parent && (
-                    <Link href={`/products?category=${encodeURIComponent(currentCategory.parent.name)}`} className='block px-3 py-2 rounded-md text-blue-600 hover:bg-blue-50 font-medium transition-colors border-t border-gray-200 mt-4 pt-4'>
-                      ← Назад до {currentCategory.parent.name}
-                    </Link>
-                  )}
+                <div className='space-y-6'>
+                  {/* Фільтр за наявністю */}
+                  <div>
+                    <label className='flex items-center gap-2 cursor-pointer'>
+                      <input type='checkbox' checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
+                      <span className='text-sm font-medium text-gray-700'>Тільки в наявності</span>
+                    </label>
+                  </div>
+                  {/* Фільтр за ціною */}
+                  <div>
+                    <h4 className='text-sm font-medium text-gray-900 mb-3'>Ціна (₴)</h4>
+                    <div className='flex gap-2'>
+                      <input type='number' placeholder='Від' value={priceRange.min} onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
+                      <input type='number' placeholder='До' value={priceRange.max} onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
+                    </div>
+                  </div>{' '}
+                  {/* Фільтр за виробником */}
+                  <div>
+                    <h4 className='text-sm font-medium text-gray-900 mb-3'>Виробник</h4>
+                    <div className='space-y-2 max-h-48 overflow-y-auto'>
+                      {manufacturers.map((manufacturer) => (
+                        <label key={manufacturer.id} className='flex items-center gap-2 cursor-pointer'>
+                          <input
+                            type='checkbox'
+                            checked={selectedManufacturers.includes(manufacturer.name)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedManufacturers([...selectedManufacturers, manufacturer.name]);
+                              } else {
+                                setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer.name));
+                              }
+                            }}
+                            className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
+                          />
+                          <span className='text-sm text-gray-700'>{manufacturer.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Кнопка скидання фільтрів */}{' '}
+                  <button
+                    onClick={() => {
+                      setSelectedManufacturers([]);
+                      setPriceRange({ min: '', max: '' });
+                      setInStockOnly(false);
+                    }}
+                    className='w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors'
+                  >
+                    Скинути фільтри
+                  </button>
                 </div>
               </div>
             </aside>
             <div className='flex-1'>
               <div className='bg-white rounded-lg shadow-sm p-6 mb-6'>
                 <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6'>
+                  {' '}
                   <div>
-                    <h1 className='text-2xl font-bold text-gray-900'>{currentCategory ? currentCategory.name : 'Всі товари'}</h1>
-                    {currentCategory?.description && <p className='text-gray-600 mt-1'>{currentCategory.description}</p>}
+                    <h1 className='text-2xl font-bold text-gray-900'>{categoryName ? decodeURIComponent(categoryName) : 'Всі товари'}</h1>
                   </div>
-
                   <div className='flex items-center gap-2'>
                     <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
                       <HiViewGrid size={20} />

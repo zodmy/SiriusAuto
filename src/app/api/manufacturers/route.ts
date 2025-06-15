@@ -2,9 +2,38 @@ import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const manufacturers = await prisma.manufacturer.findMany();
+    const { searchParams } = new URL(request.url);
+    const categoryName = searchParams.get('category');
+
+    let manufacturers;
+
+    if (categoryName) {
+      // Отримуємо виробників, які мають товари в даній категорії
+      manufacturers = await prisma.manufacturer.findMany({
+        where: {
+          products: {
+            some: {
+              category: {
+                name: decodeURIComponent(categoryName)
+              }
+            }
+          }
+        },
+        orderBy: {
+          name: 'asc'
+        }
+      });
+    } else {
+      // Отримуємо всіх виробників
+      manufacturers = await prisma.manufacturer.findMany({
+        orderBy: {
+          name: 'asc'
+        }
+      });
+    }
+
     return NextResponse.json(manufacturers, { status: 200 });
   } catch (error) {
     console.error('Помилка отримання виробників:', error);

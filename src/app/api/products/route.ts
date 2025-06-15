@@ -8,6 +8,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url); const categoryName = searchParams.get('category');
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || 'name';
+    const manufacturers = searchParams.get('manufacturers');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const inStock = searchParams.get('inStock');
 
     const where: Prisma.ProductWhereInput = {};
 
@@ -22,6 +26,29 @@ export async function GET(request: NextRequest) {
         { name: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } }
       ];
+    } if (manufacturers) {
+      const manufacturerList = manufacturers.split(',').map(m => m.trim());
+      where.manufacturer = {
+        name: {
+          in: manufacturerList
+        }
+      };
+    }
+
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) {
+        where.price.gte = parseFloat(minPrice);
+      }
+      if (maxPrice) {
+        where.price.lte = parseFloat(maxPrice);
+      }
+    }
+
+    if (inStock === 'true') {
+      where.stockQuantity = {
+        gt: 0
+      };
     }
 
     let orderBy: Prisma.ProductOrderByWithRelationInput = {};
