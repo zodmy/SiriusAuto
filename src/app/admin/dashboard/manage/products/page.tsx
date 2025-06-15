@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef, useMemo, startTransition } from 'react';
 import { HiOutlineShoppingBag, HiOutlineTrash, HiOutlineSearch, HiOutlineArrowLeft, HiOutlinePlus, HiOutlinePencil } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
@@ -205,6 +205,7 @@ const SearchInput = React.memo(({ value, onChange, placeholder }: { value: strin
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
+
   const handleChange = useCallback(
     (newValue: string) => {
       setLocalValue(newValue);
@@ -212,13 +213,11 @@ const SearchInput = React.memo(({ value, onChange, placeholder }: { value: strin
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-
-      const isMobile = window?.innerWidth <= 768;
-      const timeout = isMobile ? 100 : 200;
-
       timeoutRef.current = setTimeout(() => {
-        onChange(newValue);
-      }, timeout);
+        startTransition(() => {
+          onChange(newValue);
+        });
+      }, 10);
     },
     [onChange]
   );
@@ -233,13 +232,19 @@ const SearchInput = React.memo(({ value, onChange, placeholder }: { value: strin
 
   return (
     <div className='relative'>
-      <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white text-base sm:text-lg font-semibold' placeholder={placeholder} value={localValue} onChange={(e) => handleChange(e.target.value)} autoComplete='off' spellCheck='false' />
+      <input id='search' type='text' className='w-full border border-gray-300 rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-gray-900 bg-white text-base sm:text-lg font-semibold optimized-input' placeholder={placeholder} value={localValue} onChange={(e) => handleChange(e.target.value)} autoComplete='off' spellCheck='false' />
       <HiOutlineSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={18} />
     </div>
   );
 });
 
 SearchInput.displayName = 'SearchInput';
+
+const InstantInput = React.memo(({ value, onChange, className, placeholder, type = 'text', ...props }: { value: string; onChange: (value: string) => void; className?: string; placeholder?: string; type?: string; [key: string]: unknown }) => {
+  return <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className={`${className} optimized-input`} placeholder={placeholder} autoComplete='off' spellCheck='false' {...props} />;
+});
+
+InstantInput.displayName = 'InstantInput';
 
 const MobileProductCard = React.memo(({ product, onEdit, onDelete, onManageCompatibility, onOpenImageModal }: { product: Product; onEdit: (product: Product) => void; onDelete: (id: number) => void; onManageCompatibility: (id: number) => void; onOpenImageModal: (imageUrl: string, productName: string) => void }) => (
   <div
@@ -468,7 +473,6 @@ const FormInput = React.memo(({ label, type = 'text', value, onChange, placehold
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
-
   const handleInputChange = useCallback(
     (newValue: string) => {
       setLocalValue(newValue);
@@ -479,7 +483,7 @@ const FormInput = React.memo(({ label, type = 'text', value, onChange, placehold
 
       timeoutRef.current = setTimeout(() => {
         onChange(newValue);
-      }, 150);
+      }, 10);
     },
     [onChange]
   );
@@ -497,7 +501,7 @@ const FormInput = React.memo(({ label, type = 'text', value, onChange, placehold
       <label className='block text-sm font-medium text-gray-700 mb-1'>
         {label} {required && '*'}
       </label>
-      {type === 'textarea' ? <textarea value={localValue} onChange={(e) => handleInputChange(e.target.value)} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder={placeholder} rows={rows || 3} /> : <input type={type} value={localValue} onChange={(e) => handleInputChange(e.target.value)} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400' placeholder={placeholder} min={min} step={step} />}
+      {type === 'textarea' ? <textarea value={localValue} onChange={(e) => handleInputChange(e.target.value)} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 optimized-input' placeholder={placeholder} rows={rows || 3} /> : <input type={type} value={localValue} onChange={(e) => handleInputChange(e.target.value)} className='w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-pink-400 focus:border-pink-400 optimized-input' placeholder={placeholder} min={min} step={step} />}
     </div>
   );
 });
@@ -522,7 +526,7 @@ const OptimizedInput = React.memo(({ type = 'text', value, onChange, className, 
 
       timeoutRef.current = setTimeout(() => {
         onChange(newValue);
-      }, 100);
+      }, 10);
     },
     [onChange]
   );
@@ -547,7 +551,6 @@ const OptimizedTextarea = React.memo(({ value, onChange, className, placeholder,
   useEffect(() => {
     setLocalValue(value);
   }, [value]);
-
   const handleChange = useCallback(
     (newValue: string) => {
       setLocalValue(newValue);
@@ -558,7 +561,7 @@ const OptimizedTextarea = React.memo(({ value, onChange, className, placeholder,
 
       timeoutRef.current = setTimeout(() => {
         onChange(newValue);
-      }, 100);
+      }, 10);
     },
     [onChange]
   );
@@ -2153,10 +2156,10 @@ export default function ManageProductsPage() {
                               <button onClick={() => {}} className='text-purple-600 hover:text-purple-800 cursor-pointer' title='Поставки товару'>
                                 <HiOutlinePlus size={16} />
                               </button>
-                              <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
+                              <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer' title='Редагувати'>
                                 <HiOutlinePencil size={16} />
                               </button>
-                              <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
+                              <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer' title='Видалити'>
                                 <HiOutlineTrash size={16} />
                               </button>
                             </div>

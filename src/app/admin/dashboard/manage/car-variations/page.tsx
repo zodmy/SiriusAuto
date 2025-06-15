@@ -114,11 +114,10 @@ export default function ManageCarVariationsPage() {
         .then(setCarEngines);
     }
   }, [isAdmin, isVerifyingAuth]);
-
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 400);
+    }, 100);
     return () => clearTimeout(handler);
   }, [search]);
 

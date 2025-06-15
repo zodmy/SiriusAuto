@@ -1,5 +1,41 @@
 @import 'tailwindcss';
 
+input[type='text'],
+input[type='search'],
+textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+
+  pointer-events: auto;
+
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.optimized-input {
+  transition: none !important;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    transition: none !important;
+    will-change: contents;
+    contain: layout style;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    transition: border-color 0.1s ease, box-shadow 0.1s ease !important;
+  }
+}
+
 @media (max-width: 768px) {
   .mobile-container {
     min-height: 100vh;

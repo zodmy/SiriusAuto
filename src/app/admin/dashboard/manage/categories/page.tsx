@@ -131,11 +131,10 @@ export default function ManageCategoriesPage() {
       fetchCategories();
     }
   }, [isAdmin, isVerifyingAuth, fetchCategories]);
-
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 400);
+    }, 100);
     return () => clearTimeout(handler);
   }, [search]);
   useEffect(() => {
