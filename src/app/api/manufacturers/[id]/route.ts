@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const manufacturerId = parseInt(id, 10);
 
@@ -26,7 +26,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
@@ -67,7 +67,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }

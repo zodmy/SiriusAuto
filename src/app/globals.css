@@ -1,1 +1,125 @@
 @import 'tailwindcss';
+
+input[type='text'],
+input[type='search'],
+textarea {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+
+  pointer-events: auto;
+
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.optimized-input {
+  transition: none !important;
+  transform: translateZ(0);
+  will-change: contents;
+}
+
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    transition: none !important;
+    will-change: contents;
+    contain: layout style;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    transition: border-color 0.1s ease, box-shadow 0.1s ease !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+    overscroll-behavior: contain;
+    scroll-snap-type: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+}
+
+@media (min-width: 769px) {
+  .table-scroll::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .table-scroll::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+
+  .table-scroll::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+  }
+
+  .table-scroll::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+}
+
+.virtualized-container {
+  contain: layout style paint;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+.virtualized-item {
+  contain: layout style;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-card {
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  }
+
+  .mobile-card:active {
+    transform: scale(0.98);
+  }
+}
+
+.touch-optimized {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}

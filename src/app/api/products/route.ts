@@ -1,11 +1,104 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url); const categoryName = searchParams.get('category');
+    const search = searchParams.get('search');
+    const sort = searchParams.get('sort') || 'name';
+    const manufacturers = searchParams.get('manufacturers');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const inStock = searchParams.get('inStock');
+
+    const carMake = searchParams.get('carMake');
+    const carModel = searchParams.get('carModel');
+    const carYear = searchParams.get('carYear');
+    const carBodyType = searchParams.get('carBodyType');
+    const carEngine = searchParams.get('carEngine');
+
+    const where: Prisma.ProductWhereInput = {};
+
+    if (categoryName) {
+      where.category = {
+        name: decodeURIComponent(categoryName)
+      };
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ];
+    } if (manufacturers) {
+      const manufacturerList = manufacturers.split(',').map(m => m.trim());
+      where.manufacturer = {
+        name: {
+          in: manufacturerList
+        }
+      };
+    }
+
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) {
+        where.price.gte = parseFloat(minPrice);
+      }
+      if (maxPrice) {
+        where.price.lte = parseFloat(maxPrice);
+      }
+    } if (inStock === 'true') {
+      where.stockQuantity = {
+        gt: 0
+      };
+    }
+
+    if (carMake && carModel && carYear && carBodyType && carEngine) {
+      where.compatibleVehicles = {
+        some: {
+          carMake: { name: carMake },
+          carModel: { name: carModel },
+          carYear: { year: parseInt(carYear) },
+          carBodyType: { name: carBodyType },
+          carEngine: { name: carEngine }
+        }
+      };
+    }
+
+    let orderBy: Prisma.ProductOrderByWithRelationInput = {};
+    switch (sort) {
+      case 'price_asc':
+        orderBy = { price: 'asc' };
+        break;
+      case 'price_desc':
+        orderBy = { price: 'desc' };
+        break;
+      case 'newest':
+        orderBy = { createdAt: 'desc' };
+        break;
+      default:
+        orderBy = { name: 'asc' };
+    }
+
     const products = await prisma.product.findMany({
-      include: {
+      where,
+      orderBy,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        price: true,
+        stockQuantity: true,
+        imageUrl: true,
+        categoryId: true,
+        manufacturerId: true,
+        isVariant: true,
+        baseProductId: true,
+        averageRating: true,
+        createdAt: true,
+        updatedAt: true,
         category: {
           select: {
             id: true,

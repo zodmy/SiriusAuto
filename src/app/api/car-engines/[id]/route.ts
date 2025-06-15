@@ -3,10 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET(req: NextRequest, context: { params: { id: string } }) {
-  const { params } = await context;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const carEngineId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carEngineId = parseInt(id, 10);
     if (isNaN(carEngineId)) {
       return NextResponse.json({ error: 'Невалідний ID двигуна автомобіля' }, { status: 400 });
     }
@@ -26,13 +26,13 @@ export async function GET(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
-  const { params } = await context;
   try {
-    const carEngineId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carEngineId = parseInt(id, 10);
     if (isNaN(carEngineId)) {
       return NextResponse.json({ error: 'Невалідний ID двигуна автомобіля' }, { status: 400 });
     }
@@ -82,13 +82,13 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
-  const { params } = await context;
   try {
-    const carEngineId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carEngineId = parseInt(id, 10);
     if (isNaN(carEngineId)) {
       return NextResponse.json({ error: 'Невалідний ID двигуна автомобіля' }, { status: 400 });
     }

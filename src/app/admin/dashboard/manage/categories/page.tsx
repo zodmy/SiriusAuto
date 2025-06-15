@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { HiOutlineTag, HiOutlineArrowLeft, HiOutlineTrash, HiOutlinePlus, HiOutlineSearch } from 'react-icons/hi';
-import { useAdminAuth } from '@/lib/hooks/useAdminAuth';
+import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 import React from 'react';
 
 interface Category {
@@ -126,17 +126,15 @@ export default function ManageCategoriesPage() {
       setIsLoading(false);
     }
   }, []);
-
   useEffect(() => {
     if (isAdmin && !isVerifyingAuth) {
       fetchCategories();
     }
   }, [isAdmin, isVerifyingAuth, fetchCategories]);
-
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
-    }, 400);
+    }, 100);
     return () => clearTimeout(handler);
   }, [search]);
   useEffect(() => {

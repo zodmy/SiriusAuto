@@ -2,28 +2,72 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
-    }
-
-    const product = await prisma.product.findUnique({
+    } const product = await prisma.product.findUnique({
       where: { id: productId },
       include: {
         category: {
           select: {
             id: true,
             name: true,
+            parent: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         manufacturer: {
           select: {
             id: true,
             name: true,
+          },
+        }, compatibleVehicles: {
+          include: {
+            carMake: {
+              select: { name: true },
+            },
+            carModel: {
+              select: { name: true },
+            },
+            carYear: {
+              select: { year: true },
+            },
+            carBodyType: {
+              select: { name: true },
+            },
+            carEngine: {
+              select: { name: true },
+            },
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        variants: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            stockQuantity: true,
+            imageUrl: true,
           },
         },
         baseProduct: {
@@ -46,7 +90,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req: request }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
@@ -91,7 +135,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req: request }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
