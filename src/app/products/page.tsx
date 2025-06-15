@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -50,7 +50,7 @@ interface SavedCarSelection {
   engineName: string;
 }
 
-export default function ProductsPage() {
+function ProductsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const categoryName = searchParams.get('category');
@@ -478,5 +478,30 @@ export default function ProductsPage() {
       </main>
       <Footer />
     </div>
+  );
+}
+
+// Loading компонент для Suspense
+function ProductsPageLoading() {
+  return (
+    <div className='flex flex-col min-h-screen bg-gray-50'>
+      <Header />
+      <main className='flex-grow flex items-center justify-center'>
+        <div className='text-center'>
+          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+          <p className='text-gray-600'>Завантаження...</p>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// Основний експорт з Suspense
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={<ProductsPageLoading />}>
+      <ProductsPageContent />
+    </Suspense>
   );
 }
