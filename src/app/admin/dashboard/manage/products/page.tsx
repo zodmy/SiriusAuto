@@ -242,11 +242,17 @@ const SearchInput = React.memo(({ value, onChange, placeholder }: { value: strin
 SearchInput.displayName = 'SearchInput';
 
 const MobileProductCard = React.memo(({ product, onEdit, onDelete, onManageCompatibility, onOpenImageModal }: { product: Product; onEdit: (product: Product) => void; onDelete: (id: number) => void; onManageCompatibility: (id: number) => void; onOpenImageModal: (imageUrl: string, productName: string) => void }) => (
-  <div className='rounded-xl border border-gray-200 bg-white p-3' style={{ boxShadow: 'none' }}>
-    <div className='flex items-start justify-between gap-3'>
-      <div className='flex gap-3 flex-1'>
+  <div
+    className='rounded-xl border border-gray-200 bg-white p-3 mobile-card touch-optimized transition-all duration-200 hover:shadow-md'
+    style={{
+      boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+      minHeight: '120px',
+    }}
+  >
+    <div className='flex items-start justify-between gap-3 h-full'>
+      <div className='flex gap-3 flex-1 min-w-0'>
         {product.imageUrl ? (
-          <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer' onClick={() => onOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
+          <div className='w-16 h-16 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0 relative flex items-center justify-center cursor-pointer touch-optimized transition-transform duration-200 hover:scale-105' onClick={() => onOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
             <Image src={product.imageUrl} alt={product.name} width={64} height={64} className='w-full h-full object-contain' loading='lazy' placeholder='blur' blurDataURL='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R+Sh7+0DaGhiK7TGylUpNzuq/CdmQAaTNWz4Ey7qdZwCNBDOcgHlkfYYtRQBzrR9iPZd' />
           </div>
         ) : (
@@ -254,29 +260,33 @@ const MobileProductCard = React.memo(({ product, onEdit, onDelete, onManageCompa
             <span className='text-xs text-gray-400'>Немає</span>
           </div>
         )}
-        <div className='flex-1'>
-          <div className='font-bold text-gray-900 text-base mb-1'>
-            {product.name}
-            {product.isVariant && product.baseProduct && <span className='ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded'>Варіант: {product.baseProduct.name}</span>}
+        <div className='flex-1 min-w-0 flex flex-col justify-between'>
+          <div>
+            <div className='font-bold text-gray-900 text-base mb-1 line-clamp-2'>
+              {product.name}
+              {product.isVariant && product.baseProduct && <span className='ml-2 text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block mt-1'>Варіант: {product.baseProduct.name}</span>}
+            </div>
+            <div className='text-sm text-gray-600 mb-1 truncate'>
+              {product.category.name} • {product.manufacturer.name}
+            </div>
           </div>
-          <div className='text-sm text-gray-600 mb-1'>
-            {product.category.name} • {product.manufacturer.name}
+          <div>
+            <div className='flex items-center gap-2 mb-1 flex-wrap'>
+              <span className='font-semibold text-pink-600'>₴{product.price}</span>
+              <span className='text-sm text-gray-500'>Склад: {product.stockQuantity} шт.</span>
+            </div>
+            <div className='text-xs text-gray-500'>Рейтинг: {product.averageRating ? `${product.averageRating}/5` : 'Немає'}</div>
           </div>
-          <div className='flex items-center gap-2 mb-1'>
-            <span className='font-semibold text-pink-600'>₴{product.price}</span>
-            <span className='text-sm text-gray-500'>Склад: {product.stockQuantity} шт.</span>
-          </div>
-          <div className='text-xs text-gray-500'>Рейтинг: {product.averageRating ? `${product.averageRating}/5` : 'Немає'}</div>
         </div>
       </div>
-      <div className='flex flex-col gap-1'>
-        <button onClick={() => onEdit(product)} className='p-2 text-blue-600 rounded-lg' title='Редагувати'>
+      <div className='flex flex-col gap-1 flex-shrink-0 justify-start'>
+        <button onClick={() => onEdit(product)} className='p-2 text-blue-600 rounded-lg hover:bg-blue-50 touch-optimized transition-colors duration-200 active:scale-95' title='Редагувати'>
           <HiOutlinePencil size={16} />
         </button>
-        <button onClick={() => onDelete(product.id)} className='p-2 text-red-600 rounded-lg' title='Видалити'>
+        <button onClick={() => onDelete(product.id)} className='p-2 text-red-600 rounded-lg hover:bg-red-50 touch-optimized transition-colors duration-200 active:scale-95' title='Видалити'>
           <HiOutlineTrash size={16} />
         </button>
-        <button onClick={() => onManageCompatibility(product.id)} className='p-2 text-green-600 rounded-lg' title='Сумісність'>
+        <button onClick={() => onManageCompatibility(product.id)} className='p-2 text-green-600 rounded-lg hover:bg-green-50 touch-optimized transition-colors duration-200 active:scale-95' title='Сумісність'>
           <LuCar size={16} />
         </button>
       </div>
@@ -287,8 +297,38 @@ const MobileProductCard = React.memo(({ product, onEdit, onDelete, onManageCompa
 MobileProductCard.displayName = 'MobileProductCard';
 
 const VirtualizedMobileList = React.memo(({ products, onEdit, onDelete, onManageCompatibility, onOpenImageModal }: { products: Product[]; onEdit: (product: Product) => void; onDelete: (id: number) => void; onManageCompatibility: (id: number) => void; onOpenImageModal: (imageUrl: string, productName: string) => void }) => {
-  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 20 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const itemHeightsRef = useRef<Map<number, number>>(new Map());
+  const [averageItemHeight, setAverageItemHeight] = useState(140);
+  const lastScrollTop = useRef(0);
+  const isScrollingRef = useRef(false);
+
+  const getItemOffset = useCallback(
+    (index: number) => {
+      let offset = 0;
+      for (let i = 0; i < index; i++) {
+        offset += itemHeightsRef.current.get(i) || averageItemHeight;
+      }
+      return offset;
+    },
+    [averageItemHeight]
+  );
+
+  const findStartIndex = useCallback(
+    (scrollTop: number) => {
+      let currentOffset = 0;
+      for (let i = 0; i < products.length; i++) {
+        const height = itemHeightsRef.current.get(i) || averageItemHeight;
+        if (currentOffset + height > scrollTop) {
+          return Math.max(0, i);
+        }
+        currentOffset += height;
+      }
+      return Math.max(0, products.length - 1);
+    },
+    [products.length, averageItemHeight]
+  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -296,51 +336,123 @@ const VirtualizedMobileList = React.memo(({ products, onEdit, onDelete, onManage
 
       const container = containerRef.current;
       const scrollTop = container.scrollTop;
-      const itemHeight = 120;
       const containerHeight = container.clientHeight;
 
-      const start = Math.floor(scrollTop / itemHeight);
-      const end = Math.min(start + Math.ceil(containerHeight / itemHeight) + 2, products.length);
+      if (Math.abs(scrollTop - lastScrollTop.current) < 20) return;
+      lastScrollTop.current = scrollTop;
 
-      setVisibleRange({ start, end });
+      const startIndex = findStartIndex(scrollTop);
+      const visibleCount = Math.ceil(containerHeight / averageItemHeight) + 8;
+      const endIndex = Math.min(startIndex + visibleCount, products.length);
+
+      setVisibleRange((prev) => {
+        if (Math.abs(prev.start - startIndex) > 10 || Math.abs(prev.end - endIndex) > 10) {
+          return { start: startIndex, end: endIndex };
+        }
+        return prev;
+      });
     };
 
     const container = containerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      let scrollTimeout: NodeJS.Timeout;
+      const debouncedScroll = () => {
+        isScrollingRef.current = true;
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          isScrollingRef.current = false;
+          handleScroll();
+        }, 16);
+      };
+
+      container.addEventListener('scroll', debouncedScroll, { passive: true });
       handleScroll();
+
+      const resizeObserver = new ResizeObserver((entries) => {
+        if (isScrollingRef.current) return;
+
+        let hasChanges = false;
+        entries.forEach((entry, index) => {
+          const element = entry.target as HTMLElement;
+          const productId = element.getAttribute('data-product-id');
+          if (productId) {
+            const height = entry.contentRect.height + 12;
+            const itemIndex = visibleRange.start + index;
+            const currentHeight = itemHeightsRef.current.get(itemIndex);
+
+            if (!currentHeight || Math.abs(currentHeight - height) > 5) {
+              itemHeightsRef.current.set(itemIndex, height);
+              hasChanges = true;
+            }
+          }
+        });
+
+        if (hasChanges) {
+          const heights = Array.from(itemHeightsRef.current.values());
+          if (heights.length > 0) {
+            const newAvgHeight = heights.reduce((sum, h) => sum + h, 0) / heights.length;
+            if (Math.abs(newAvgHeight - averageItemHeight) > 5) {
+              setAverageItemHeight(newAvgHeight);
+            }
+          }
+        }
+      });
+
+      const observeVisibleItems = () => {
+        const items = container.querySelectorAll('[data-product-card]');
+        items.forEach((item) => resizeObserver.observe(item));
+      };
+
+      observeVisibleItems();
+
+      return () => {
+        clearTimeout(scrollTimeout);
+        container.removeEventListener('scroll', debouncedScroll);
+        resizeObserver.disconnect();
+      };
     }
-
-    return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll);
-      }
-    };
-  }, [products.length]);
-
-  if (products.length <= 20) {
+  }, [products.length, visibleRange.start, findStartIndex, averageItemHeight]);
+  if (products.length <= 50) {
     return (
-      <div className='flex flex-col gap-3'>
-        {products.map((product) => (
-          <MobileProductCard key={product.id} product={product} onEdit={onEdit} onDelete={onDelete} onManageCompatibility={onManageCompatibility} onOpenImageModal={onOpenImageModal} />
-        ))}
+      <div className='h-full overflow-y-auto overflow-x-hidden pb-4 smooth-scroll custom-scrollbar touch-optimized'>
+        <div className='flex flex-col gap-3'>
+          {products.map((product) => (
+            <div key={product.id} data-product-card data-product-id={product.id}>
+              <MobileProductCard product={product} onEdit={onEdit} onDelete={onDelete} onManageCompatibility={onManageCompatibility} onOpenImageModal={onOpenImageModal} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   const visibleProducts = products.slice(visibleRange.start, visibleRange.end);
-  const totalHeight = products.length * 120;
-  const offsetY = visibleRange.start * 120;
-
+  const totalHeight = getItemOffset(products.length);
+  const offsetY = getItemOffset(visibleRange.start);
   return (
-    <div ref={containerRef} className='flex flex-col gap-3 overflow-y-auto' style={{ height: '70vh', maxHeight: '600px' }}>
+    <div
+      ref={containerRef}
+      className='h-full overflow-y-auto overflow-x-hidden pb-4 smooth-scroll custom-scrollbar touch-optimized virtualized-container'
+      style={{
+        WebkitOverflowScrolling: 'touch',
+      }}
+    >
       <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          {visibleProducts.map((product) => (
-            <div key={product.id} style={{ marginBottom: '12px' }}>
-              <MobileProductCard product={product} onEdit={onEdit} onDelete={onDelete} onManageCompatibility={onManageCompatibility} onOpenImageModal={onOpenImageModal} />
-            </div>
-          ))}
+        <div
+          className='virtualized-item'
+          style={{
+            transform: `translate3d(0, ${offsetY}px, 0)`,
+            willChange: 'transform',
+          }}
+        >
+          {' '}
+          <div className='flex flex-col gap-3'>
+            {visibleProducts.map((product) => (
+              <div key={product.id} data-product-card data-product-id={product.id} className='virtualized-item'>
+                <MobileProductCard product={product} onEdit={onEdit} onDelete={onDelete} onManageCompatibility={onManageCompatibility} onOpenImageModal={onOpenImageModal} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -1306,27 +1418,27 @@ export default function ManageProductsPage() {
     );
   }
   return (
-    <div className='min-h-screen bg-gray-50 p-1 sm:p-4 overflow-y-auto' style={{ maxHeight: '100vh', WebkitOverflowScrolling: 'touch' }}>
-      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200'>
-        <div className='mb-3'>
+    <div className='h-screen sm:min-h-screen bg-gray-50 p-1 sm:p-4 flex flex-col overflow-hidden sm:overflow-auto mobile-container'>
+      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200 flex flex-col flex-1 min-h-0'>
+        <div className='mb-3 flex-shrink-0'>
           <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300 cursor-pointer'>
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
             На головну
           </a>
         </div>
-        <h2 className='text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3'>
+        <h2 className='text-xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-8 flex items-center gap-2 sm:gap-3 flex-shrink-0'>
           <span className='text-purple-700'>
             <HiOutlineShoppingBag className='inline-block mr-1' size={24} />
           </span>
           Керування товарами
         </h2>{' '}
-        <div className='mb-3 sm:mb-6'>
+        <div className='mb-3 sm:mb-6 flex-shrink-0'>
           <label htmlFor='search' className='block text-gray-900 font-semibold mb-1 sm:mb-2 text-base sm:text-lg'>
             Пошук товарів
           </label>
           <SearchInput value={search} onChange={setSearch} placeholder='Пошук товарів...' />
         </div>
-        <div className='mb-6'>
+        <div className='mb-6 flex-shrink-0'>
           {' '}
           <button
             onClick={() => {
@@ -1356,9 +1468,9 @@ export default function ManageProductsPage() {
           >
             <HiOutlinePlus size={20} />
             {showCreateForm ? 'Скасувати' : 'Додати товар'}
-          </button>
+          </button>{' '}
           {showCreateForm && (
-            <div className='mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50'>
+            <div className='mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50 max-h-60 sm:max-h-80 overflow-y-auto'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Додати новий товар</h3>{' '}
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
                 <div>
@@ -1896,159 +2008,165 @@ export default function ManageProductsPage() {
               </div>
             </div>
           )}
+        </div>{' '}
+        <div className='sm:hidden flex-1 flex flex-col min-h-0 overflow-hidden'>
+          <div className='flex-1 min-h-0 overflow-hidden'>{isLoading ? <ProductSkeleton /> : filteredProducts.length === 0 ? <div className='text-center text-gray-700 font-semibold py-6'>Нічого не знайдено</div> : <VirtualizedMobileList products={filteredProducts} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onManageCompatibility={handleManageCompatibility} onOpenImageModal={handleOpenImageModal} />}</div>
         </div>
-        <div className='sm:hidden'>{isLoading ? <ProductSkeleton /> : filteredProducts.length === 0 ? <div className='text-center text-gray-700 font-semibold py-6'>Нічого не знайдено</div> : <VirtualizedMobileList products={filteredProducts} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onManageCompatibility={handleManageCompatibility} onOpenImageModal={handleOpenImageModal} />}</div>{' '}
-        <div className='bg-white rounded-lg shadow border border-gray-200 w-full hidden sm:block'>
+        <div className='bg-white rounded-lg shadow border border-gray-200 w-full hidden sm:flex flex-col flex-1 min-h-0'>
           {isLoading ? (
             <ProductSkeleton />
           ) : (
-            <div className='w-full'>
-              <table className='w-full divide-y divide-gray-200 text-sm table-fixed'>
-                <thead className='bg-gray-100'>
-                  <tr>
-                    <th
-                      className='px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-12'
-                      onClick={() => {
-                        if (sortBy === 'id') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                        else {
-                          setSortBy('id');
-                          setSortDir('asc');
-                        }
-                      }}
-                    >
-                      ID {sortBy === 'id' && (sortDir === 'asc' ? '▲' : '▼')}
-                    </th>
-                    <th className='px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16'>Фото</th>
-                    <th
-                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/4'
-                      onClick={() => {
-                        if (sortBy === 'name') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                        else {
-                          setSortBy('name');
-                          setSortDir('asc');
-                        }
-                      }}
-                    >
-                      Назва {sortBy === 'name' && (sortDir === 'asc' ? '▲' : '▼')}
-                    </th>
-                    <th
-                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-20'
-                      onClick={() => {
-                        if (sortBy === 'price') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                        else {
-                          setSortBy('price');
-                          setSortDir('asc');
-                        }
-                      }}
-                    >
-                      {' '}
-                      Ціна {sortBy === 'price' && (sortDir === 'asc' ? '▲' : '▼')}
-                    </th>
-                    <th
-                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-16'
-                      onClick={() => {
-                        if (sortBy === 'stockQuantity') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                        else {
-                          setSortBy('stockQuantity');
-                          setSortDir('asc');
-                        }
-                      }}
-                    >
-                      Склад {sortBy === 'stockQuantity' && (sortDir === 'asc' ? '▲' : '▼')}
-                    </th>
-                    <th
-                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/6'
-                      onClick={() => {
-                        if (sortBy === 'category') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                        else {
-                          setSortBy('category');
-                          setSortDir('asc');
-                        }
-                      }}
-                    >
-                      Категорія {sortBy === 'category' && (sortDir === 'asc' ? '▲' : '▼')}
-                    </th>
-                    <th
-                      className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/6'
-                      onClick={() => {
-                        if (sortBy === 'manufacturer') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
-                        else {
-                          setSortBy('manufacturer');
-                          setSortDir('asc');
-                        }
-                      }}
-                    >
-                      Виробник {sortBy === 'manufacturer' && (sortDir === 'asc' ? '▲' : '▼')}
-                    </th>
-                    <th className='px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-24'>Дії</th>
-                  </tr>
-                </thead>
-                <tbody className='bg-white divide-y divide-gray-100 max-h-[400px] overflow-y-auto'>
-                  {filteredProducts.length === 0 ? (
+            <div className='flex flex-col flex-1 min-h-0'>
+              <div className='flex-shrink-0'>
+                <table className='w-full divide-y divide-gray-200 text-sm table-fixed'>
+                  <thead className='bg-gray-100'>
                     <tr>
-                      <td colSpan={8} className='px-6 py-4 text-center text-gray-700 font-semibold'>
-                        {search ? 'Товарів за запитом не знайдено' : 'Товарів не знайдено'}
-                      </td>
+                      <th
+                        className='px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-12'
+                        onClick={() => {
+                          if (sortBy === 'id') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          else {
+                            setSortBy('id');
+                            setSortDir('asc');
+                          }
+                        }}
+                      >
+                        ID {sortBy === 'id' && (sortDir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th className='px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-16'>Фото</th>
+                      <th
+                        className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/4'
+                        onClick={() => {
+                          if (sortBy === 'name') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          else {
+                            setSortBy('name');
+                            setSortDir('asc');
+                          }
+                        }}
+                      >
+                        Назва {sortBy === 'name' && (sortDir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th
+                        className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-20'
+                        onClick={() => {
+                          if (sortBy === 'price') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          else {
+                            setSortBy('price');
+                            setSortDir('asc');
+                          }
+                        }}
+                      >
+                        Ціна {sortBy === 'price' && (sortDir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th
+                        className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-16'
+                        onClick={() => {
+                          if (sortBy === 'stockQuantity') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          else {
+                            setSortBy('stockQuantity');
+                            setSortDir('asc');
+                          }
+                        }}
+                      >
+                        Склад {sortBy === 'stockQuantity' && (sortDir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th
+                        className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/6'
+                        onClick={() => {
+                          if (sortBy === 'category') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          else {
+                            setSortBy('category');
+                            setSortDir('asc');
+                          }
+                        }}
+                      >
+                        Категорія {sortBy === 'category' && (sortDir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th
+                        className='px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer select-none w-1/6'
+                        onClick={() => {
+                          if (sortBy === 'manufacturer') setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+                          else {
+                            setSortBy('manufacturer');
+                            setSortDir('asc');
+                          }
+                        }}
+                      >
+                        Виробник {sortBy === 'manufacturer' && (sortDir === 'asc' ? '▲' : '▼')}
+                      </th>
+                      <th className='px-3 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider w-24'>Дії</th>
                     </tr>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <tr key={product.id} className='hover:bg-gray-50'>
-                        <td className='px-2 py-3 font-semibold text-gray-900 text-center'>{product.id}</td>
-                        <td className='px-2 py-3'>
-                          {product.imageUrl ? (
-                            <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity' onClick={() => handleOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
-                              <Image src={product.imageUrl} alt={product.name} width={40} height={40} className='w-full h-full object-contain' />
-                            </div>
-                          ) : (
-                            <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mx-auto'>
-                              <span className='text-xs text-gray-400'>Немає</span>
-                            </div>
-                          )}
-                        </td>
-                        <td className='px-3 py-3'>
-                          <div className='font-semibold text-gray-900 break-words'>{product.name}</div>
-                          {product.isVariant && product.baseProduct && <div className='text-xs text-blue-600 mt-1 break-words'>Варіант: {product.baseProduct.name}</div>}
-                          {product.averageRating !== null && product.averageRating > 0 && <div className='text-xs text-yellow-600 mt-1'>★ {product.averageRating.toFixed(1)}</div>}
-                          {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
-                            <div className='text-xs text-blue-600 mt-1 flex items-center gap-1'>
-                              <LuCar size={12} /> {product.compatibleVehicles.length} авто
-                            </div>
-                          )}
-                        </td>
-                        <td className='px-3 py-3'>
-                          <span className='font-semibold text-green-600 break-words'>{product.price} грн</span>
-                        </td>
-                        <td className='px-3 py-3'>
-                          <span className={`font-medium break-words ${product.stockQuantity === 0 ? 'text-red-600' : product.stockQuantity < 10 ? 'text-yellow-600' : 'text-gray-900'}`}>{product.stockQuantity} шт</span>
-                        </td>
-                        <td className='px-3 py-3'>
-                          <span className='font-medium text-gray-900 break-words'>{product.category.name}</span>
-                        </td>
-                        <td className='px-3 py-3'>
-                          <span className='font-medium text-gray-900 break-words'>{product.manufacturer.name}</span>
-                        </td>
-                        <td className='px-3 py-3 text-right'>
-                          <div className='flex justify-end gap-1 flex-wrap'>
-                            {' '}
-                            <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
-                              <LuCar size={16} />
-                            </button>
-                            <button onClick={() => {}} className='text-purple-600 hover:text-purple-800 cursor-pointer' title='Поставки товару'>
-                              <HiOutlinePlus size={16} />
-                            </button>
-                            <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
-                              <HiOutlinePencil size={16} />
-                            </button>
-                            <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
-                              <HiOutlineTrash size={16} />
-                            </button>
-                          </div>
+                  </thead>
+                </table>
+              </div>{' '}
+              <div className='flex-1 overflow-y-auto min-h-0 table-scroll'>
+                <table className='w-full text-sm table-fixed'>
+                  <tbody className='bg-white divide-y divide-gray-100'>
+                    {filteredProducts.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className='px-6 py-4 text-center text-gray-700 font-semibold'>
+                          {search ? 'Товарів за запитом не знайдено' : 'Товарів не знайдено'}
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      filteredProducts.map((product) => (
+                        <tr key={product.id} className='hover:bg-gray-50'>
+                          <td className='px-2 py-3 font-semibold text-gray-900 text-center w-12'>{product.id}</td>
+                          <td className='px-2 py-3 w-16'>
+                            {product.imageUrl ? (
+                              <div className='w-10 h-10 rounded-lg overflow-hidden bg-gray-100 mx-auto relative flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity' onClick={() => handleOpenImageModal(product.imageUrl!, product.name)} title='Натисніть для перегляду зображення'>
+                                <Image src={product.imageUrl} alt={product.name} width={40} height={40} className='w-full h-full object-contain' />
+                              </div>
+                            ) : (
+                              <div className='w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center mx-auto'>
+                                <span className='text-xs text-gray-400'>Немає</span>
+                              </div>
+                            )}
+                          </td>
+                          <td className='px-3 py-3 w-1/4'>
+                            <div className='font-semibold text-gray-900 break-words'>{product.name}</div>
+                            {product.isVariant && product.baseProduct && <div className='text-xs text-blue-600 mt-1 break-words'>Варіант: {product.baseProduct.name}</div>}
+                            {product.averageRating !== null && product.averageRating > 0 && <div className='text-xs text-yellow-600 mt-1'>★ {product.averageRating.toFixed(1)}</div>}
+                            {product.compatibleVehicles && product.compatibleVehicles.length > 0 && (
+                              <div className='text-xs text-blue-600 mt-1 flex items-center gap-1'>
+                                <LuCar size={12} /> {product.compatibleVehicles.length} авто
+                              </div>
+                            )}
+                          </td>
+                          <td className='px-3 py-3 w-20'>
+                            <span className='font-semibold text-green-600 break-words'>{product.price} грн</span>
+                          </td>
+                          <td className='px-3 py-3 w-16'>
+                            <span className={`font-medium break-words ${product.stockQuantity === 0 ? 'text-red-600' : product.stockQuantity < 10 ? 'text-yellow-600' : 'text-gray-900'}`}>{product.stockQuantity} шт</span>
+                          </td>
+                          <td className='px-3 py-3 w-1/6'>
+                            <span className='font-medium text-gray-900 break-words'>{product.category.name}</span>
+                          </td>
+                          <td className='px-3 py-3 w-1/6'>
+                            <span className='font-medium text-gray-900 break-words'>{product.manufacturer.name}</span>
+                          </td>
+                          <td className='px-3 py-3 text-right w-24'>
+                            <div className='flex justify-end gap-1 flex-wrap'>
+                              <button onClick={() => handleManageCompatibility(product.id)} className='text-green-600 hover:text-green-800 cursor-pointer' title='Керування сумісністю з авто'>
+                                <LuCar size={16} />
+                              </button>
+                              <button onClick={() => {}} className='text-purple-600 hover:text-purple-800 cursor-pointer' title='Поставки товару'>
+                                <HiOutlinePlus size={16} />
+                              </button>
+                              <button onClick={() => handleEditProduct(product)} className='text-blue-600 hover:text-blue-800 cursor-pointer'>
+                                <HiOutlinePencil size={16} />
+                              </button>
+                              <button onClick={() => handleDeleteProduct(product.id)} className='text-red-600 hover:text-red-800 cursor-pointer'>
+                                <HiOutlineTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
