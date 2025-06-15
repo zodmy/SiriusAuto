@@ -152,12 +152,12 @@ function ProductPageContent() {
       if (product.category.parent) {
         crumbs.push({
           name: product.category.parent.name,
-          href: `/products?category=${encodeURIComponent(product.category.parent.name)}`,
+          href: `/categories/${encodeURIComponent(product.category.parent.name)}`,
         });
       }
       crumbs.push({
         name: product.category.name,
-        href: `/products?category=${encodeURIComponent(product.category.name)}`,
+        href: `/categories/${encodeURIComponent(product.category.name)}`,
       });
     }
 

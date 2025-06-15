@@ -108,7 +108,7 @@ const Header = () => {
                         </Link>
                         {categories.map((category) => (
                           <div key={category.id} className='relative group'>
-                            <Link href={`/products?category=${encodeURIComponent(category.name)}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-3 text-sm text-gray-900 hover:bg-blue-50 font-semibold transition-colors border-b border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-800'>
+                            <Link href={`/categories/${encodeURIComponent(category.name)}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-3 text-sm text-gray-900 hover:bg-blue-50 font-semibold transition-colors border-b border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-800'>
                               {category.name}
                               {category.children.length > 0 && (
                                 <svg className='float-right w-4 h-4 mt-0.5 text-gray-700' fill='currentColor' viewBox='0 0 20 20'>
@@ -121,7 +121,7 @@ const Header = () => {
                                 <div className='py-2'>
                                   <div className='px-4 py-2 text-xs font-bold text-gray-800 uppercase tracking-wide border-b border-gray-200 bg-gray-50'>{category.name}</div>
                                   {category.children.map((child) => (
-                                    <Link key={child.id} href={`/products?category=${encodeURIComponent(child.name)}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 hover:text-blue-900 transition-colors font-medium'>
+                                    <Link key={child.id} href={`/categories/${encodeURIComponent(child.name)}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 hover:text-blue-900 transition-colors font-medium'>
                                       {child.name}
                                     </Link>
                                   ))}
@@ -271,13 +271,13 @@ const Header = () => {
               </Link>
               {categories.map((category) => (
                 <div key={category.id} className='mb-2'>
-                  <Link href={`/products?category=${category.id}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium'>
+                  <Link href={`/categories/${encodeURIComponent(category.name)}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium'>
                     {category.name}
                   </Link>
                   {category.children.length > 0 && (
                     <div className='ml-4 mt-1 space-y-1 bg-gray-800 rounded p-2'>
                       {category.children.map((child) => (
-                        <Link key={child.id} href={`/products?category=${child.id}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-1 rounded-md hover:bg-gray-600 transition-colors text-sm text-gray-300'>
+                        <Link key={child.id} href={`/categories/${encodeURIComponent(child.name)}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-1 rounded-md hover:bg-gray-600 transition-colors text-sm text-gray-300'>
                           • {child.name}
                         </Link>
                       ))}

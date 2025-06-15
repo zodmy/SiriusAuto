@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart, HiFilter } from 'react-icons/hi';
+import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
 
 interface Category {
@@ -50,11 +50,13 @@ interface SavedCarSelection {
   engineName: string;
 }
 
-function ProductsPageContent() {
-  const searchParams = useSearchParams();
+export default function CategoryPage() {
+  const params = useParams();
   const router = useRouter();
-  const categoryName = searchParams.get('category');
+  const searchParams = useSearchParams();
+  const categoryName = decodeURIComponent(params.categoryName as string);
   const urlSearchQuery = searchParams.get('search');
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
@@ -69,6 +71,7 @@ function ProductsPageContent() {
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [showAllProducts, setShowAllProducts] = useState<boolean>(false);
+
   useEffect(() => {
     if (urlSearchQuery) {
       const query = decodeURIComponent(urlSearchQuery);
@@ -93,7 +96,7 @@ function ProductsPageContent() {
           const data = await response.json();
           setCategories(data);
           if (categoryName) {
-            const category = data.find((cat: Category) => cat.name === decodeURIComponent(categoryName));
+            const category = data.find((cat: Category) => cat.name === categoryName);
             setCurrentCategory(category || null);
           }
         }
@@ -115,6 +118,7 @@ function ProductsPageContent() {
       }
     }
   }, []);
+
   useEffect(() => {
     const fetchManufacturers = async () => {
       try {
@@ -153,6 +157,7 @@ function ProductsPageContent() {
     };
     fetchManufacturers();
   }, [categoryName, savedCar, showAllProducts]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -206,6 +211,7 @@ function ProductsPageContent() {
     };
     fetchProducts();
   }, [categoryName, debouncedSearchQuery, sortBy, selectedManufacturers, priceRange, inStockOnly, savedCar, showAllProducts]);
+
   const breadcrumbs = () => {
     const crumbs = [{ name: 'Головна', href: '/' }];
 
@@ -230,6 +236,7 @@ function ProductsPageContent() {
   const shouldShowSubcategories = () => {
     return currentCategory && currentCategory.children && currentCategory.children.length > 0;
   };
+
   const getSubcategories = () => {
     let subcategories = [];
     if (!currentCategory) {
@@ -240,20 +247,17 @@ function ProductsPageContent() {
 
     return subcategories.sort((a, b) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
   };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-
-    if (categoryName) {
-      params.append('category', categoryName);
-    }
 
     if (searchQuery.trim()) {
       params.append('search', searchQuery.trim());
     }
 
     const queryString = params.toString();
-    router.push(`/products${queryString ? `?${queryString}` : ''}`);
+    router.push(`/categories/${encodeURIComponent(categoryName)}${queryString ? `?${queryString}` : ''}`);
   };
 
   return (
@@ -278,30 +282,34 @@ function ProductsPageContent() {
               ))}
             </nav>
           </div>
-        </div>{' '}
+        </div>
+
         {savedCar && (
           <div className='bg-green-50 border-b border-green-200'>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
-              <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3'>
-                <div className='flex items-center gap-3'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center space-x-3'>
                   <FaCar className='text-green-600' />
-                  <span className='text-green-800 font-medium'>
-                    Обраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} ({savedCar.bodyTypeName}, {savedCar.engineName})
+                  <span className='text-sm text-green-800'>
+                    <strong>Вибраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year}
                   </span>
-                </div>{' '}
-                <div className='flex items-center gap-3 sm:ml-auto'>
-                  <Link href='/' className='text-green-700 hover:text-green-900 text-sm underline'>
-                    Змінити
+                </div>
+                <div className='flex items-center space-x-2'>
+                  <button onClick={() => setShowAllProducts(!showAllProducts)} className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${showAllProducts ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}>
+                    {showAllProducts ? 'Показати сумісні' : 'Показати всі товари'}
+                  </button>
+                  <Link href='/profile' className='text-green-600 hover:text-green-800 text-sm font-medium'>
+                    Змінити автомобіль
                   </Link>
                 </div>
               </div>
             </div>
           </div>
         )}
+
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
           {shouldShowSubcategories() ? (
             <div>
-              {' '}
               <div className='bg-white rounded-lg shadow-sm p-4 mb-6'>
                 <div className='text-center py-2'>
                   <h1 className='text-2xl font-bold text-gray-900 mb-2'>{currentCategory ? currentCategory.name : 'Категорії товарів'}</h1>
@@ -324,59 +332,51 @@ function ProductsPageContent() {
             </div>
           ) : (
             <div className='flex flex-col lg:flex-row gap-8'>
-              <aside className='lg:w-64'>
-                <div className='bg-white rounded-lg shadow-sm p-6 sticky top-8'>
-                  <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
-                    <HiFilter className='text-blue-600' />
-                    Фільтри
-                  </h3>{' '}
-                  <div className='space-y-6'>
-                    <div>
-                      <label className='flex items-center gap-2 cursor-pointer'>
-                        <input type='checkbox' checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
-                        <span className='text-sm font-medium text-gray-700'>Тільки в наявності</span>
-                      </label>
+              <aside className='lg:w-64 space-y-6'>
+                <div className='bg-white rounded-lg shadow-sm p-6'>
+                  <h3 className='text-lg font-medium text-gray-900 mb-4'>Фільтри</h3>
+
+                  {manufacturers.length > 0 && (
+                    <div className='mb-6'>
+                      <h4 className='text-sm font-medium text-gray-900 mb-2'>Виробник</h4>
+                      <div className='space-y-2 max-h-40 overflow-y-auto'>
+                        {manufacturers.map((manufacturer) => (
+                          <label key={manufacturer.id} className='flex items-center'>
+                            <input
+                              type='checkbox'
+                              checked={selectedManufacturers.includes(manufacturer.name)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedManufacturers([...selectedManufacturers, manufacturer.name]);
+                                } else {
+                                  setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer.name));
+                                }
+                              }}
+                              className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+                            />
+                            <span className='ml-2 text-sm text-gray-600'>{manufacturer.name}</span>
+                          </label>
+                        ))}
+                      </div>
                     </div>
-                    {savedCar && (
-                      <div>
-                        <label className='flex items-center gap-2 cursor-pointer'>
-                          <input type='checkbox' checked={showAllProducts} onChange={(e) => setShowAllProducts(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
-                          <span className='text-sm font-medium text-gray-700'>Показати всі товари</span>
-                        </label>
-                        <p className='text-xs text-gray-500 mt-1'>Показувати товари, несумісні з обраним автомобілем</p>
-                      </div>
-                    )}
-                    <div>
-                      <h4 className='text-sm font-medium text-gray-900 mb-3'>Ціна (₴)</h4>
-                      <div className='flex gap-2'>
-                        <input type='number' placeholder='Від' value={priceRange.min} onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
-                        <input type='number' placeholder='До' value={priceRange.max} onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
-                      </div>{' '}
-                    </div>{' '}
-                    {manufacturers.length > 0 && products.length > 0 && (
-                      <div>
-                        <h4 className='text-sm font-medium text-gray-900 mb-3'>Виробник</h4>
-                        <div className='space-y-2 max-h-48 overflow-y-auto'>
-                          {manufacturers.map((manufacturer) => (
-                            <label key={manufacturer.id} className='flex items-center gap-2 cursor-pointer'>
-                              <input
-                                type='checkbox'
-                                checked={selectedManufacturers.includes(manufacturer.name)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedManufacturers([...selectedManufacturers, manufacturer.name]);
-                                  } else {
-                                    setSelectedManufacturers(selectedManufacturers.filter((m) => m !== manufacturer.name));
-                                  }
-                                }}
-                                className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
-                              />
-                              <span className='text-sm text-gray-700'>{manufacturer.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}{' '}
+                  )}
+
+                  <div className='mb-6'>
+                    <h4 className='text-sm font-medium text-gray-900 mb-2'>Ціна</h4>
+                    <div className='flex gap-2'>
+                      <input type='number' placeholder='Від' value={priceRange.min} onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })} className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm' />
+                      <input type='number' placeholder='До' value={priceRange.max} onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })} className='w-full px-3 py-2 border border-gray-300 rounded-md text-sm' />
+                    </div>
+                  </div>
+
+                  <div className='mb-6'>
+                    <label className='flex items-center'>
+                      <input type='checkbox' checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className='h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded' />
+                      <span className='ml-2 text-sm text-gray-600'>Тільки в наявності</span>
+                    </label>
+                  </div>
+
+                  <div>
                     <button
                       onClick={() => {
                         setSelectedManufacturers([]);
@@ -394,9 +394,7 @@ function ProductsPageContent() {
 
               <div className='flex-1'>
                 <div className='bg-white rounded-lg shadow-sm p-6 mb-6'>
-                  {' '}
                   <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6'>
-                    {' '}
                     <div>
                       <h1 className='text-2xl font-bold text-gray-900'>{currentCategory ? currentCategory.name : 'Всі товари'}</h1>
                       {currentCategory?.description && <p className='text-gray-600 mt-1'>{currentCategory.description}</p>}
@@ -414,15 +412,10 @@ function ProductsPageContent() {
                     <form onSubmit={handleSearch} className='flex-1'>
                       <div className='relative'>
                         <HiSearch className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400' />
-                        <input type='text' placeholder='Пошук товарів...' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className='w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
-                        {searchQuery !== debouncedSearchQuery && (
-                          <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                            <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600'></div>
-                          </div>
-                        )}
+                        <input type='text' placeholder='Пошук товарів...' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
                       </div>
                     </form>
-                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className='px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'>
+                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className='px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'>
                       <option value='name'>За назвою</option>
                       <option value='price_asc'>За ціною (зростання)</option>
                       <option value='price_desc'>За ціною (спадання)</option>
@@ -439,22 +432,18 @@ function ProductsPageContent() {
                 ) : products.length === 0 ? (
                   <div className='bg-white rounded-lg shadow-sm p-8 text-center'>
                     <HiTag className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3> <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year}` : 'В цій категорії поки немає товарів'}</p>
+                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3>
+                    <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year}` : 'В цій категорії поки немає товарів'}</p>
                     {debouncedSearchQuery && (
                       <button
                         onClick={() => {
                           setSearchQuery('');
                           setDebouncedSearchQuery('');
-                          const params = new URLSearchParams();
-                          if (categoryName) {
-                            params.append('category', categoryName);
-                          }
-                          const queryString = params.toString();
-                          router.push(`/products${queryString ? `?${queryString}` : ''}`);
+                          router.push(`/categories/${encodeURIComponent(categoryName)}`);
                         }}
                         className='text-blue-600 hover:text-blue-800 font-medium mr-4'
                       >
-                        Очистити пошук{' '}
+                        Очистити пошук
                       </button>
                     )}
                   </div>
@@ -462,36 +451,24 @@ function ProductsPageContent() {
                   <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}`}>
                     {products.map((product) => (
                       <div key={product.id} onClick={() => router.push(`/products/${product.id}`)} className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer ${viewMode === 'list' ? 'flex items-stretch gap-4 p-4' : 'p-4 flex flex-col h-full'}`}>
-                        <div className={`${viewMode === 'list' ? 'w-24 h-24 flex-shrink-0' : 'w-full h-48 mb-4'} relative bg-white rounded-md overflow-hidden border border-gray-200`}>
-                          {product.imageUrl ? (
-                            <Image src={product.imageUrl} alt={product.name} fill className='object-contain' />
-                          ) : (
-                            <div className='w-full h-full flex items-center justify-center text-gray-400'>
-                              <HiTag className='w-8 h-8' />
+                        {viewMode === 'grid' ? (
+                          <>
+                            <div className='aspect-square relative mb-4 bg-gray-100 rounded-lg overflow-hidden'>
+                              {product.imageUrl ? (
+                                <Image src={product.imageUrl} alt={product.name} fill className='object-cover group-hover:scale-105 transition-transform duration-300' sizes='(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw' />
+                              ) : (
+                                <div className='w-full h-full flex items-center justify-center'>
+                                  <HiTag className='w-12 h-12 text-gray-300' />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <div className={`${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : 'flex-1 flex flex-col'}`}>
-                          <div className='mb-2'>
-                            <h3 className={`font-semibold text-gray-900 line-clamp-2 ${viewMode === 'list' ? 'text-lg mb-1' : 'text-base mb-2'}`}>{product.name}</h3>
-                            {product.manufacturer && <p className='text-xs text-gray-500 mb-1'>{product.manufacturer.name}</p>}
-                          </div>
-                          {product.description && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow'>{product.description}</p>}
-                          <div className='mt-auto'>
-                            {viewMode === 'list' ? (
-                              <div>
-                                <p className='text-lg font-bold text-blue-600'>₴{Number(product.price).toFixed(2)}</p>
+                            <div className='flex-1 flex flex-col'>
+                              <h3 className='font-semibold text-gray-900 mb-2 line-clamp-2'>{product.name}</h3>
+                              <div className='flex justify-between items-center mb-3'>
+                                <span className='text-lg font-bold text-blue-600'>{product.price} грн</span>
+                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
                               </div>
-                            ) : (
-                              <div className='flex items-center justify-between mb-3'>
-                                <div>
-                                  <p className='text-lg font-bold text-blue-600'>₴{Number(product.price).toFixed(2)}</p>
-                                </div>
-                                <div>
-                                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
-                                </div>
-                              </div>
-                            )}{' '}
+                            </div>
                             {viewMode === 'grid' && (
                               <button
                                 disabled={product.stockQuantity === 0}
@@ -503,22 +480,43 @@ function ProductsPageContent() {
                                 {product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
                               </button>
                             )}
-                          </div>
-                        </div>
-                        {viewMode === 'list' && (
-                          <div className='flex-shrink-0 flex items-center gap-3'>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
-                            <button
-                              disabled={product.stockQuantity === 0}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                              }}
-                              className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
-                              title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
-                            >
-                              <HiShoppingCart className='w-5 h-5' />
-                            </button>
-                          </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className='w-24 h-24 relative bg-gray-100 rounded-lg overflow-hidden flex-shrink-0'>
+                              {product.imageUrl ? (
+                                <Image src={product.imageUrl} alt={product.name} fill className='object-cover' sizes='96px' />
+                              ) : (
+                                <div className='w-full h-full flex items-center justify-center'>
+                                  <HiTag className='w-8 h-8 text-gray-300' />
+                                </div>
+                              )}
+                            </div>
+                            <div className='flex-1 flex flex-col justify-between'>
+                              <div>
+                                <h3 className='font-semibold text-gray-900 mb-1'>{product.name}</h3>
+                                <div className='flex items-center gap-4 mb-2'>
+                                  <span className='text-lg font-bold text-blue-600'>{product.price} грн</span>
+                                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
+                                </div>
+                              </div>
+                            </div>
+                            {viewMode === 'list' && (
+                              <div className='flex-shrink-0 flex items-center gap-3'>
+                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
+                                <button
+                                  disabled={product.stockQuantity === 0}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                  }}
+                                  className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
+                                  title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
+                                >
+                                  <HiShoppingCart className='w-5 h-5' />
+                                </button>
+                              </div>
+                            )}
+                          </>
                         )}
                       </div>
                     ))}
@@ -531,28 +529,5 @@ function ProductsPageContent() {
       </main>
       <Footer />
     </div>
-  );
-}
-
-function ProductsPageLoading() {
-  return (
-    <div className='flex flex-col min-h-screen bg-gray-50'>
-      <Header />
-      <main className='flex-grow flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Завантаження...</p>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  );
-}
-
-export default function ProductsPage() {
-  return (
-    <Suspense fallback={<ProductsPageLoading />}>
-      <ProductsPageContent />
-    </Suspense>
   );
 }

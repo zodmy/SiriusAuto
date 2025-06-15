@@ -3,6 +3,7 @@ import { checkAdmin } from '@/lib/auth';
 
 export async function middleware(req: NextRequest) {
   const pathname = req.nextUrl.pathname.toLowerCase();
+
   if (pathname === '/admin' || pathname === '/admin/') {
     const isAdmin = await checkAdmin({ req });
     if (isAdmin) {

@@ -359,7 +359,7 @@ export default function Home() {
                 .filter((category) => !category.parent)
                 .map((category) => (
                   <div key={category.id} className='bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden group'>
-                    <Link href={`/products?category=${encodeURIComponent(category.name)}`} className='block p-6 text-center border-b border-gray-100 group-hover:bg-blue-50 transition-colors'>
+                    <Link href={`/categories/${encodeURIComponent(category.name)}`} className='block p-6 text-center border-b border-gray-100 group-hover:bg-blue-50 transition-colors'>
                       <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors'>
                         <HiTag className='w-8 h-8 text-blue-600' />
                       </div>{' '}
@@ -371,7 +371,7 @@ export default function Home() {
                       <div className='p-4 bg-gray-50'>
                         <div className='grid grid-cols-1 gap-2'>
                           {category.children.slice(0, 4).map((child) => (
-                            <Link key={child.id} href={`/products?category=${encodeURIComponent(child.name)}`} className='text-sm text-gray-700 hover:text-blue-600 hover:bg-white px-3 py-2 rounded-md transition-all duration-150 flex items-center justify-between group/child'>
+                            <Link key={child.id} href={`/categories/${encodeURIComponent(child.name)}`} className='text-sm text-gray-700 hover:text-blue-600 hover:bg-white px-3 py-2 rounded-md transition-all duration-150 flex items-center justify-between group/child'>
                               <span>{child.name}</span>
                               <svg className='w-4 h-4 text-gray-400 group-hover/child:text-blue-600 transition-colors' fill='currentColor' viewBox='0 0 20 20'>
                                 <path fillRule='evenodd' d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z' clipRule='evenodd' />
@@ -379,7 +379,7 @@ export default function Home() {
                             </Link>
                           ))}
                           {category.children.length > 4 && (
-                            <Link href={`/products?category=${encodeURIComponent(category.name)}`} className='text-sm text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md transition-colors font-medium text-center bg-blue-50 hover:bg-blue-100'>
+                            <Link href={`/categories/${encodeURIComponent(category.name)}`} className='text-sm text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md transition-colors font-medium text-center bg-blue-50 hover:bg-blue-100'>
                               Переглянути всі ({category.children.length})
                             </Link>
                           )}
