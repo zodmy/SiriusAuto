@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const parentCategoryId = parseInt(params.id, 10);
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const parentCategoryId = parseInt(id, 10);
 
   if (isNaN(parentCategoryId)) {
     return NextResponse.json({ error: 'Невалідний ID батьківської категорії' }, { status: 400 });

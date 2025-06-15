@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const carYearId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carYearId = parseInt(id, 10);
     if (isNaN(carYearId)) {
       return NextResponse.json({ error: 'Невалідний ID року випуску автомобіля' }, { status: 400 });
     }
@@ -25,12 +26,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
-    const carYearId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carYearId = parseInt(id, 10);
     if (isNaN(carYearId)) {
       return NextResponse.json({ error: 'Невалідний ID року випуску автомобіля' }, { status: 400 });
     }
@@ -72,12 +74,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
-    const carYearId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carYearId = parseInt(id, 10);
     if (isNaN(carYearId)) {
       return NextResponse.json({ error: 'Невалідний ID року випуску автомобіля' }, { status: 400 });
     }

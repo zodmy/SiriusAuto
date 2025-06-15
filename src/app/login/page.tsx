@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/components/AuthProvider';
@@ -8,7 +8,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -59,7 +59,6 @@ export default function LoginPage() {
               </Link>
             </p>
           </div>
-
           <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
             <div className='space-y-4'>
               <div>
@@ -116,10 +115,18 @@ export default function LoginPage() {
                 {isSubmitting ? 'Вхід...' : 'Увійти'}
               </button>
             </div>{' '}
-          </form>
+          </form>{' '}
         </div>
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

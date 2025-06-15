@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const compatibilityId = parseInt(params.id, 10);
+    const { id } = await params;
+    const compatibilityId = parseInt(id, 10);
 
     if (isNaN(compatibilityId)) {
       return NextResponse.json({ error: 'Недійсний ID запису сумісності' }, { status: 400 });
@@ -25,12 +26,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
   try {
-    const compatibilityId = parseInt(params.id, 10);
+    const { id } = await params;
+    const compatibilityId = parseInt(id, 10);
     if (isNaN(compatibilityId)) {
       return NextResponse.json({ error: 'Недійсний ID запису сумісності' }, { status: 400 });
     }
@@ -52,12 +54,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
   try {
-    const compatibilityId = parseInt(params.id, 10);
+    const { id } = await params;
+    const compatibilityId = parseInt(id, 10);
     if (isNaN(compatibilityId)) {
       return NextResponse.json({ error: 'Недійсний ID запису сумісності' }, { status: 400 });
     }

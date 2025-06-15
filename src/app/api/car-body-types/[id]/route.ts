@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import { Prisma } from '@prisma/client';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const carBodyTypeId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carBodyTypeId = parseInt(id, 10);
     if (isNaN(carBodyTypeId)) {
       return NextResponse.json({ error: 'Невалідний ID типу кузова автомобіля' }, { status: 400 });
     }
@@ -25,12 +26,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req: request }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
-    const carBodyTypeId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carBodyTypeId = parseInt(id, 10);
     if (isNaN(carBodyTypeId)) {
       return NextResponse.json({ error: 'Невалідний ID типу кузова автомобіля' }, { status: 400 });
     }
@@ -81,12 +83,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!(await checkAdmin({ req }))) {
     return NextResponse.json({ error: 'Неавторизований доступ' }, { status: 401 });
   }
   try {
-    const carBodyTypeId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carBodyTypeId = parseInt(id, 10);
     if (isNaN(carBodyTypeId)) {
       return NextResponse.json({ error: 'Невалідний ID типу кузова автомобіля' }, { status: 400 });
     }

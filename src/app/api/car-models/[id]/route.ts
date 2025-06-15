@@ -2,8 +2,9 @@ import { NextResponse, NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
-  const carModelId = parseInt(params.id, 10);
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const carModelId = parseInt(id, 10);
 
   if (isNaN(carModelId)) {
     return NextResponse.json({ error: 'Невалідний ID моделі автомобіля' }, { status: 400 });
@@ -25,13 +26,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const resolvedParams = await params;
-  const carModelId = parseInt(resolvedParams.id, 10);
+  const { id } = await params;
+  const carModelId = parseInt(id, 10);
 
   if (isNaN(carModelId)) {
     return NextResponse.json({ error: 'Невалідний ID моделі автомобіля' }, { status: 400 });
@@ -79,13 +80,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ message: 'Потрібні права адміністратора' }, { status: 401 });
   }
 
-  const resolvedParams = await params;
-  const carModelId = parseInt(resolvedParams.id, 10);
+  const { id } = await params;
+  const carModelId = parseInt(id, 10);
 
   if (isNaN(carModelId)) {
     return NextResponse.json({ error: 'Невалідний ID моделі автомобіля' }, { status: 400 });

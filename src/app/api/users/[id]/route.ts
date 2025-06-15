@@ -3,13 +3,14 @@ import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
 import bcrypt from 'bcrypt';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
 
   try {
-    const userId = parseInt(params.id, 10);
+    const { id } = await params;
+    const userId = parseInt(id, 10);
     if (isNaN(userId)) {
       return NextResponse.json({ error: 'Недійсний ID користувача' }, { status: 400 });
     }
@@ -29,13 +30,14 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
 
   try {
-    const id = parseInt(params.id, 10);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId, 10);
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Недійсний ID користувача' }, { status: 400 });
     }
@@ -62,13 +64,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   if (!await checkAdmin({ req: request })) {
     return NextResponse.json({ error: 'Неавторизовано' }, { status: 401 });
   }
 
   try {
-    const id = parseInt(params.id, 10);
+    const { id: paramId } = await params;
+    const id = parseInt(paramId, 10);
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Недійсний ID користувача' }, { status: 400 });
     }

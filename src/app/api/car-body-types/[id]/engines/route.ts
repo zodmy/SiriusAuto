@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
-  const params = await context.params;
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const carBodyTypeId = parseInt(params.id, 10);
+    const { id } = await params;
+    const carBodyTypeId = parseInt(id, 10);
     if (isNaN(carBodyTypeId)) {
       return NextResponse.json({ error: 'Невалідний ID типу кузова автомобіля' }, { status: 400 });
     }
