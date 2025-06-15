@@ -269,9 +269,8 @@ function ProductsPageContent() {
                   <span className='text-green-800 font-medium'>
                     Обраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} ({savedCar.bodyTypeName}, {savedCar.engineName})
                   </span>
-                </div>
+                </div>{' '}
                 <div className='flex items-center gap-3 sm:ml-auto'>
-                  <span className='text-green-700 text-sm bg-green-100 px-2 py-1 rounded'>Показано лише сумісні товари</span>
                   <Link href='/' className='text-green-700 hover:text-green-900 text-sm underline'>
                     Змінити
                   </Link>

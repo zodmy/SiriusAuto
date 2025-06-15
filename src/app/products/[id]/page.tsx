@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import Image from 'next/image';
-import { HiTag, HiChevronRight, HiHome, HiShoppingCart, HiHeart, HiStar, HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
+import { HiTag, HiChevronRight, HiHome, HiShoppingCart, HiStar, HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
 
 interface Product {
@@ -65,6 +65,32 @@ interface SavedCarSelection {
   engineName: string;
 }
 
+// Функція для відображення рейтингу в зірках
+const renderStars = (rating: number) => {
+  const stars = [];
+  const fullStars = Math.floor(rating);
+  const hasHalfStar = rating % 1 >= 0.5;
+
+  for (let i = 0; i < 5; i++) {
+    if (i < fullStars) {
+      stars.push(<HiStar key={i} className='w-5 h-5 text-yellow-400 fill-current' />);
+    } else if (i === fullStars && hasHalfStar) {
+      stars.push(
+        <div key={i} className='relative w-5 h-5'>
+          <HiStar className='w-5 h-5 text-gray-300 fill-current absolute' />
+          <div className='overflow-hidden w-1/2'>
+            <HiStar className='w-5 h-5 text-yellow-400 fill-current' />
+          </div>
+        </div>
+      );
+    } else {
+      stars.push(<HiStar key={i} className='w-5 h-5 text-gray-300 fill-current' />);
+    }
+  }
+
+  return stars;
+};
+
 function ProductPageContent() {
   const params = useParams();
   const productId = params.id as string;
@@ -76,7 +102,7 @@ function ProductPageContent() {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
   const [isCompatible, setIsCompatible] = useState<boolean | null>(null);
-  const [activeTab, setActiveTab] = useState<'description' | 'reviews' | 'compatibility'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
 
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
@@ -159,14 +185,6 @@ function ProductPageContent() {
     } finally {
       setIsAddingToCart(false);
     }
-  };
-
-  const renderStars = (rating: number) => {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(<HiStar key={i} className={`w-4 h-4 ${i <= rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />);
-    }
-    return stars;
   };
 
   if (isLoading) {
@@ -279,11 +297,12 @@ function ProductPageContent() {
               </div>
 
               <div className='mb-6'>
+                {' '}
                 <div className='flex items-center gap-2'>
                   {product.stockQuantity > 0 ? (
                     <>
                       <HiCheck className='w-5 h-5 text-green-600' />
-                      <span className='text-green-600 font-medium'>В наявності ({product.stockQuantity} шт.)</span>
+                      <span className='text-green-600 font-medium'>В наявності</span>
                     </>
                   ) : (
                     <>
@@ -307,15 +326,11 @@ function ProductPageContent() {
                         +
                       </button>
                     </div>
-                  </div>
-
+                  </div>{' '}
                   <div className='flex gap-4'>
-                    <button onClick={handleAddToCart} disabled={isAddingToCart} className='flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-6 rounded-md transition-colors flex items-center justify-center gap-2 cursor-pointer'>
+                    <button onClick={handleAddToCart} disabled={isAddingToCart} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-3 px-6 rounded-md transition-colors flex items-center justify-center gap-2 cursor-pointer'>
                       <HiShoppingCart className='w-5 h-5' />
                       {isAddingToCart ? 'Додавання...' : 'Додати до кошика'}
-                    </button>
-                    <button className='p-3 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer'>
-                      <HiHeart className='w-5 h-5 text-gray-600' />
                     </button>
                   </div>
                 </div>
@@ -336,6 +351,7 @@ function ProductPageContent() {
           </div>
 
           <div className='bg-white rounded-lg shadow-sm'>
+            {' '}
             <div className='border-b border-gray-200'>
               <nav className='flex'>
                 <button onClick={() => setActiveTab('description')} className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'description' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
@@ -344,12 +360,8 @@ function ProductPageContent() {
                 <button onClick={() => setActiveTab('reviews')} className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'reviews' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
                   Відгуки ({product.reviews?.length || 0})
                 </button>
-                <button onClick={() => setActiveTab('compatibility')} className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'compatibility' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>
-                  Сумісність
-                </button>
               </nav>
-            </div>
-
+            </div>{' '}
             <div className='p-6'>
               {activeTab === 'description' && (
                 <div>
@@ -388,43 +400,6 @@ function ProductPageContent() {
                     <div className='text-center py-8'>
                       <HiStar className='w-12 h-12 text-gray-300 mx-auto mb-4' />
                       <p className='text-gray-500'>Ще немає відгуків для цього товару</p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'compatibility' && (
-                <div>
-                  {product.compatibleVehicles && product.compatibleVehicles.length > 0 ? (
-                    <div className='overflow-x-auto'>
-                      <table className='min-w-full divide-y divide-gray-200'>
-                        <thead className='bg-gray-50'>
-                          <tr>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Марка</th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Модель</th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Рік</th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Кузов</th>
-                            <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>Двигун</th>
-                          </tr>
-                        </thead>
-                        <tbody className='bg-white divide-y divide-gray-200'>
-                          {' '}
-                          {product.compatibleVehicles.map((vehicle, index) => (
-                            <tr key={index} className='hover:bg-gray-50'>
-                              <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{vehicle.carMake.name}</td>
-                              <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{vehicle.carModel.name}</td>
-                              <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{vehicle.carYear.year}</td>
-                              <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{vehicle.carBodyType.name}</td>
-                              <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-900'>{vehicle.carEngine.name}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className='text-center py-8'>
-                      <FaCar className='w-12 h-12 text-gray-300 mx-auto mb-4' />
-                      <p className='text-gray-500'>Інформація про сумісність відсутня</p>
                     </div>
                   )}
                 </div>
