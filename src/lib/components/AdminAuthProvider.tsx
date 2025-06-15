@@ -1,11 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface AdminAuthContextType {
   isAdmin: boolean | null;
   isLoading: boolean;
+  refreshAuth: () => Promise<void>;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
@@ -18,42 +19,28 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-  const effectRan = useRef(false);
+
+  const verifyAccess = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/admin/check-auth', { credentials: 'include' });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsAdmin(data.isAdmin);
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (err) {
+      console.error('Не вдалося перевірити статус адміністратора:', err);
+      setIsAdmin(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const verifyAccess = async () => {
-      setIsLoading(true);
-      try {
-        const response = await fetch('/api/admin/check-auth', { credentials: 'include' });
-        if (!isMounted) return;
-
-        if (response.ok) {
-          const data = await response.json();
-          setIsAdmin(data.isAdmin);
-        } else {
-          setIsAdmin(false);
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        console.error('Не вдалося перевірити статус адміністратора:', err);
-        setIsAdmin(false);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    if (effectRan.current === false) {
-      verifyAccess();
-      effectRan.current = true;
-    }
-
-    return () => {
-      isMounted = false;
-    };
+    verifyAccess();
   }, []);
 
   useEffect(() => {
@@ -65,6 +52,7 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
   const value = {
     isAdmin,
     isLoading,
+    refreshAuth: verifyAccess,
   };
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;

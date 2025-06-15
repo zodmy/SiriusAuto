@@ -296,7 +296,7 @@ const VirtualizedMobileList = React.memo(({ products, onEdit, onDelete, onManage
 
       const container = containerRef.current;
       const scrollTop = container.scrollTop;
-      const itemHeight = 120; // Приблизна висота одного елемента
+      const itemHeight = 120;
       const containerHeight = container.clientHeight;
 
       const start = Math.floor(scrollTop / itemHeight);
@@ -308,7 +308,7 @@ const VirtualizedMobileList = React.memo(({ products, onEdit, onDelete, onManage
     const container = containerRef.current;
     if (container) {
       container.addEventListener('scroll', handleScroll);
-      handleScroll(); // Початкове встановлення
+      handleScroll();
     }
 
     return () => {
@@ -764,7 +764,7 @@ export default function ManageProductsPage() {
         return sortDir === 'asc' ? a.manufacturer.name.localeCompare(b.manufacturer.name) : b.manufacturer.name.localeCompare(a.manufacturer.name);
       }
       return 0;
-    }); // Зберігаємо в кеш (обмежуємо розмір кешу)
+    });
     if (searchCache.size > 50) {
       const firstKey = searchCache.keys().next().value;
       if (firstKey) {
