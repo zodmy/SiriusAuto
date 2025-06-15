@@ -6,16 +6,19 @@ export async function GET() {
   try {
     const categories = await prisma.category.findMany({
       include: {
-        children: true,
+        children: {
+          orderBy: {
+            name: 'asc',
+          },
+        },
         parent: {
           select: {
             id: true,
             name: true,
           },
         },
-      },
-      orderBy: {
-        name: 'desc',
+      }, orderBy: {
+        name: 'asc',
       },
     });
     return NextResponse.json(categories, { status: 200 });

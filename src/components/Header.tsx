@@ -32,13 +32,12 @@ const Header = () => {
   const catalogButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
   const { items, getTotalItems, getTotalPrice, isEmpty, removeItem, updateQuantity } = useCart();
-
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories');
       if (response.ok) {
         const data = await response.json();
-        const parentCategories = data.filter((category: Category) => !category.parent);
+        const parentCategories = data.filter((category: Category) => !category.parent).sort((a: Category, b: Category) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
         setCategories(parentCategories);
       }
     } catch (error) {

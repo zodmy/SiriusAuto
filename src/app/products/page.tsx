@@ -202,12 +202,15 @@ export default function ProductsPage() {
   const shouldShowSubcategories = () => {
     return currentCategory && currentCategory.children && currentCategory.children.length > 0;
   };
-
   const getSubcategories = () => {
+    let subcategories = [];
     if (!currentCategory) {
-      return categories.filter((cat) => !cat.parent) || [];
+      subcategories = categories.filter((cat) => !cat.parent) || [];
+    } else {
+      subcategories = currentCategory.children || [];
     }
-    return currentCategory.children || [];
+
+    return subcategories.sort((a, b) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
   };
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
