@@ -92,9 +92,9 @@ export default function Home() {
     const fetchInitialData = async () => {
       try {
         const [makesRes, categoriesRes] = await Promise.all([fetch('/api/car-makes'), fetch('/api/categories')]);
-
         if (makesRes.ok) {
           const makes = await makesRes.json();
+          makes.sort((a: CarMake, b: CarMake) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
           setCarMakes(makes);
         }
         if (categoriesRes.ok) {
@@ -116,6 +116,7 @@ export default function Home() {
       fetch(`/api/car-models?makeId=${selectedMake}`)
         .then((res) => res.json())
         .then((models) => {
+          models.sort((a: CarModel, b: CarModel) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
           setCarModels(models);
           if (!models.find((m: CarModel) => m.id === selectedModel)) {
             setSelectedModel(null);
@@ -136,6 +137,7 @@ export default function Home() {
       fetch(`/api/car-years?modelId=${selectedModel}`)
         .then((res) => res.json())
         .then((years) => {
+          years.sort((a: CarYear, b: CarYear) => b.year - a.year);
           setCarYears(years);
           if (!years.find((y: CarYear) => y.id === selectedYear)) {
             setSelectedYear(null);
@@ -155,6 +157,7 @@ export default function Home() {
       fetch(`/api/car-body-types?yearId=${selectedYear}`)
         .then((res) => res.json())
         .then((bodyTypes) => {
+          bodyTypes.sort((a: CarBodyType, b: CarBodyType) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
           setCarBodyTypes(bodyTypes);
           if (!bodyTypes.find((bt: CarBodyType) => bt.id === selectedBodyType)) {
             setSelectedBodyType(null);
@@ -173,6 +176,7 @@ export default function Home() {
       fetch(`/api/car-engines?bodyTypeId=${selectedBodyType}`)
         .then((res) => res.json())
         .then((engines) => {
+          engines.sort((a: CarEngine, b: CarEngine) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
           setCarEngines(engines);
           if (!engines.find((e: CarEngine) => e.id === selectedEngine)) {
             setSelectedEngine(null);

@@ -732,6 +732,7 @@ export default function ManageProductsPage() {
         throw new Error('Не вдалося завантажити марки автомобілів');
       }
       const data = await res.json();
+      data.sort((a: CarMake, b: CarMake) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
       setCarMakes(data);
     } catch (error) {
       console.error('Помилка завантаження марок автомобілів:', error);
@@ -745,6 +746,7 @@ export default function ManageProductsPage() {
         throw new Error('Не вдалося завантажити моделі автомобілів');
       }
       const data = await res.json();
+      data.sort((a: CarModel, b: CarModel) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
       setCarModels(data);
     } catch (error) {
       console.error('Помилка завантаження моделей автомобілів:', error);
@@ -758,6 +760,7 @@ export default function ManageProductsPage() {
         throw new Error('Не вдалося завантажити роки автомобілів');
       }
       const data = await res.json();
+      data.sort((a: CarYear, b: CarYear) => b.year - a.year);
       setCarYears(data);
     } catch (error) {
       console.error('Помилка завантаження років автомобілів:', error);
@@ -771,6 +774,7 @@ export default function ManageProductsPage() {
         throw new Error('Не вдалося завантажити типи кузова');
       }
       const data = await res.json();
+      data.sort((a: CarBodyType, b: CarBodyType) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
       setCarBodyTypes(data);
     } catch (error) {
       console.error('Помилка завантаження типів кузова:', error);
@@ -783,6 +787,7 @@ export default function ManageProductsPage() {
         throw new Error('Не вдалося завантажити двигуни');
       }
       const data = await res.json();
+      data.sort((a: CarEngine, b: CarEngine) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
       setCarEngines(data);
     } catch (error) {
       console.error('Помилка завантаження двигунів:', error);

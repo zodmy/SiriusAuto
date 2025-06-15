@@ -352,8 +352,8 @@ function ProductsPageContent() {
                         <input type='number' placeholder='Від' value={priceRange.min} onChange={(e) => setPriceRange({ ...priceRange, min: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
                         <input type='number' placeholder='До' value={priceRange.max} onChange={(e) => setPriceRange({ ...priceRange, max: e.target.value })} className='w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500' />
                       </div>{' '}
-                    </div>
-                    {manufacturers.length > 0 && (
+                    </div>{' '}
+                    {manufacturers.length > 0 && products.length > 0 && (
                       <div>
                         <h4 className='text-sm font-medium text-gray-900 mb-3'>Виробник</h4>
                         <div className='space-y-2 max-h-48 overflow-y-auto'>
