@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import SiriusAutoLogoDynamic from '@/components/SiriusAutoLogoDynamic';
 import Link from 'next/link';
 import { HiSearch, HiTag } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
@@ -106,7 +105,6 @@ export default function Home() {
         }
         if (categoriesRes.ok) {
           const cats = await categoriesRes.json();
-          // Фільтруємо тільки батьківські категорії, але зберігаємо всі для роботи з підкатегоріями
           setCategories(cats);
         }
       } catch (error) {
@@ -250,19 +248,8 @@ export default function Home() {
 
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
-      <Header />
+      <Header />{' '}
       <main className='flex-grow'>
-        <section className='bg-gradient-to-r from-blue-900 to-blue-700 text-white py-12 sm:py-20'>
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-            <div className='text-center'>
-              <div className='mb-6 sm:mb-8'>
-                <SiriusAutoLogoDynamic textColor='#FFFFFF' iconColor='#60A5FA' width={250} height={80} className='mx-auto' />
-              </div>
-              <h1 className='text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6'>Знайдіть запчастини для вашого авто</h1>
-              <p className='text-lg sm:text-xl md:text-2xl text-blue-100 mb-6 sm:mb-8 max-w-3xl mx-auto'>Оберіть ваш автомобіль та переглядайте тільки сумісні товари</p>
-            </div>
-          </div>
-        </section>
         <section className='py-8 sm:py-12 bg-white'>
           <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='text-center mb-8'>
@@ -359,7 +346,6 @@ export default function Home() {
             </div>
           </div>
         </section>{' '}
-        {/* Categories Section */}
         <section className='py-8 sm:py-12 bg-gray-50'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='text-center mb-8'>
@@ -370,13 +356,12 @@ export default function Home() {
               <p className='text-gray-600 max-w-2xl mx-auto'>Оберіть категорію для перегляду асортименту автозапчастин</p>
             </div>
 
-            {/* Main Categories with Subcategories */}
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8'>
               {categories
                 .filter((category) => !category.parent)
                 .map((category) => (
                   <div key={category.id} className='bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden group'>
-                    <Link href={`/products?category=${category.id}`} className='block p-6 text-center border-b border-gray-100 group-hover:bg-blue-50 transition-colors'>
+                    <Link href={`/products?category=${encodeURIComponent(category.name)}`} className='block p-6 text-center border-b border-gray-100 group-hover:bg-blue-50 transition-colors'>
                       <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors'>
                         <HiTag className='w-8 h-8 text-blue-600' />
                       </div>
@@ -385,12 +370,11 @@ export default function Home() {
                       {category.children.length > 0 && <p className='text-blue-600 text-xs font-medium'>{category.children.length} підкатегорій</p>}
                     </Link>
 
-                    {/* Subcategories */}
                     {category.children.length > 0 && (
                       <div className='p-4 bg-gray-50'>
                         <div className='grid grid-cols-1 gap-2'>
                           {category.children.slice(0, 4).map((child) => (
-                            <Link key={child.id} href={`/products?category=${child.id}`} className='text-sm text-gray-700 hover:text-blue-600 hover:bg-white px-3 py-2 rounded-md transition-all duration-150 flex items-center justify-between group/child'>
+                            <Link key={child.id} href={`/products?category=${encodeURIComponent(child.name)}`} className='text-sm text-gray-700 hover:text-blue-600 hover:bg-white px-3 py-2 rounded-md transition-all duration-150 flex items-center justify-between group/child'>
                               <span>{child.name}</span>
                               <svg className='w-4 h-4 text-gray-400 group-hover/child:text-blue-600 transition-colors' fill='currentColor' viewBox='0 0 20 20'>
                                 <path fillRule='evenodd' d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z' clipRule='evenodd' />
@@ -398,7 +382,7 @@ export default function Home() {
                             </Link>
                           ))}
                           {category.children.length > 4 && (
-                            <Link href={`/products?category=${category.id}`} className='text-sm text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md transition-colors font-medium text-center bg-blue-50 hover:bg-blue-100'>
+                            <Link href={`/products?category=${encodeURIComponent(category.name)}`} className='text-sm text-blue-600 hover:text-blue-800 px-3 py-2 rounded-md transition-colors font-medium text-center bg-blue-50 hover:bg-blue-100'>
                               Переглянути всі ({category.children.length})
                             </Link>
                           )}

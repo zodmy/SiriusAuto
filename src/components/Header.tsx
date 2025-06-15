@@ -109,7 +109,7 @@ const Header = () => {
                         </Link>
                         {categories.map((category) => (
                           <div key={category.id} className='relative group'>
-                            <Link href={`/products?category=${category.id}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-3 text-sm text-gray-900 hover:bg-blue-50 font-semibold transition-colors border-b border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-800'>
+                            <Link href={`/products?category=${encodeURIComponent(category.name)}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-3 text-sm text-gray-900 hover:bg-blue-50 font-semibold transition-colors border-b border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-800'>
                               {category.name}
                               {category.children.length > 0 && (
                                 <svg className='float-right w-4 h-4 mt-0.5 text-gray-700' fill='currentColor' viewBox='0 0 20 20'>
@@ -122,7 +122,7 @@ const Header = () => {
                                 <div className='py-2'>
                                   <div className='px-4 py-2 text-xs font-bold text-gray-800 uppercase tracking-wide border-b border-gray-200 bg-gray-50'>{category.name}</div>
                                   {category.children.map((child) => (
-                                    <Link key={child.id} href={`/products?category=${child.id}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 hover:text-blue-900 transition-colors font-medium'>
+                                    <Link key={child.id} href={`/products?category=${encodeURIComponent(child.name)}`} onClick={() => setIsCatalogOpen(false)} className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 hover:text-blue-900 transition-colors font-medium'>
                                       {child.name}
                                     </Link>
                                   ))}

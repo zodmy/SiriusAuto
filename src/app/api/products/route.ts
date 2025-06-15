@@ -1,10 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkAdmin } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url); const categoryName = searchParams.get('category');
+    const search = searchParams.get('search');
+    const sort = searchParams.get('sort') || 'name';
+
+    const where: Prisma.ProductWhereInput = {};
+
+    if (categoryName) {
+      where.category = {
+        name: decodeURIComponent(categoryName)
+      };
+    }
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    let orderBy: Prisma.ProductOrderByWithRelationInput = {};
+    switch (sort) {
+      case 'price_asc':
+        orderBy = { price: 'asc' };
+        break;
+      case 'price_desc':
+        orderBy = { price: 'desc' };
+        break;
+      case 'newest':
+        orderBy = { createdAt: 'desc' };
+        break;
+      default:
+        orderBy = { name: 'asc' };
+    }
+
     const products = await prisma.product.findMany({
+      where,
+      orderBy,
       select: {
         id: true,
         name: true,
