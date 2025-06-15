@@ -1418,8 +1418,8 @@ export default function ManageProductsPage() {
     );
   }
   return (
-    <div className='h-screen sm:min-h-screen bg-gray-50 p-1 sm:p-4 flex flex-col overflow-hidden sm:overflow-auto mobile-container'>
-      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200 flex flex-col flex-1 min-h-0'>
+    <div className='min-h-screen bg-gray-50 p-1 sm:p-4 flex flex-col mobile-container'>
+      <main className='bg-white shadow-xl rounded-2xl p-2 sm:p-8 max-w-full mx-auto border border-gray-200 flex flex-col w-full'>
         <div className='mb-3 flex-shrink-0'>
           <a href='/admin/dashboard' className='inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-base sm:text-lg transition-colors shadow-sm border border-gray-300 cursor-pointer'>
             <HiOutlineArrowLeft className='h-5 w-5 text-gray-500' />
@@ -1470,7 +1470,7 @@ export default function ManageProductsPage() {
             {showCreateForm ? 'Скасувати' : 'Додати товар'}
           </button>{' '}
           {showCreateForm && (
-            <div className='mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50 max-h-60 sm:max-h-80 overflow-y-auto'>
+            <div className='mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50'>
               <h3 className='text-lg font-semibold text-gray-900 mb-4'>Додати новий товар</h3>{' '}
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4'>
                 <div>
@@ -2009,8 +2009,8 @@ export default function ManageProductsPage() {
             </div>
           )}
         </div>{' '}
-        <div className='sm:hidden flex-1 flex flex-col min-h-0 overflow-hidden'>
-          <div className='flex-1 min-h-0 overflow-hidden'>{isLoading ? <ProductSkeleton /> : filteredProducts.length === 0 ? <div className='text-center text-gray-700 font-semibold py-6'>Нічого не знайдено</div> : <VirtualizedMobileList products={filteredProducts} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onManageCompatibility={handleManageCompatibility} onOpenImageModal={handleOpenImageModal} />}</div>
+        <div className='sm:hidden flex-1 flex flex-col'>
+          <div className='flex-1'>{isLoading ? <ProductSkeleton /> : filteredProducts.length === 0 ? <div className='text-center text-gray-700 font-semibold py-6'>Нічого не знайдено</div> : <VirtualizedMobileList products={filteredProducts} onEdit={handleEditProduct} onDelete={handleDeleteProduct} onManageCompatibility={handleManageCompatibility} onOpenImageModal={handleOpenImageModal} />}</div>
         </div>
         <div className='bg-white rounded-lg shadow border border-gray-200 w-full hidden sm:flex flex-col flex-1 min-h-0'>
           {isLoading ? (

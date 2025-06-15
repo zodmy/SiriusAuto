@@ -158,7 +158,6 @@ function ProductsPageContent() {
           params.append('inStock', 'true');
         }
 
-        // Додаємо параметри обраного автомобіля для фільтрації за сумісністю
         if (savedCar) {
           params.append('carMake', savedCar.makeName);
           params.append('carModel', savedCar.modelName);
@@ -469,7 +468,6 @@ function ProductsPageContent() {
                                 disabled={product.stockQuantity === 0}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Тут буде логіка додавання до кошика
                                 }}
                                 className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed cursor-pointer'
                               >
@@ -485,7 +483,6 @@ function ProductsPageContent() {
                               disabled={product.stockQuantity === 0}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // Тут буде логіка додавання до кошика
                               }}
                               className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
                               title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
@@ -508,7 +505,6 @@ function ProductsPageContent() {
   );
 }
 
-// Loading компонент для Suspense
 function ProductsPageLoading() {
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
@@ -524,7 +520,6 @@ function ProductsPageLoading() {
   );
 }
 
-// Основний експорт з Suspense
 export default function ProductsPage() {
   return (
     <Suspense fallback={<ProductsPageLoading />}>

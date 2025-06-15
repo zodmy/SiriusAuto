@@ -100,7 +100,6 @@ function ProductPageContent() {
         if (response.ok) {
           const data = await response.json();
           setProduct(data);
-          // Перевірка сумісності з обраним автомобілем
           if (savedCar && data.compatibleVehicles) {
             const compatible = data.compatibleVehicles.some((vehicle: { carMake: { name: string }; carModel: { name: string }; carYear: { year: number }; carBodyType: { name: string }; carEngine: { name: string } }) => vehicle.carMake.name === savedCar.makeName && vehicle.carModel.name === savedCar.modelName && vehicle.carYear.year === savedCar.year && vehicle.carBodyType.name === savedCar.bodyTypeName && vehicle.carEngine.name === savedCar.engineName);
             setIsCompatible(compatible);
@@ -152,13 +151,9 @@ function ProductPageContent() {
 
     setIsAddingToCart(true);
     try {
-      // Тут буде логіка додавання до кошика
       console.log('Додано до кошика:', { productId: product.id, quantity });
 
-      // Симуляція запиту
       await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Показати повідомлення або оновити стан кошика
     } catch (error) {
       console.error('Помилка додавання до кошика:', error);
     } finally {
@@ -212,7 +207,6 @@ function ProductPageContent() {
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
       <main className='flex-grow'>
-        {/* Breadcrumbs */}
         <div className='bg-white border-b'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
             <nav className='flex items-center space-x-2 text-sm'>
@@ -233,7 +227,6 @@ function ProductPageContent() {
           </div>
         </div>
 
-        {/* Інформація про обраний автомобіль */}
         {savedCar && (
           <div className={`border-b ${isCompatible === true ? 'bg-green-50 border-green-200' : isCompatible === false ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
@@ -252,7 +245,6 @@ function ProductPageContent() {
 
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
-            {/* Фотографії товару */}
             <div>
               <div className='aspect-square bg-white rounded-lg border border-gray-200 overflow-hidden mb-4'>
                 {product.imageUrl ? (
@@ -265,13 +257,11 @@ function ProductPageContent() {
               </div>
             </div>
 
-            {/* Інформація про товар */}
             <div>
               <div className='mb-4'>
                 {product.manufacturer && <p className='text-sm text-gray-600 mb-2'>{product.manufacturer.name}</p>}
                 <h1 className='text-3xl font-bold text-gray-900 mb-4'>{product.name}</h1>
 
-                {/* Рейтинг */}
                 {product.averageRating !== undefined && product.averageRating > 0 && (
                   <div className='flex items-center gap-2 mb-4'>
                     <div className='flex items-center'>{renderStars(Math.round(product.averageRating))}</div>
@@ -282,14 +272,12 @@ function ProductPageContent() {
                 )}
               </div>
 
-              {/* Ціна */}
               <div className='mb-6'>
                 <div className='flex items-baseline gap-2'>
                   <span className='text-3xl font-bold text-blue-600'>₴{Number(product.price).toFixed(2)}</span>
                 </div>
               </div>
 
-              {/* Наявність */}
               <div className='mb-6'>
                 <div className='flex items-center gap-2'>
                   {product.stockQuantity > 0 ? (
@@ -306,7 +294,6 @@ function ProductPageContent() {
                 </div>
               </div>
 
-              {/* Кількість та додавання до кошика */}
               {product.stockQuantity > 0 && (
                 <div className='mb-6'>
                   <div className='flex items-center gap-4 mb-4'>
@@ -334,7 +321,6 @@ function ProductPageContent() {
                 </div>
               )}
 
-              {/* Попередження про несумісність */}
               {isCompatible === false && (
                 <div className='bg-red-50 border border-red-200 rounded-md p-4 mb-6'>
                   <div className='flex items-start gap-3'>
@@ -349,7 +335,6 @@ function ProductPageContent() {
             </div>
           </div>
 
-          {/* Табованій контент */}
           <div className='bg-white rounded-lg shadow-sm'>
             <div className='border-b border-gray-200'>
               <nav className='flex'>
@@ -453,7 +438,6 @@ function ProductPageContent() {
   );
 }
 
-// Loading компонент
 function ProductPageLoading() {
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
@@ -469,7 +453,6 @@ function ProductPageLoading() {
   );
 }
 
-// Основний експорт з Suspense
 export default function ProductPage() {
   return (
     <Suspense fallback={<ProductPageLoading />}>

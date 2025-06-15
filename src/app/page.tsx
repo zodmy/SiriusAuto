@@ -82,7 +82,6 @@ export default function Home() {
       try {
         const car = JSON.parse(savedCarData) as SavedCarSelection;
         setSavedCar(car);
-        // Не встановлюємо автоматично значення у формі - користувач може хотіти вибрати інший автомобіль
       } catch (error) {
         console.error('Помилка завантаження збереженого автомобіля:', error);
       }
