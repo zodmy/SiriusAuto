@@ -11,30 +11,63 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
     } const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        price: true,
-        stockQuantity: true,
-        imageUrl: true,
-        categoryId: true,
-        manufacturerId: true,
-        isVariant: true,
-        baseProductId: true,
-        averageRating: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         category: {
           select: {
             id: true,
             name: true,
+            parent: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         manufacturer: {
           select: {
             id: true,
             name: true,
+          },
+        }, compatibleVehicles: {
+          include: {
+            carMake: {
+              select: { name: true },
+            },
+            carModel: {
+              select: { name: true },
+            },
+            carYear: {
+              select: { year: true },
+            },
+            carBodyType: {
+              select: { name: true },
+            },
+            carEngine: {
+              select: { name: true },
+            },
+          },
+        },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        variants: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            stockQuantity: true,
+            imageUrl: true,
           },
         },
         baseProduct: {
