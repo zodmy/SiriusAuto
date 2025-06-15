@@ -76,18 +76,13 @@ export default function Home() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
-
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
     if (savedCarData) {
       try {
         const car = JSON.parse(savedCarData) as SavedCarSelection;
         setSavedCar(car);
-        setSelectedMake(car.makeId);
-        setSelectedModel(car.modelId);
-        setSelectedYear(car.yearId);
-        setSelectedBodyType(car.bodyTypeId);
-        setSelectedEngine(car.engineId);
+        // Не встановлюємо автоматично значення у формі - користувач може хотіти вибрати інший автомобіль
       } catch (error) {
         console.error('Помилка завантаження збереженого автомобіля:', error);
       }
