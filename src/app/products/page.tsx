@@ -282,18 +282,11 @@ function ProductsPageContent() {
         {savedCar && (
           <div className='bg-green-50 border-b border-green-200'>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
-              <div className='flex flex-col sm:flex-row items-start sm:items-center gap-3'>
-                <div className='flex items-center gap-3'>
-                  <FaCar className='text-green-600' />
-                  <span className='text-green-800 font-medium'>
-                    Обраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} ({savedCar.bodyTypeName}, {savedCar.engineName})
-                  </span>
-                </div>{' '}
-                <div className='flex items-center gap-3 sm:ml-auto'>
-                  <Link href='/' className='text-green-700 hover:text-green-900 text-sm underline'>
-                    Змінити
-                  </Link>
-                </div>
+              <div className='flex items-center space-x-3'>
+                <FaCar className='text-green-600' />
+                <span className='text-sm text-green-800'>
+                  <strong>Вибраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
+                </span>
               </div>
             </div>
           </div>
@@ -439,7 +432,7 @@ function ProductsPageContent() {
                 ) : products.length === 0 ? (
                   <div className='bg-white rounded-lg shadow-sm p-8 text-center'>
                     <HiTag className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3> <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year}` : 'В цій категорії поки немає товарів'}</p>
+                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3> <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}` : 'В цій категорії поки немає товарів'}</p>
                     {debouncedSearchQuery && (
                       <button
                         onClick={() => {
