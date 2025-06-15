@@ -10,7 +10,6 @@ export async function GET(request: NextRequest) {
     let manufacturers;
 
     if (categoryName) {
-      // Отримуємо виробників, які мають товари в даній категорії
       manufacturers = await prisma.manufacturer.findMany({
         where: {
           products: {
@@ -26,7 +25,6 @@ export async function GET(request: NextRequest) {
         }
       });
     } else {
-      // Отримуємо всіх виробників
       manufacturers = await prisma.manufacturer.findMany({
         orderBy: {
           name: 'asc'
