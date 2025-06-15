@@ -359,10 +359,9 @@ export default function Home() {
                     <Link href={`/products?category=${encodeURIComponent(category.name)}`} className='block p-6 text-center border-b border-gray-100 group-hover:bg-blue-50 transition-colors'>
                       <div className='bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors'>
                         <HiTag className='w-8 h-8 text-blue-600' />
-                      </div>
+                      </div>{' '}
                       <h3 className='text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-800 transition-colors'>{category.name}</h3>
                       {category.description && <p className='text-gray-600 text-sm mb-2'>{category.description}</p>}
-                      {category.children.length > 0 && <p className='text-blue-600 text-xs font-medium'>{category.children.length} підкатегорій</p>}
                     </Link>
 
                     {category.children.length > 0 && (
