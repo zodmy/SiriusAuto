@@ -59,6 +59,10 @@ export default function ProfilePage() {
   const { isAuthenticated, isInitialCheckComplete: authReady, logout } = useAuth();
 
   useEffect(() => {
+    document.title = 'Мій профіль - Sirius Auto';
+  }, []);
+
+  useEffect(() => {
     if (authReady && !isAuthenticated) {
       router.push('/login');
     }

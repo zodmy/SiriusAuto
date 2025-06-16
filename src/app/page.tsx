@@ -73,9 +73,13 @@ export default function Home() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedBodyType, setSelectedBodyType] = useState<number | null>(null);
   const [selectedEngine, setSelectedEngine] = useState<number | null>(null);
-
   const [isLoading, setIsLoading] = useState(true);
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
+
+  useEffect(() => {
+    document.title = 'Sirius Auto - автозапчастини онлайн | Магазин автозапчастин';
+  }, []);
+
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
     if (savedCarData) {

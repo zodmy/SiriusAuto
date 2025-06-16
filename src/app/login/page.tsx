@@ -18,6 +18,11 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login, isAuthenticated, isInitialCheckComplete } = useAuth();
+
+  useEffect(() => {
+    document.title = 'Вхід в акаунт - Sirius Auto';
+  }, []);
+
   useEffect(() => {
     if (searchParams.get('registered') === 'true') {
       setSuccessMessage('Реєстрацію завершено! Тепер ви можете увійти до системи.');

@@ -614,6 +614,10 @@ const initialFormData: ProductFormData = {
 export default function ManageProductsPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
+  useEffect(() => {
+    document.title = 'Управління продуктами - Адміністратор | Sirius Auto';
+  }, []);
+
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [manufacturers, setManufacturers] = useState<Manufacturer[]>([]);

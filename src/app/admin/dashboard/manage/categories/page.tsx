@@ -78,6 +78,10 @@ const CategorySkeleton = () => (
 export default function ManageCategoriesPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
+  useEffect(() => {
+    document.title = 'Управління категоріями - Адміністратор | Sirius Auto';
+  }, []);
+
   const normalizeString = useCallback((str: string) => {
     return str
       .normalize('NFD')

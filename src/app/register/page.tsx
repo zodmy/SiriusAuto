@@ -23,6 +23,11 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { register, isAuthenticated, isInitialCheckComplete } = useAuth();
+
+  useEffect(() => {
+    document.title = 'Реєстрація акаунта - Sirius Auto';
+  }, []);
+
   useEffect(() => {
     if (isInitialCheckComplete && isAuthenticated) {
       router.push('/');

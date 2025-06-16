@@ -9,6 +9,11 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    document.title = 'Адміністратор - Sirius Auto';
+  }, []);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {

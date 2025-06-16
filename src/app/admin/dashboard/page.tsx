@@ -1,4 +1,5 @@
 'use client';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { HiOutlineCog, HiOutlineTag, HiOutlineCube, HiOutlineOfficeBuilding, HiOutlineLogout } from 'react-icons/hi';
@@ -8,6 +9,10 @@ import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 export default function AdminDashboard() {
   const router = useRouter();
   const { isAdmin, isLoading } = useAdminAuth();
+
+  useEffect(() => {
+    document.title = 'Панель адміністратора - Sirius Auto';
+  }, []);
 
   const handleLogout = async () => {
     try {

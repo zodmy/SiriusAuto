@@ -77,8 +77,17 @@ export default function CategoryPage() {
   const [showAllProducts, setShowAllProducts] = useState<boolean>(false);
   const [showNotification, setShowNotification] = useState(false);
   const [notificationProductName, setNotificationProductName] = useState('');
-
   const { breadcrumbRef, scrollToEnd } = useBreadcrumbScroll();
+
+  useEffect(() => {
+    let title = `${categoryName} - автозапчастини | Sirius Auto`;
+    if (currentCategory && debouncedSearchQuery) {
+      title = `Пошук "${debouncedSearchQuery}" в ${currentCategory.name} | Sirius Auto`;
+    } else if (debouncedSearchQuery) {
+      title = `Пошук "${debouncedSearchQuery}" в ${categoryName} | Sirius Auto`;
+    }
+    document.title = title;
+  }, [categoryName, currentCategory, debouncedSearchQuery]);
 
   useEffect(() => {
     if (urlSearchQuery) {

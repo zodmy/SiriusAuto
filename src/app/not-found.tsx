@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -7,6 +8,9 @@ import { HiHome, HiSearch, HiArrowLeft } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
 
 export default function NotFound() {
+  useEffect(() => {
+    document.title = 'Сторінка не знайдена (404) - Sirius Auto';
+  }, []);
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />

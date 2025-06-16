@@ -21,8 +21,11 @@ interface Category {
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const { breadcrumbRef } = useBreadcrumbScroll();
+
+  useEffect(() => {
+    document.title = 'Категорії автозапчастин - Sirius Auto';
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {

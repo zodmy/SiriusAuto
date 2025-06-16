@@ -106,8 +106,14 @@ function ProductPageContent() {
   const [isCompatible, setIsCompatible] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
   const [showNotification, setShowNotification] = useState(false);
-
   const { breadcrumbRef, scrollToEnd } = useBreadcrumbScroll();
+
+  useEffect(() => {
+    if (product) {
+      const title = `${product.name} - ${product.price} грн | Sirius Auto`;
+      document.title = title;
+    }
+  }, [product]);
 
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');

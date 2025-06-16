@@ -25,6 +25,11 @@ export default function CheckoutPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    document.title = 'Оформлення замовлення - Sirius Auto';
+  }, []);
+
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
