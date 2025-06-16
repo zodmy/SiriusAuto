@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { HiTag, HiChevronRight, HiHome, HiShoppingCart, HiStar, HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
 import { useCart } from '@/lib/hooks/useCart';
+import { useBreadcrumbScroll } from '@/lib/hooks/useBreadcrumbScroll';
 import CartNotification from '@/components/CartNotification';
 
 interface Product {
@@ -106,6 +107,8 @@ function ProductPageContent() {
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
   const [showNotification, setShowNotification] = useState(false);
 
+  const { breadcrumbRef, scrollToEnd } = useBreadcrumbScroll();
+
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
     if (savedCarData) {
@@ -128,6 +131,7 @@ function ProductPageContent() {
         if (response.ok) {
           const data = await response.json();
           setProduct(data);
+          scrollToEnd();
           if (savedCar && data.compatibleVehicles) {
             const compatible = data.compatibleVehicles.some((vehicle: { carMake: { name: string }; carModel: { name: string }; carYear: { year: number }; carBodyType: { name: string }; carEngine: { name: string } }) => vehicle.carMake.name === savedCar.makeName && vehicle.carModel.name === savedCar.modelName && vehicle.carYear.year === savedCar.year && vehicle.carBodyType.name === savedCar.bodyTypeName && vehicle.carEngine.name === savedCar.engineName);
             setIsCompatible(compatible);
@@ -144,9 +148,8 @@ function ProductPageContent() {
         setIsLoading(false);
       }
     };
-
     fetchProduct();
-  }, [productId, savedCar]);
+  }, [productId, savedCar, scrollToEnd]);
 
   const breadcrumbs = () => {
     const crumbs = [{ name: 'Головна', href: '/' }];
@@ -237,26 +240,30 @@ function ProductPageContent() {
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
       <main className='flex-grow'>
+        {' '}
         <div className='bg-white border-b'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-            <nav className='flex items-center space-x-2 text-sm'>
-              {breadcrumbs().map((crumb, index) => (
-                <div key={index} className='flex items-center'>
-                  {index > 0 && <HiChevronRight className='text-gray-400 mx-2' />}
-                  {index === 0 ? <HiHome className='text-gray-400 mr-1' /> : null}
-                  {index === breadcrumbs().length - 1 ? (
-                    <span className='text-gray-900 font-medium'>{crumb.name}</span>
-                  ) : (
-                    <Link href={crumb.href} className='text-blue-600 hover:text-blue-800'>
-                      {crumb.name}
-                    </Link>
-                  )}
+            <div className='relative'>
+              <nav ref={breadcrumbRef} className='flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
+                <div className='flex items-center space-x-1 sm:space-x-2 min-w-max'>
+                  {breadcrumbs().map((crumb, index) => (
+                    <div key={index} className='flex items-center'>
+                      {index > 0 && <HiChevronRight className='text-gray-400 mx-1 sm:mx-2 flex-shrink-0' />}
+                      {index === 0 ? <HiHome className='text-gray-400 mr-1 flex-shrink-0' /> : null}
+                      {index === breadcrumbs().length - 1 ? (
+                        <span className='text-gray-900 font-medium whitespace-nowrap'>{crumb.name}</span>
+                      ) : (
+                        <Link href={crumb.href} className='text-blue-600 hover:text-blue-800 whitespace-nowrap'>
+                          {crumb.name}
+                        </Link>
+                      )}
+                    </div>
+                  ))}{' '}
                 </div>
-              ))}
-            </nav>
+              </nav>
+            </div>
           </div>
         </div>
-
         {savedCar && (
           <div className={`border-b ${isCompatible === true ? 'bg-green-50 border-green-200' : isCompatible === false ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
@@ -272,7 +279,6 @@ function ProductPageContent() {
             </div>
           </div>
         )}
-
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
           <div className='grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8'>
             <div>
@@ -421,7 +427,6 @@ function ProductPageContent() {
       </main>
       <Footer />
 
-      {/* Сповіщення про додавання до кошика */}
       <CartNotification show={showNotification} productName={product?.name || ''} onHide={() => setShowNotification(false)} />
     </div>
   );
