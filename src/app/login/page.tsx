@@ -37,7 +37,8 @@ function LoginForm() {
     const result = await login(email, password);
 
     if (result.success) {
-      router.push('/');
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
     } else {
       setError(result.error || 'Помилка входу');
     }
@@ -51,10 +52,10 @@ function LoginForm() {
         {' '}
         <div className='max-w-md w-full space-y-8'>
           <div className='text-center'>
-            <h2 className='text-3xl font-extrabold text-gray-900'>Вхід до системи</h2>
+            <h2 className='text-3xl font-extrabold text-gray-900'>Вхід до системи</h2>{' '}
             <p className='mt-2 text-sm text-gray-600'>
               Не маєте облікового запису?{' '}
-              <Link href='/register' className='font-medium text-blue-600 hover:text-blue-500 cursor-pointer'>
+              <Link href={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className='font-medium text-blue-600 hover:text-blue-500 cursor-pointer'>
                 Зареєструйтесь
               </Link>
             </p>
