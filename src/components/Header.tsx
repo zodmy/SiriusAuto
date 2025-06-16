@@ -106,7 +106,7 @@ const Header = () => {
     };
   }, [isCartOpen, isMobileMenuOpen, isCatalogOpen]);
   return (
-    <header className='bg-gray-800 text-white shadow-md'>
+    <header className='bg-gray-800 text-white shadow-md sticky top-0 z-50'>
       <div className='hidden md:block p-4'>
         <div className='relative flex items-center justify-between h-[40px]'>
           {' '}
