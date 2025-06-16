@@ -21,7 +21,7 @@ interface CustomerInfo {
 
 export default function CheckoutPage() {
   const { items, removeItem, getTotalPrice, clearCart, increaseQuantity, decreaseQuantity } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -34,6 +34,44 @@ export default function CheckoutPage() {
     city: '',
     postalCode: '',
   });
+
+  if (isInitialCheckComplete && !isAuthenticated) {
+    return (
+      <div className='min-h-screen bg-gray-100 flex flex-col'>
+        <Header />
+        <main className='flex-1 flex items-center justify-center'>
+          <div className='max-w-md mx-auto text-center bg-white p-8 rounded-lg shadow-md'>
+            <h1 className='text-2xl font-bold text-gray-900 mb-4'>Необхідна авторизація</h1>
+            <p className='text-gray-600 mb-6'>Для оформлення замовлення потрібно увійти в систему</p>
+            <div className='flex flex-col sm:flex-row gap-3'>
+              <button onClick={() => router.push('/login?redirect=/checkout')} className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md cursor-pointer'>
+                Увійти
+              </button>
+              <button onClick={() => router.push('/register?redirect=/checkout')} className='bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-md cursor-pointer'>
+                Зареєструватися
+              </button>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!isInitialCheckComplete) {
+    return (
+      <div className='min-h-screen bg-gray-100 flex flex-col'>
+        <Header />
+        <main className='flex-1 flex items-center justify-center'>
+          <div className='text-center'>
+            <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
+            <p className='text-gray-600'>Завантаження...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,12 +124,11 @@ export default function CheckoutPage() {
   const handleInputChange = (field: keyof CustomerInfo, value: string) => {
     setCustomerInfo((prev) => ({ ...prev, [field]: value }));
   };
-
   if (items.length === 0) {
     return (
-      <div className='min-h-screen bg-gray-100'>
+      <div className='min-h-screen bg-gray-100 flex flex-col'>
         <Header />
-        <main className='container mx-auto px-4 py-8'>
+        <main className='flex-1 flex items-center justify-center'>
           <div className='max-w-2xl mx-auto text-center'>
             <h1 className='text-2xl font-bold text-gray-900 mb-4'>Кошик порожній</h1>
             <p className='text-gray-600 mb-8'>Додайте товари до кошика для оформлення замовлення</p>
@@ -106,9 +143,9 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-100'>
+    <div className='min-h-screen bg-gray-100 flex flex-col'>
       <Header />
-      <main className='container mx-auto px-4 py-8'>
+      <main className='flex-1 container mx-auto px-4 py-8'>
         <div className='max-w-6xl mx-auto'>
           <h1 className='text-3xl font-bold text-gray-900 mb-8'>Оформлення замовлення</h1>
 
@@ -176,7 +213,7 @@ export default function CheckoutPage() {
 
                     <div className='flex-1 min-w-0'>
                       <h3 className='font-medium text-gray-900 truncate'>{item.name}</h3>
-                      <p className='text-sm text-gray-600'>₴{item.price.toFixed(2)}</p>
+                      <p className='text-sm text-gray-600'>₴{Number(item.price).toFixed(2)}</p>
                     </div>
 
                     <div className='flex items-center gap-2'>
@@ -196,7 +233,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className='text-right'>
-                      <p className='font-medium'>₴{(item.price * item.quantity).toFixed(2)}</p>
+                      <p className='font-medium'>₴{(Number(item.price) * item.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}

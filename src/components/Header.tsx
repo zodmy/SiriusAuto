@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { BiCategory } from 'react-icons/bi';
 import { AiOutlineShoppingCart } from 'react-icons/ai';
-import { HiMenu, HiX } from 'react-icons/hi';
+import { HiMenu, HiX, HiMinus, HiPlus } from 'react-icons/hi';
 import { FaUser } from 'react-icons/fa';
 import { BsCart3 } from 'react-icons/bs';
 import { useState, useEffect, useRef } from 'react';
@@ -31,7 +31,7 @@ const Header = () => {
   const catalogRef = useRef<HTMLDivElement>(null);
   const catalogButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
-  const { items, getTotalItems, getTotalPrice, isEmpty, removeItem, increaseQuantity, decreaseQuantity, clearCart } = useCart();
+  const { items, getTotalItems, getTotalPrice, isEmpty, removeItem, increaseQuantity, decreaseQuantity } = useCart();
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories');
@@ -172,66 +172,56 @@ const Header = () => {
                 </button>
                 {isCartOpen && (
                   <div ref={cartRef} className='fixed inset-0 z-50 flex items-end md:items-start justify-center md:justify-end pointer-events-none'>
-                    <div className='bg-white text-gray-800 rounded-t-2xl md:rounded-md shadow-2xl w-full max-w-md md:w-96 p-4 md:mt-24 md:mr-8 pointer-events-auto animate-slide-up md:animate-fade-in' style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-                      <div className='flex items-center justify-between mb-4'>
+                    <div className='bg-white text-gray-800 rounded-t-2xl md:rounded-md shadow-2xl w-full max-w-md md:w-96 md:mt-24 md:mr-8 pointer-events-auto animate-slide-up md:animate-fade-in flex flex-col' style={{ maxHeight: '80vh' }}>
+                      <div className='flex items-center justify-between mb-4 p-4 pb-2 flex-shrink-0'>
                         <h3 className='text-lg font-semibold'>Кошик</h3>
                         <button onClick={() => setIsCartOpen(false)} className='text-gray-400 hover:text-gray-700 text-2xl leading-none cursor-pointer' aria-label='Закрити кошик'>
                           ×
                         </button>
                       </div>
                       {isEmpty() ? (
-                        <div className='flex flex-col items-center justify-center py-8'>
+                        <div className='flex flex-col items-center justify-center py-8 flex-1'>
                           <BsCart3 size={80} className='text-gray-400' />
                           <p className='text-sm text-gray-600 mt-4'>Ваш кошик порожній.</p>
                         </div>
                       ) : (
                         <>
-                          <div className='divide-y divide-gray-200 mb-4'>
-                            {items.map((item) => (
-                              <div key={item.id} className='flex items-center py-3 gap-3'>
-                                {item.image && (
-                                  <div className='flex-shrink-0 w-14 h-14 relative'>
-                                    <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
+                          <div className='flex-1 overflow-y-auto px-4' style={{ maxHeight: 'calc(80vh - 180px)' }}>
+                            <div className='divide-y divide-gray-200'>
+                              {items.map((item) => (
+                                <div key={item.id} className='flex items-center py-3 gap-3'>
+                                  {item.image && (
+                                    <div className='flex-shrink-0 w-14 h-14 relative'>
+                                      <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
+                                    </div>
+                                  )}
+                                  <div className='flex-1 min-w-0'>
+                                    <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
+                                    <div className='text-xs text-gray-500 mt-1'>₴{Number(item.price).toFixed(2)}</div>
+                                    <div className='flex items-center mt-2 gap-2'>
+                                      <button onClick={() => decreaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Зменшити кількість'>
+                                        <HiMinus className='w-3 h-3' />
+                                      </button>
+                                      <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
+                                      <button onClick={() => increaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Збільшити кількість'>
+                                        <HiPlus className='w-3 h-3' />
+                                      </button>
+                                    </div>
                                   </div>
-                                )}
-                                <div className='flex-1 min-w-0'>
-                                  <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
-                                  <div className='text-xs text-gray-500 mt-1'>₴{Number(item.price).toFixed(2)}</div>
-                                  <div className='flex items-center mt-2 gap-2'>
-                                    <button onClick={() => decreaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Зменшити кількість'>
-                                      –
-                                    </button>
-                                    <span className='text-sm font-medium w-6 text-center'>{item.quantity}</span>
-                                    <button onClick={() => increaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Збільшити кількість'>
-                                      +
+                                  <div className='flex flex-col items-end gap-2'>
+                                    <span className='text-sm font-semibold text-gray-900'>₴{(Number(item.price) * item.quantity).toFixed(2)}</span>
+                                    <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
+                                      ×
                                     </button>
                                   </div>
                                 </div>
-                                <div className='flex flex-col items-end gap-2'>
-                                  <span className='text-sm font-semibold text-gray-900'>₴{(Number(item.price) * item.quantity).toFixed(2)}</span>
-                                  <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
-                                    ×
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
-                          <div className='border-t pt-4'>
-                            <div className='flex justify-between items-center mb-2'>
-                              <button
-                                onClick={() => {
-                                  if (window.confirm('Очистити кошик?')) {
-                                    clearCart();
-                                  }
-                                }}
-                                className='text-sm text-red-600 hover:text-red-800 cursor-pointer'
-                              >
-                                Очистити кошик
-                              </button>
-                              <div className='text-right'>
-                                <span className='block text-sm text-gray-600'>Загальна сума:</span>
-                                <span className='font-semibold text-lg'>₴{getTotalPrice().toFixed(2)}</span>
-                              </div>
+                          <div className='border-t pt-4 px-4 pb-4 flex-shrink-0'>
+                            <div className='flex justify-between items-center mb-4'>
+                              <span className='text-lg font-semibold'>Загальна сума:</span>
+                              <span className='text-lg font-bold'>₴{getTotalPrice().toFixed(2)}</span>
                             </div>
                             <Link
                               href='/checkout'
@@ -239,7 +229,7 @@ const Header = () => {
                                 setIsCartOpen(false);
                                 setIsMobileMenuOpen(false);
                               }}
-                              className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-base font-medium mt-2'
+                              className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md text-base font-medium cursor-pointer'
                             >
                               Оформити замовлення
                             </Link>
@@ -322,66 +312,56 @@ const Header = () => {
       )}
       {isCartOpen && (
         <div ref={cartRef} className='fixed inset-0 z-50 flex items-end md:items-start justify-center md:justify-end pointer-events-none'>
-          <div className='bg-white text-gray-800 rounded-t-2xl md:rounded-md shadow-2xl w-full max-w-md md:w-96 p-4 md:mt-24 md:mr-8 pointer-events-auto animate-slide-up md:animate-fade-in' style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-            <div className='flex items-center justify-between mb-4'>
+          <div className='bg-white text-gray-800 rounded-t-2xl md:rounded-md shadow-2xl w-full max-w-md md:w-96 md:mt-24 md:mr-8 pointer-events-auto animate-slide-up md:animate-fade-in flex flex-col' style={{ maxHeight: '80vh' }}>
+            <div className='flex items-center justify-between mb-4 p-4 pb-2 flex-shrink-0'>
               <h3 className='text-lg font-semibold'>Кошик</h3>
               <button onClick={() => setIsCartOpen(false)} className='text-gray-400 hover:text-gray-700 text-2xl leading-none cursor-pointer' aria-label='Закрити кошик'>
                 ×
               </button>
             </div>
             {isEmpty() ? (
-              <div className='flex flex-col items-center justify-center py-8'>
+              <div className='flex flex-col items-center justify-center py-8 flex-1'>
                 <BsCart3 size={80} className='text-gray-400' />
                 <p className='text-sm text-gray-600 mt-4'>Ваш кошик порожній.</p>
               </div>
             ) : (
               <>
-                <div className='divide-y divide-gray-200 mb-4'>
-                  {items.map((item) => (
-                    <div key={item.id} className='flex items-center py-3 gap-3'>
-                      {item.image && (
-                        <div className='flex-shrink-0 w-14 h-14 relative'>
-                          <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
+                <div className='flex-1 overflow-y-auto px-4' style={{ maxHeight: 'calc(80vh - 180px)' }}>
+                  <div className='divide-y divide-gray-200'>
+                    {items.map((item) => (
+                      <div key={item.id} className='flex items-center py-3 gap-3'>
+                        {item.image && (
+                          <div className='flex-shrink-0 w-14 h-14 relative'>
+                            <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
+                          </div>
+                        )}
+                        <div className='flex-1 min-w-0'>
+                          <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
+                          <div className='text-xs text-gray-500 mt-1'>₴{Number(item.price).toFixed(2)}</div>
+                          <div className='flex items-center mt-2 gap-2'>
+                            <button onClick={() => decreaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Зменшити кількість'>
+                              <HiMinus className='w-3 h-3' />
+                            </button>
+                            <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
+                            <button onClick={() => increaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Збільшити кількість'>
+                              <HiPlus className='w-3 h-3' />
+                            </button>
+                          </div>
                         </div>
-                      )}
-                      <div className='flex-1 min-w-0'>
-                        <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
-                        <div className='text-xs text-gray-500 mt-1'>₴{Number(item.price).toFixed(2)}</div>
-                        <div className='flex items-center mt-2 gap-2'>
-                          <button onClick={() => decreaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Зменшити кількість'>
-                            –
-                          </button>
-                          <span className='text-sm font-medium w-6 text-center'>{item.quantity}</span>
-                          <button onClick={() => increaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Збільшити кількість'>
-                            +
+                        <div className='flex flex-col items-end gap-2'>
+                          <span className='text-sm font-semibold text-gray-900'>₴{(Number(item.price) * item.quantity).toFixed(2)}</span>
+                          <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
+                            ×
                           </button>
                         </div>
                       </div>
-                      <div className='flex flex-col items-end gap-2'>
-                        <span className='text-sm font-semibold text-gray-900'>₴{(Number(item.price) * item.quantity).toFixed(2)}</span>
-                        <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-                <div className='border-t pt-4'>
-                  <div className='flex justify-between items-center mb-2'>
-                    <button
-                      onClick={() => {
-                        if (window.confirm('Очистити кошик?')) {
-                          clearCart();
-                        }
-                      }}
-                      className='text-sm text-red-600 hover:text-red-800 cursor-pointer'
-                    >
-                      Очистити кошик
-                    </button>
-                    <div className='text-right'>
-                      <span className='block text-sm text-gray-600'>Загальна сума:</span>
-                      <span className='font-semibold text-lg'>₴{getTotalPrice().toFixed(2)}</span>
-                    </div>
+                <div className='border-t pt-4 px-4 pb-4 flex-shrink-0'>
+                  <div className='flex justify-between items-center mb-4'>
+                    <span className='text-lg font-semibold'>Загальна сума:</span>
+                    <span className='text-lg font-bold'>₴{getTotalPrice().toFixed(2)}</span>
                   </div>
                   <Link
                     href='/checkout'
@@ -389,7 +369,7 @@ const Header = () => {
                       setIsCartOpen(false);
                       setIsMobileMenuOpen(false);
                     }}
-                    className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-base font-medium mt-2'
+                    className='block w-full text-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-md text-base font-medium cursor-pointer'
                   >
                     Оформити замовлення
                   </Link>
