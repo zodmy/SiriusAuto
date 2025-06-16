@@ -106,7 +106,7 @@ const Header = () => {
     };
   }, [isCartOpen, isMobileMenuOpen, isCatalogOpen]);
   return (
-    <header className='bg-gray-800 text-white shadow-md sticky top-0 z-50'>
+    <header className='bg-gray-800 text-white'>
       <div className='hidden md:block p-4'>
         <div className='relative flex items-center justify-between h-[40px]'>
           {' '}
@@ -214,28 +214,53 @@ const Header = () => {
                           <div className='flex-1 overflow-y-auto px-4' style={{ maxHeight: 'calc(80vh - 180px)' }}>
                             <div className='divide-y divide-gray-200'>
                               {items.map((item) => (
-                                <div key={item.id} className='flex items-center py-3 gap-3'>
+                                <div key={item.id} className='flex items-center py-3 gap-3 hover:bg-gray-50 rounded-md transition-colors cursor-pointer' onClick={() => (window.location.href = `/products/${item.id}`)}>
                                   {item.image && (
                                     <div className='flex-shrink-0 w-14 h-14 relative'>
                                       <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
                                     </div>
                                   )}
                                   <div className='flex-1 min-w-0'>
-                                    <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
-                                    <div className='text-xs text-gray-500 mt-1'>₴{Number(item.price).toFixed(2)}</div>
-                                    <div className='flex items-center mt-2 gap-2'>
-                                      <button onClick={() => decreaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Зменшити кількість'>
-                                        <HiMinus className='w-3 h-3' />
-                                      </button>
-                                      <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
-                                      <button onClick={() => increaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Збільшити кількість'>
-                                        <HiPlus className='w-3 h-3' />
-                                      </button>
+                                    <div className='flex items-start justify-between mb-2'>
+                                      <div className='font-medium text-gray-900 text-sm leading-tight break-words pr-2'>{item.name}</div>
+                                      <div className='text-sm font-semibold text-gray-900 flex-shrink-0'>₴{(Number(item.price) * item.quantity).toFixed(2)}</div>
+                                    </div>
+                                    <div className='flex items-center justify-between'>
+                                      <div className='text-xs text-gray-500'>₴{Number(item.price).toFixed(2)} за шт.</div>
+                                      <div className='flex items-center gap-2'>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            decreaseQuantity(item.id);
+                                          }}
+                                          className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer'
+                                          aria-label='Зменшити кількість'
+                                        >
+                                          <HiMinus className='w-3 h-3' />
+                                        </button>
+                                        <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            increaseQuantity(item.id);
+                                          }}
+                                          className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer'
+                                          aria-label='Збільшити кількість'
+                                        >
+                                          <HiPlus className='w-3 h-3' />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
-                                  <div className='flex flex-col items-end gap-2'>
-                                    <span className='text-sm font-semibold text-gray-900'>₴{(Number(item.price) * item.quantity).toFixed(2)}</span>
-                                    <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
+                                  <div className='flex flex-col items-end justify-center'>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeItem(item.id);
+                                      }}
+                                      className='text-red-500 hover:text-red-700 text-lg cursor-pointer'
+                                      aria-label='Видалити товар'
+                                    >
                                       ×
                                     </button>
                                   </div>
@@ -387,28 +412,53 @@ const Header = () => {
                 <div className='flex-1 overflow-y-auto px-4' style={{ maxHeight: 'calc(80vh - 180px)' }}>
                   <div className='divide-y divide-gray-200'>
                     {items.map((item) => (
-                      <div key={item.id} className='flex items-center py-3 gap-3'>
+                      <div key={item.id} className='flex items-center py-3 gap-3 hover:bg-gray-50 rounded-md transition-colors cursor-pointer' onClick={() => (window.location.href = `/products/${item.id}`)}>
                         {item.image && (
                           <div className='flex-shrink-0 w-14 h-14 relative'>
                             <Image src={item.image} alt={item.name} fill className='object-contain rounded-md border' />
                           </div>
                         )}
                         <div className='flex-1 min-w-0'>
-                          <div className='truncate font-medium text-gray-900 text-sm'>{item.name}</div>
-                          <div className='text-xs text-gray-500 mt-1'>₴{Number(item.price).toFixed(2)}</div>
-                          <div className='flex items-center mt-2 gap-2'>
-                            <button onClick={() => decreaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Зменшити кількість'>
-                              <HiMinus className='w-3 h-3' />
-                            </button>
-                            <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
-                            <button onClick={() => increaseQuantity(item.id)} className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer' aria-label='Збільшити кількість'>
-                              <HiPlus className='w-3 h-3' />
-                            </button>
+                          <div className='flex items-start justify-between mb-2'>
+                            <div className='font-medium text-gray-900 text-sm leading-tight break-words pr-2'>{item.name}</div>
+                            <div className='text-sm font-semibold text-gray-900 flex-shrink-0'>₴{(Number(item.price) * item.quantity).toFixed(2)}</div>
+                          </div>
+                          <div className='flex items-center justify-between'>
+                            <div className='text-xs text-gray-500'>₴{Number(item.price).toFixed(2)} за шт.</div>
+                            <div className='flex items-center gap-2'>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  decreaseQuantity(item.id);
+                                }}
+                                className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer'
+                                aria-label='Зменшити кількість'
+                              >
+                                <HiMinus className='w-3 h-3' />
+                              </button>
+                              <span className='w-6 text-center text-sm font-medium'>{item.quantity}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  increaseQuantity(item.id);
+                                }}
+                                className='w-6 h-6 flex items-center justify-center border border-gray-300 rounded text-gray-500 hover:text-gray-700 cursor-pointer'
+                                aria-label='Збільшити кількість'
+                              >
+                                <HiPlus className='w-3 h-3' />
+                              </button>
+                            </div>
                           </div>
                         </div>
-                        <div className='flex flex-col items-end gap-2'>
-                          <span className='text-sm font-semibold text-gray-900'>₴{(Number(item.price) * item.quantity).toFixed(2)}</span>
-                          <button onClick={() => removeItem(item.id)} className='text-red-500 hover:text-red-700 text-lg cursor-pointer' aria-label='Видалити товар'>
+                        <div className='flex flex-col items-end justify-center'>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeItem(item.id);
+                            }}
+                            className='text-red-500 hover:text-red-700 text-lg cursor-pointer'
+                            aria-label='Видалити товар'
+                          >
                             ×
                           </button>
                         </div>
