@@ -9,6 +9,7 @@ import { BsCart3 } from 'react-icons/bs';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/components/AuthProvider';
 import { useCart } from '@/lib/hooks/useCart';
+import SearchBar from './SearchBar';
 
 interface Category {
   id: number;
@@ -160,10 +161,10 @@ const Header = () => {
                 </div>
               )}
             </div>
-          </div>
+          </div>{' '}
           <div className='absolute inset-0 flex justify-center items-center pointer-events-none'>
             <div className='w-1/2 max-w-xl pointer-events-auto'>
-              <input type='text' placeholder='Пошук товарів...' className='bg-gray-700 text-white placeholder-gray-400 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae] h-10' />
+              <SearchBar className='bg-gray-700 text-white placeholder-gray-400 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae] h-10' />
             </div>
           </div>
           <nav className='flex items-center z-10'>
@@ -291,10 +292,9 @@ const Header = () => {
             <AiOutlineShoppingCart size={24} />
             {getTotalItems() > 0 && <span className='absolute -top-2 -right-2 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>{getTotalItems()}</span>}
           </button>
-        </div>
-
+        </div>{' '}
         <div className='mt-3'>
-          <input type='text' placeholder='Пошук товарів...' className='bg-gray-700 text-white placeholder-gray-400 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae] h-10' />
+          <SearchBar className='bg-gray-700 text-white placeholder-gray-400 px-4 rounded-md w-full focus:outline-none focus:ring-2 focus:ring-[#1c5eae] h-10' />
         </div>
       </div>{' '}
       {isMobileMenuOpen && (

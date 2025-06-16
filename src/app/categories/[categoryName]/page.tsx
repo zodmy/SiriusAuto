@@ -521,7 +521,7 @@ export default function CategoryPage() {
                                 }}
                                 className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed cursor-pointer'
                               >
-                                {product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
+                                {product.stockQuantity > 0 ? 'Додати до кошику' : 'Немає в наявності'}
                               </button>
                             )}
                           </div>
@@ -546,7 +546,7 @@ export default function CategoryPage() {
                                 }
                               }}
                               className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
-                              title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
+                              title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Немає в наявності'}
                             >
                               <HiShoppingCart className='w-5 h-5' />
                             </button>
