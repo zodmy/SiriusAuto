@@ -258,9 +258,9 @@ function ProductPageContent() {
           <div className={`border-b ${isCompatible === true ? 'bg-green-50 border-green-200' : isCompatible === false ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
               <div className='flex items-center gap-3'>
-                <FaCar className={`${isCompatible === true ? 'text-green-600' : isCompatible === false ? 'text-red-600' : 'text-blue-600'}`} />
+                <FaCar className={`${isCompatible === true ? 'text-green-600' : isCompatible === false ? 'text-red-600' : 'text-blue-600'}`} />{' '}
                 <span className={`font-medium ${isCompatible === true ? 'text-green-800' : isCompatible === false ? 'text-red-800' : 'text-blue-800'}`}>
-                  Обраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} ({savedCar.bodyTypeName}, {savedCar.engineName})
+                  Обраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
                 </span>
                 {isCompatible === true && <HiCheck className='w-5 h-5 text-green-600' />}
                 {isCompatible === false && <HiX className='w-5 h-5 text-red-600' />}
