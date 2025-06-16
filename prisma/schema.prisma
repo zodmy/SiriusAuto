@@ -159,15 +159,23 @@ model User {
 }
 
 model Order {
-  id         Int         @id @default(autoincrement())
-  userId     Int
-  user       User        @relation(fields: [userId], references: [id])
-  orderItems OrderItem[]
-  totalPrice Decimal
-  orderDate  DateTime    @default(now())
-  status     OrderStatus
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id                Int         @id @default(autoincrement())
+  userId            Int
+  user              User        @relation(fields: [userId], references: [id])
+  orderItems        OrderItem[]
+  totalPrice        Decimal
+  orderDate         DateTime    @default(now())
+  status            OrderStatus
+  customerFirstName String
+  customerLastName  String?
+  customerEmail     String
+  customerPhone     String
+  deliveryMethod    String
+  deliveryPrice     Decimal     @default(0)
+  novaPoshtaCity    String?
+  novaPoshtaBranch  String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   @@map("orders")
 }

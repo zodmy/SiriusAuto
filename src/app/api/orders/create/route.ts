@@ -14,10 +14,13 @@ interface CreateOrderRequest {
     lastName: string;
     email: string;
     phone: string;
-    address: string;
-    city: string;
-    postalCode: string;
   };
+  deliveryInfo: {
+    method: 'pickup' | 'novaposhta';
+    novaPoshtaBranch?: string;
+    novaPoshtaCity?: string;
+  };
+  deliveryPrice: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -32,10 +35,8 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Помилка верифікації токена:', error);
       }
-    }
-
-    const body: CreateOrderRequest = await request.json();
-    const { items, customerInfo } = body;
+    } const body: CreateOrderRequest = await request.json();
+    const { items, customerInfo, deliveryInfo, deliveryPrice } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Кошик порожній' }, { status: 400 });
@@ -43,6 +44,10 @@ export async function POST(request: NextRequest) {
 
     if (!customerInfo.firstName || !customerInfo.email || !customerInfo.phone) {
       return NextResponse.json({ error: 'Не всі обов\'язкові поля заповнені' }, { status: 400 });
+    }
+
+    if (deliveryInfo.method === 'novaposhta' && (!deliveryInfo.novaPoshtaCity || !deliveryInfo.novaPoshtaBranch)) {
+      return NextResponse.json({ error: 'Для доставки Новою Поштою необхідно вказати місто та відділення' }, { status: 400 });
     }
 
     const productIds = items.map(item => item.productId);
@@ -59,19 +64,24 @@ export async function POST(request: NextRequest) {
       if (product.stockQuantity < item.quantity) {
         return NextResponse.json({ error: `Недостатньо товару на складі для товару з ID ${item.productId}` }, { status: 400 });
       }
-    }
-
-    const totalPrice = items.reduce((total, item) => {
+    } const totalPrice = items.reduce((total, item) => {
       const product = products.find(p => p.id === item.productId);
       return total + (product ? Number(product.price) * item.quantity : 0);
-    }, 0); let order;
-
-    if (userId) {
-      order = await prisma.order.create({
+    }, 0) + deliveryPrice; let order; if (userId) {      order = await prisma.order.create({
         data: {
           userId: userId,
           totalPrice,
           status: OrderStatus.PENDING,
+          // Customer info
+          customerFirstName: customerInfo.firstName,
+          customerLastName: customerInfo.lastName,
+          customerEmail: customerInfo.email,
+          customerPhone: customerInfo.phone,
+          // Delivery info
+          deliveryMethod: deliveryInfo.method,
+          deliveryPrice: deliveryPrice,
+          novaPoshtaCity: deliveryInfo.novaPoshtaCity,
+          novaPoshtaBranch: deliveryInfo.novaPoshtaBranch,
           orderItems: {
             create: items.map(item => ({
               productId: item.productId,

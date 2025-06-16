@@ -27,12 +27,12 @@ function RegisterForm() {
   useEffect(() => {
     document.title = 'Реєстрація акаунта - Sirius Auto';
   }, []);
-
   useEffect(() => {
     if (isInitialCheckComplete && isAuthenticated) {
-      router.push('/');
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
     }
-  }, [isInitialCheckComplete, isAuthenticated, router]);
+  }, [isInitialCheckComplete, isAuthenticated, router, searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

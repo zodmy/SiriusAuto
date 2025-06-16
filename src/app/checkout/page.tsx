@@ -19,8 +19,31 @@ interface CustomerInfo {
   postalCode: string;
 }
 
+interface DeliveryInfo {
+  method: 'pickup' | 'novaposhta';
+  novaPoshtaBranch?: string;
+  novaPoshtaCity?: string;
+}
+
+const DELIVERY_METHODS = {
+  pickup: {
+    name: 'Самовивіз',
+    price: 0,
+    description: 'Безкоштовно, м. Харків, вул. Полтавський Шлях, 115',
+  },
+  novaposhta: {
+    name: 'Нова Пошта',
+    price: 80,
+    description: 'Доставка у відділення або поштомат',
+  },
+};
+
 export default function CheckoutPage() {
   const { items, removeItem, getTotalPrice, clearCart, increaseQuantity, decreaseQuantity } = useCart();
+
+  const getDeliveryPrice = () => DELIVERY_METHODS[deliveryInfo.method].price;
+
+  const getTotalWithDelivery = () => getTotalPrice() + getDeliveryPrice();
   const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +52,6 @@ export default function CheckoutPage() {
   useEffect(() => {
     document.title = 'Оформлення замовлення - Sirius Auto';
   }, []);
-
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
@@ -38,6 +60,12 @@ export default function CheckoutPage() {
     address: '',
     city: '',
     postalCode: '',
+  });
+
+  const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
+    method: 'pickup',
+    novaPoshtaBranch: '',
+    novaPoshtaCity: '',
   });
 
   useEffect(() => {
@@ -86,7 +114,6 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -97,6 +124,16 @@ export default function CheckoutPage() {
 
     if (items.length === 0) {
       setError('Кошик порожній');
+      return;
+    }
+
+    if (!customerInfo.firstName || !customerInfo.email || !customerInfo.phone) {
+      setError("Будь ласка, заповніть усі обов'язкові поля");
+      return;
+    }
+
+    if (deliveryInfo.method === 'novaposhta' && (!deliveryInfo.novaPoshtaCity || !deliveryInfo.novaPoshtaBranch)) {
+      setError('Будь ласка, вкажіть місто та відділення Нової Пошти');
       return;
     }
 
@@ -116,6 +153,8 @@ export default function CheckoutPage() {
             price: item.price,
           })),
           customerInfo,
+          deliveryInfo,
+          deliveryPrice: getDeliveryPrice(),
         }),
       });
 
@@ -199,9 +238,46 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Поштовий індекс</label>
-                    <input type='text' value={customerInfo.postalCode} onChange={(e) => handleInputChange('postalCode', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
+                    <input type='text' value={customerInfo.postalCode} onChange={(e) => handleInputChange('postalCode', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />{' '}
                   </div>
-                </div>{' '}
+                </div>
+
+                {/* Delivery Section */}
+                <div className='border-t pt-6 mt-6'>
+                  <h3 className='text-lg font-semibold mb-4'>Спосіб доставки</h3>
+
+                  <div className='space-y-3'>
+                    {Object.entries(DELIVERY_METHODS).map(([method, info]) => (
+                      <label key={method} className='flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors'>
+                        <input type='radio' name='deliveryMethod' value={method} checked={deliveryInfo.method === method} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, method: e.target.value as 'pickup' | 'novaposhta' }))} className='mt-1 mr-3' />
+                        <div className='flex-1'>
+                          <div className='flex justify-between items-center'>
+                            <span className='font-medium'>{info.name}</span>
+                            <span className='font-semibold text-blue-600'>{info.price === 0 ? 'Безкоштовно' : `₴${info.price}`}</span>
+                          </div>
+                          <p className='text-sm text-gray-600 mt-1'>{info.description}</p>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+
+                  {/* Nova Poshta additional fields */}
+                  {deliveryInfo.method === 'novaposhta' && (
+                    <div className='mt-4 p-4 bg-blue-50 rounded-lg'>
+                      <div className='space-y-4'>
+                        <div>
+                          <label className='block text-sm font-medium text-gray-700 mb-1'>Місто доставки *</label>
+                          <input type='text' required value={deliveryInfo.novaPoshtaCity || ''} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, novaPoshtaCity: e.target.value }))} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' placeholder='Наприклад: Київ, Харків, Одеса' />
+                        </div>
+                        <div>
+                          <label className='block text-sm font-medium text-gray-700 mb-1'>Відділення або поштомат *</label>
+                          <input type='text' required value={deliveryInfo.novaPoshtaBranch || ''} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, novaPoshtaBranch: e.target.value }))} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' placeholder='Наприклад: Відділення №1, Поштомат №5001' />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <button type='submit' disabled={isSubmitting} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-md font-medium cursor-pointer disabled:cursor-not-allowed'>
                   {isSubmitting ? 'Оформлення...' : 'Оформити замовлення'}
                 </button>
@@ -209,7 +285,6 @@ export default function CheckoutPage() {
             </div>{' '}
             <div className='bg-white rounded-lg shadow-md p-6 flex flex-col max-h-[70vh] min-h-[500px]'>
               <h2 className='text-xl font-semibold mb-6 flex-shrink-0'>Ваше замовлення</h2>
-
               <div className='flex-1 overflow-y-auto mb-4 pr-2 checkout-scroll'>
                 <div className='space-y-4'>
                   {items.map((item) => (
@@ -249,12 +324,21 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-
+              </div>{' '}
               <div className='border-t pt-4 flex-shrink-0'>
-                <div className='flex justify-between items-center text-lg font-semibold'>
-                  <span>Загальна сума:</span>
-                  <span>₴{getTotalPrice().toFixed(2)}</span>
+                <div className='space-y-2'>
+                  <div className='flex justify-between items-center'>
+                    <span>Товари:</span>
+                    <span>₴{getTotalPrice().toFixed(2)}</span>
+                  </div>
+                  <div className='flex justify-between items-center'>
+                    <span>{DELIVERY_METHODS[deliveryInfo.method].name}:</span>
+                    <span>{getDeliveryPrice() === 0 ? 'Безкоштовно' : `₴${getDeliveryPrice().toFixed(2)}`}</span>
+                  </div>
+                  <div className='border-t pt-2 flex justify-between items-center text-lg font-semibold'>
+                    <span>Загальна сума:</span>
+                    <span>₴{getTotalWithDelivery().toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             </div>

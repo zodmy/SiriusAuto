@@ -28,12 +28,12 @@ function LoginForm() {
       setSuccessMessage('Реєстрацію завершено! Тепер ви можете увійти до системи.');
     }
   }, [searchParams]);
-
   useEffect(() => {
     if (isInitialCheckComplete && isAuthenticated) {
-      router.push('/');
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
     }
-  }, [isInitialCheckComplete, isAuthenticated, router]);
+  }, [isInitialCheckComplete, isAuthenticated, router, searchParams]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
