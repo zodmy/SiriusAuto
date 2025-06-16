@@ -67,17 +67,16 @@ export async function POST(request: NextRequest) {
     } const totalPrice = items.reduce((total, item) => {
       const product = products.find(p => p.id === item.productId);
       return total + (product ? Number(product.price) * item.quantity : 0);
-    }, 0) + deliveryPrice; let order; if (userId) {      order = await prisma.order.create({
+    }, 0) + deliveryPrice; let order; if (userId) {
+      order = await prisma.order.create({
         data: {
           userId: userId,
           totalPrice,
           status: OrderStatus.PENDING,
-          // Customer info
           customerFirstName: customerInfo.firstName,
           customerLastName: customerInfo.lastName,
           customerEmail: customerInfo.email,
           customerPhone: customerInfo.phone,
-          // Delivery info
           deliveryMethod: deliveryInfo.method,
           deliveryPrice: deliveryPrice,
           novaPoshtaCity: deliveryInfo.novaPoshtaCity,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useCart } from '@/lib/hooks/useCart';
 import { useAuth } from '@/lib/components/AuthProvider';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Image from 'next/image';
@@ -221,7 +222,6 @@ export default function CheckoutPage() {
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label>
                   <input type='tel' required value={customerInfo.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
                 </div>
-                {/* Delivery Section */}
                 <div className='border-t pt-6 mt-6'>
                   <h3 className='text-lg font-semibold mb-4'>Спосіб доставки</h3>
 
@@ -240,7 +240,6 @@ export default function CheckoutPage() {
                     ))}
                   </div>
 
-                  {/* Nova Poshta additional fields */}
                   {deliveryInfo.method === 'novaposhta' && (
                     <div className='mt-4 p-4 bg-blue-50 rounded-lg'>
                       <div className='space-y-4'>
@@ -271,13 +270,13 @@ export default function CheckoutPage() {
                         <div className='flex-shrink-0 w-16 h-16 relative'>
                           <Image src={item.image} alt={item.name} fill className='object-contain rounded-md' />
                         </div>
-                      )}
-
+                      )}{' '}
                       <div className='flex-1 min-w-0'>
-                        <h3 className='font-medium text-gray-900 mb-1 break-words'>{item.name}</h3>
+                        <Link href={`/products/${item.id}`} className='block'>
+                          <h3 className='font-medium text-gray-900 mb-1 break-words hover:text-blue-600 transition-colors cursor-pointer'>{item.name}</h3>
+                        </Link>
                         <p className='text-sm text-gray-600'>₴{Number(item.price).toFixed(2)}</p>
                       </div>
-
                       <div className='flex items-center justify-between sm:justify-start gap-4'>
                         <div className='flex items-center gap-2'>
                           <button onClick={() => decreaseQuantity(item.id)} className='w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50 cursor-pointer'>
