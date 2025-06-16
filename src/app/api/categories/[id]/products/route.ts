@@ -15,12 +15,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
 
     if (!products || products.length === 0) {
-      return NextResponse.json({ message: `Продукти для категорії з ID ${categoryId} не знайдено` }, { status: 404 });
+      return NextResponse.json({ message: `Товари для категорії з ID ${categoryId} не знайдено` }, { status: 404 });
     }
 
     return NextResponse.json(products, { status: 200 });
   } catch (error) {
-    console.error(`Помилка отримання продуктів для категорії з ID ${categoryId}:`, error);
-    return NextResponse.json({ error: 'Не вдалося отримати продукти категорії' }, { status: 500 });
+    console.error(`Помилка отримання товарів для категорії з ID ${categoryId}:`, error);
+    return NextResponse.json({ error: 'Не вдалося отримати товари категорії' }, { status: 500 });
   }
 }

@@ -17,7 +17,7 @@ export async function POST(
     const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
     }
 
     const product = await prisma.product.findUnique({
@@ -25,7 +25,7 @@ export async function POST(
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Продукт не знайдено' }, { status: 404 });
+      return NextResponse.json({ error: 'Товар не знайдено' }, { status: 404 });
     }
 
     const formData = await request.formData();
@@ -108,7 +108,7 @@ export async function POST(
 
     return NextResponse.json(updatedProduct);
   } catch (error) {
-    console.error('Помилка завантаження зображення продукту:', error);
+    console.error('Помилка завантаження зображення товару:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }
@@ -126,7 +126,7 @@ export async function DELETE(
     const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
     }
 
     const product = await prisma.product.findUnique({
@@ -134,11 +134,11 @@ export async function DELETE(
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Продукт не знайдено' }, { status: 404 });
+      return NextResponse.json({ error: 'Товар не знайдено' }, { status: 404 });
     }
 
     if (!product.imageUrl) {
-      return NextResponse.json({ error: 'У продукту немає зображення' }, { status: 400 });
+      return NextResponse.json({ error: 'У товару немає зображення' }, { status: 400 });
     }
 
     await deleteProductImage(product.imageUrl);
@@ -170,7 +170,7 @@ export async function DELETE(
 
     return NextResponse.json(updatedProduct);
   } catch (error) {
-    console.error('Помилка видалення зображення продукту:', error);
+    console.error('Помилка видалення зображення товару:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }

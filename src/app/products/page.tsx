@@ -78,7 +78,7 @@ function ProductsPageContent() {
   const { breadcrumbRef, scrollToEnd } = useBreadcrumbScroll();
 
   useEffect(() => {
-    let title = 'Продукти - Sirius Auto';
+    let title = 'Товари - Sirius Auto';
     if (currentCategory) {
       title = `${currentCategory.name} - автозапчастини | Sirius Auto`;
     } else if (debouncedSearchQuery) {

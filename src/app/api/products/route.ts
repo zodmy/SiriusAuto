@@ -155,7 +155,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(products);
   } catch (error) {
-    console.error('Помилка отримання продуктів:', error);
+    console.error('Помилка отримання товарів:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }
@@ -191,7 +191,7 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error('Помилка створення продукту:', error);
+    console.error('Помилка створення товару:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }

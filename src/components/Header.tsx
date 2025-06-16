@@ -226,7 +226,7 @@ const Header = () => {
                                       <div className='text-sm font-semibold text-gray-900 flex-shrink-0'>₴{(Number(item.price) * item.quantity).toFixed(2)}</div>
                                     </div>
                                     <div className='flex items-center justify-between'>
-                                      <div className='text-xs text-gray-500'>₴{Number(item.price).toFixed(2)} за шт.</div>
+                                      <div className='text-xs text-gray-500'>₴{Number(item.price).toFixed(2)}</div>
                                       <div className='flex items-center gap-2'>
                                         <button
                                           onClick={(e) => {
@@ -424,7 +424,7 @@ const Header = () => {
                             <div className='text-sm font-semibold text-gray-900 flex-shrink-0'>₴{(Number(item.price) * item.quantity).toFixed(2)}</div>
                           </div>
                           <div className='flex items-center justify-between'>
-                            <div className='text-xs text-gray-500'>₴{Number(item.price).toFixed(2)} за шт.</div>
+                            <div className='text-xs text-gray-500'>₴{Number(item.price).toFixed(2)}</div>
                             <div className='flex items-center gap-2'>
                               <button
                                 onClick={(e) => {

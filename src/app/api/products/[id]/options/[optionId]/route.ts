@@ -12,7 +12,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const optionIdNum = parseInt(optionId, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
     }
 
     if (isNaN(optionIdNum)) {
@@ -34,7 +34,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json(productOption);
   } catch (error: unknown) {
-    console.error('Помилка оновлення опції продукту:', error);
+    console.error('Помилка оновлення опції товару:', error);
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const prismaError = error as { code?: string }; if (prismaError.code === 'P2025') {
         return NextResponse.json({ message: `Опція не знайдена` }, { status: 404 });
@@ -55,7 +55,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const optionIdNum = parseInt(optionId, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
     }
 
     if (isNaN(optionIdNum)) {
@@ -68,13 +68,13 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
     return new NextResponse(null, { status: 204 });
   } catch (error: unknown) {
-    console.error(`Помилка видалення опції продукту:`, error);
+    console.error(`Помилка видалення опції товару:`, error);
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const prismaError = error as { code?: string };
       if (prismaError.code === 'P2025') {
         return NextResponse.json({ message: `Опція не знайдена` }, { status: 404 });
       }
     }
-    return NextResponse.json({ error: 'Не вдалося видалити опцію продукту' }, { status: 500 });
+    return NextResponse.json({ error: 'Не вдалося видалити опцію товару' }, { status: 500 });
   }
 }

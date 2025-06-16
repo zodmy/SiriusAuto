@@ -24,7 +24,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     return NextResponse.json(products, { status: 200 });
   } catch (error) {
-    console.error(`Помилка отримання продуктів для виробника з ID ${manufacturerId}:`, error);
-    return NextResponse.json({ error: 'Не вдалося отримати продукти виробника' }, { status: 500 });
+    console.error(`Помилка отримання товарів для виробника з ID ${manufacturerId}:`, error);
+    return NextResponse.json({ error: 'Не вдалося отримати товари виробника' }, { status: 500 });
   }
 }

@@ -688,7 +688,7 @@ async function main() {
   const generatorCategory = await prisma.category.findFirst({ where: { name: 'Генератори та комплектуючі' } })
   const clutchCategory = await prisma.category.findFirst({ where: { name: 'Комплекти зчеплення' } })
 
-  console.log('🌱 Створення продуктів...')
+  console.log('🌱 Створення товарів...')
 
   const products = await Promise.all([
     prisma.product.create({
@@ -1251,7 +1251,7 @@ async function main() {
     })
   ])
 
-  console.log('🌱 Створення сумісності продуктів з автомобілями...')
+  console.log('🌱 Створення сумісності товарів з автомобілями...')
 
   const allCarYears = await prisma.carYear.findMany({
     include: {
@@ -1591,7 +1591,7 @@ async function main() {
   - ${totalManufacturers} виробників
   - ${totalCarMakes} марок автомобілів
   - ${totalCarModels} моделей автомобілів
-  - ${totalProducts} основних продуктів та ${totalVariants} варіантів продуктів
+  - ${totalProducts} основних товарів та ${totalVariants} варіантів товарів
   - ${totalCompatibilities} зв'язків сумісності`)
 }
 
