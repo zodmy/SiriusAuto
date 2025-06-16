@@ -24,6 +24,8 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const [isCategoriesSectionOpen, setIsCategoriesSectionOpen] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
   const [categories, setCategories] = useState<Category[]>([]);
   const cartRef = useRef<HTMLDivElement>(null);
   const cartButtonRef = useRef<HTMLButtonElement>(null);
@@ -32,6 +34,25 @@ const Header = () => {
   const catalogButtonRef = useRef<HTMLButtonElement>(null);
   const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
   const { items, getTotalItems, getTotalPrice, isEmpty, removeItem, increaseQuantity, decreaseQuantity } = useCart();
+  const toggleCategoryExpansion = (categoryId: number) => {
+    setExpandedCategories((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleCategoriesSection = () => {
+    setIsCategoriesSectionOpen(!isCategoriesSectionOpen);
+    if (isCategoriesSectionOpen) {
+      setExpandedCategories(new Set());
+    }
+  };
+
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories');
@@ -56,17 +77,20 @@ const Header = () => {
       }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setIsMobileMenuOpen(false);
+        setIsCategoriesSectionOpen(false);
+        setExpandedCategories(new Set());
       }
       if (catalogRef.current && !catalogRef.current.contains(event.target as Node) && catalogButtonRef.current && !catalogButtonRef.current.contains(event.target as Node)) {
         setIsCatalogOpen(false);
       }
     };
-
     const handleEscapeKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setIsCartOpen(false);
         setIsMobileMenuOpen(false);
         setIsCatalogOpen(false);
+        setIsCategoriesSectionOpen(false);
+        setExpandedCategories(new Set());
       }
     };
 
@@ -246,7 +270,18 @@ const Header = () => {
       </div>
       <div className='md:hidden p-4'>
         <div className='flex items-center justify-between'>
-          <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md flex items-center justify-center h-10 cursor-pointer' aria-label='Toggle menu'>
+          {' '}
+          <button
+            onClick={() => {
+              setIsMobileMenuOpen(!isMobileMenuOpen);
+              if (isMobileMenuOpen) {
+                setIsCategoriesSectionOpen(false);
+                setExpandedCategories(new Set());
+              }
+            }}
+            className='bg-gray-700 hover:bg-gray-600 px-3 rounded-md flex items-center justify-center h-10 cursor-pointer'
+            aria-label='Toggle menu'
+          >
             {isMobileMenuOpen ? <HiX size={24} /> : <HiMenu size={24} />}
           </button>{' '}
           <Link href='/' className='flex items-center'>
@@ -264,6 +299,7 @@ const Header = () => {
       </div>{' '}
       {isMobileMenuOpen && (
         <div ref={mobileMenuRef} className='md:hidden bg-gray-700 border-t border-gray-600'>
+          {' '}
           <nav className='px-4 py-3 space-y-3'>
             {' '}
             <div>
@@ -271,22 +307,44 @@ const Header = () => {
                 <BiCategory className='mr-2' size={20} />
                 Усі товари
               </Link>
-              {categories.map((category) => (
-                <div key={category.id} className='mb-2'>
-                  <Link href={`/categories/${encodeURIComponent(category.name)}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium cursor-pointer'>
-                    {category.name}
-                  </Link>
-                  {category.children.length > 0 && (
-                    <div className='ml-4 mt-1 space-y-1 bg-gray-800 rounded p-2'>
-                      {category.children.map((child) => (
-                        <Link key={child.id} href={`/categories/${encodeURIComponent(child.name)}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-1 rounded-md hover:bg-gray-600 transition-colors text-sm text-gray-300 cursor-pointer'>
-                          • {child.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+
+              <div className='mb-2'>
+                <button onClick={toggleCategoriesSection} className='flex items-center justify-between w-full text-left px-3 py-3 rounded-md hover:bg-gray-600 transition-colors border-b border-gray-600 font-semibold cursor-pointer' aria-label={isCategoriesSectionOpen ? 'Згорнути категорії' : 'Розгорнути категорії'}>
+                  <span className='flex items-center'>
+                    <BiCategory className='mr-2' size={20} />
+                    Категорії
+                  </span>
+                  {isCategoriesSectionOpen ? <HiMinus size={20} /> : <HiPlus size={20} />}
+                </button>
+
+                {isCategoriesSectionOpen && (
+                  <div className='mt-2 space-y-1'>
+                    {categories.map((category) => (
+                      <div key={category.id} className='ml-4'>
+                        <div className='flex items-center'>
+                          <Link href={`/categories/${encodeURIComponent(category.name)}`} onClick={() => setIsMobileMenuOpen(false)} className='flex-1 text-left px-3 py-2 rounded-md hover:bg-gray-600 transition-colors font-medium cursor-pointer'>
+                            {category.name}
+                          </Link>
+                          {category.children.length > 0 && (
+                            <button onClick={() => toggleCategoryExpansion(category.id)} className='px-2 py-2 text-gray-300 hover:text-white hover:bg-gray-600 rounded-md transition-colors cursor-pointer' aria-label={expandedCategories.has(category.id) ? 'Згорнути підкатегорії' : 'Розгорнути підкатегорії'}>
+                              {expandedCategories.has(category.id) ? <HiMinus size={16} /> : <HiPlus size={16} />}
+                            </button>
+                          )}
+                        </div>
+                        {category.children.length > 0 && expandedCategories.has(category.id) && (
+                          <div className='ml-4 mt-1 space-y-1 bg-gray-800 rounded p-2'>
+                            {category.children.map((child) => (
+                              <Link key={child.id} href={`/categories/${encodeURIComponent(child.name)}`} onClick={() => setIsMobileMenuOpen(false)} className='block w-full text-left px-3 py-1 rounded-md hover:bg-gray-600 transition-colors text-sm text-gray-300 cursor-pointer'>
+                                • {child.name}
+                              </Link>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             {!isInitialCheckComplete ? (
               <div className='px-3 py-2'>
