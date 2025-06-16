@@ -281,7 +281,7 @@ export default function CategoryPage() {
         <div className='bg-white border-b'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
             <div className='relative'>
-              <nav ref={breadcrumbRef} className='flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
+              <nav ref={breadcrumbRef} className='breadcrumb-container flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
                 <div className='flex items-center space-x-1 sm:space-x-2 min-w-max'>
                   {breadcrumbs().map((crumb, index) => (
                     <div key={index} className='flex items-center'>

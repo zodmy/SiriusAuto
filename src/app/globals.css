@@ -132,3 +132,21 @@ textarea {
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+@media (max-width: 640px) {
+  .breadcrumb-container {
+    scroll-behavior: smooth;
+  }
+
+  .breadcrumb-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .breadcrumb-container {
+    direction: rtl;
+  }
+
+  .breadcrumb-container > * {
+    direction: ltr;
+  }
+}
