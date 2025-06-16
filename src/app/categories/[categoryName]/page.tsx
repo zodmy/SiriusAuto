@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart, HiFilter } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
+import { useCart } from '@/lib/hooks/useCart';
 
 interface Category {
   id: number;
@@ -56,6 +57,7 @@ export default function CategoryPage() {
   const searchParams = useSearchParams();
   const categoryName = decodeURIComponent(params.categoryName as string);
   const urlSearchQuery = searchParams.get('search');
+  const { addItem } = useCart();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -482,12 +484,21 @@ export default function CategoryPage() {
                                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
                                 </div>
                               </div>
-                            )}
+                            )}{' '}
                             {viewMode === 'grid' && (
                               <button
                                 disabled={product.stockQuantity === 0}
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  if (product.stockQuantity > 0) {
+                                    addItem({
+                                      id: product.id,
+                                      name: product.name,
+                                      price: product.price,
+                                      image: product.imageUrl,
+                                      stockQuantity: product.stockQuantity,
+                                    });
+                                  }
                                 }}
                                 className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed cursor-pointer'
                               >
@@ -498,11 +509,20 @@ export default function CategoryPage() {
                         </div>
                         {viewMode === 'list' && (
                           <div className='flex-shrink-0 flex items-center gap-3'>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>{' '}
                             <button
                               disabled={product.stockQuantity === 0}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (product.stockQuantity > 0) {
+                                  addItem({
+                                    id: product.id,
+                                    name: product.name,
+                                    price: product.price,
+                                    image: product.imageUrl,
+                                    stockQuantity: product.stockQuantity,
+                                  });
+                                }
                               }}
                               className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
                               title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}

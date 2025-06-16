@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { HiTag, HiChevronRight, HiHome, HiShoppingCart, HiStar, HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
+import { useCart } from '@/lib/hooks/useCart';
 
 interface Product {
   id: number;
@@ -93,6 +94,7 @@ const renderStars = (rating: number) => {
 function ProductPageContent() {
   const params = useParams();
   const productId = params.id as string;
+  const { addItem } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -170,13 +172,21 @@ function ProductPageContent() {
 
     return crumbs;
   };
-
   const handleAddToCart = async () => {
     if (!product || product.stockQuantity === 0) return;
 
     setIsAddingToCart(true);
     try {
-      console.log('Додано до кошика:', { productId: product.id, quantity });
+      addItem(
+        {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.imageUrl,
+          stockQuantity: product.stockQuantity,
+        },
+        quantity
+      );
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
