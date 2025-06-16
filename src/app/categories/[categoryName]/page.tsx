@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart, HiFilter } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
 import { useCart } from '@/lib/hooks/useCart';
+import CartNotification from '@/components/CartNotification';
 
 interface Category {
   id: number;
@@ -73,6 +74,8 @@ export default function CategoryPage() {
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [showAllProducts, setShowAllProducts] = useState<boolean>(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationProductName, setNotificationProductName] = useState('');
 
   useEffect(() => {
     if (urlSearchQuery) {
@@ -498,6 +501,8 @@ export default function CategoryPage() {
                                       image: product.imageUrl,
                                       stockQuantity: product.stockQuantity,
                                     });
+                                    setNotificationProductName(product.name);
+                                    setShowNotification(true);
                                   }
                                 }}
                                 className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed cursor-pointer'
@@ -522,6 +527,8 @@ export default function CategoryPage() {
                                     image: product.imageUrl,
                                     stockQuantity: product.stockQuantity,
                                   });
+                                  setNotificationProductName(product.name);
+                                  setShowNotification(true);
                                 }
                               }}
                               className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
@@ -537,10 +544,13 @@ export default function CategoryPage() {
                 )}
               </div>
             </div>
-          )}
+          )}{' '}
         </div>
       </main>
       <Footer />
+
+      {/* Сповіщення про додавання до кошика */}
+      <CartNotification show={showNotification} productName={notificationProductName} onHide={() => setShowNotification(false)} />
     </div>
   );
 }

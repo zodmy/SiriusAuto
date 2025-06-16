@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { HiTag, HiChevronRight, HiHome, HiShoppingCart, HiStar, HiCheck, HiX, HiInformationCircle } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
 import { useCart } from '@/lib/hooks/useCart';
+import CartNotification from '@/components/CartNotification';
 
 interface Product {
   id: number;
@@ -95,7 +96,6 @@ function ProductPageContent() {
   const params = useParams();
   const productId = params.id as string;
   const { addItem } = useCart();
-
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +104,7 @@ function ProductPageContent() {
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
   const [isCompatible, setIsCompatible] = useState<boolean | null>(null);
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
+  const [showNotification, setShowNotification] = useState(false);
 
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
@@ -187,6 +188,8 @@ function ProductPageContent() {
         },
         quantity
       );
+
+      setShowNotification(true);
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
@@ -383,7 +386,6 @@ function ProductPageContent() {
                   )}
                 </div>
               )}
-
               {activeTab === 'reviews' && (
                 <div>
                   {product.reviews && product.reviews.length > 0 ? (
@@ -412,12 +414,15 @@ function ProductPageContent() {
                     </div>
                   )}
                 </div>
-              )}
+              )}{' '}
             </div>
           </div>
         </div>
       </main>
       <Footer />
+
+      {/* Сповіщення про додавання до кошика */}
+      <CartNotification show={showNotification} productName={product?.name || ''} onHide={() => setShowNotification(false)} />
     </div>
   );
 }
