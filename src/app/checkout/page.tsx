@@ -434,15 +434,7 @@ export default function CheckoutPage() {
               </div>{' '}
               <div className='border-t pt-4 flex-shrink-0'>
                 <div className='space-y-2'>
-                  <div className='flex justify-between items-center'>
-                    <span>Товари:</span>
-                    <span>₴{getTotalPrice().toFixed(2)}</span>
-                  </div>{' '}
-                  <div className='flex justify-between items-center'>
-                    <span>{DELIVERY_METHODS[deliveryInfo.method].name}:</span>
-                    <span>{DELIVERY_METHODS[deliveryInfo.method].price === 0 ? 'Безкоштовно' : DELIVERY_METHODS[deliveryInfo.method].price}</span>
-                  </div>
-                  <div className='border-t pt-2 flex justify-between items-center text-lg font-semibold'>
+                  <div className='flex justify-between items-center text-lg font-semibold'>
                     <span>Загальна сума:</span>
                     <span>₴{getTotalPrice().toFixed(2)}</span>
                   </div>

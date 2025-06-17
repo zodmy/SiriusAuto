@@ -25,7 +25,7 @@ interface CreateOrderRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const token = request.cookies.get('token')?.value;
+    const token = request.cookies.get('auth-token')?.value;
     let userId: number | null = null;
 
     if (token) {
@@ -35,7 +35,9 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Помилка верифікації токена:', error);
       }
-    } const body: CreateOrderRequest = await request.json();
+    }
+
+    const body: CreateOrderRequest = await request.json();
     const { items, customerInfo, deliveryInfo, deliveryPrice } = body;
 
     if (!items || items.length === 0) {
@@ -54,9 +56,7 @@ export async function POST(request: NextRequest) {
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
       select: { id: true, stockQuantity: true, price: true }
-    });
-
-    for (const item of items) {
+    }); for (const item of items) {
       const product = products.find(p => p.id === item.productId);
       if (!product) {
         return NextResponse.json({ error: `Товар з ID ${item.productId} не знайдено` }, { status: 400 });
@@ -64,10 +64,14 @@ export async function POST(request: NextRequest) {
       if (product.stockQuantity < item.quantity) {
         return NextResponse.json({ error: `Недостатньо товару на складі для товару з ID ${item.productId}` }, { status: 400 });
       }
-    } const totalPrice = items.reduce((total, item) => {
+    }
+    const totalPrice = items.reduce((total, item) => {
       const product = products.find(p => p.id === item.productId);
       return total + (product ? Number(product.price) * item.quantity : 0);
-    }, 0) + deliveryPrice; let order; if (userId) {
+    }, 0);
+
+    let order;
+    if (userId) {
       order = await prisma.order.create({
         data: {
           userId: userId,
@@ -78,9 +82,9 @@ export async function POST(request: NextRequest) {
           customerEmail: customerInfo.email,
           customerPhone: customerInfo.phone,
           deliveryMethod: deliveryInfo.method,
-          deliveryPrice: deliveryPrice,
-          novaPoshtaCity: deliveryInfo.novaPoshtaCity,
-          novaPoshtaBranch: deliveryInfo.novaPoshtaBranch,
+          deliveryPrice: deliveryPrice || 0,
+          novaPoshtaCity: deliveryInfo.novaPoshtaCity || null,
+          novaPoshtaBranch: deliveryInfo.novaPoshtaBranch || null,
           orderItems: {
             create: items.map(item => ({
               productId: item.productId,
@@ -97,26 +101,26 @@ export async function POST(request: NextRequest) {
           }
         }
       });
+
+      for (const item of items) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: {
+            stockQuantity: {
+              decrement: item.quantity
+            }
+          }
+        });
+      }
+
+      return NextResponse.json({
+        success: true,
+        orderId: order.id,
+        message: 'Замовлення успішно створено'
+      });
     } else {
       return NextResponse.json({ error: 'Необхідно авторизуватися для створення замовлення' }, { status: 401 });
     }
-
-    for (const item of items) {
-      await prisma.product.update({
-        where: { id: item.productId },
-        data: {
-          stockQuantity: {
-            decrement: item.quantity
-          }
-        }
-      });
-    }
-
-    return NextResponse.json({
-      success: true,
-      orderId: order.id,
-      message: 'Замовлення успішно створено'
-    });
 
   } catch (error) {
     console.error('Помилка створення замовлення:', error);
