@@ -19,33 +19,39 @@ interface CustomerInfo {
 
 interface DeliveryInfo {
   method: 'pickup' | 'novaposhta';
-  novaPoshtaBranch?: string;
   novaPoshtaCity?: string;
+  novaPoshtaBranch?: string;
 }
 
 const DELIVERY_METHODS = {
   pickup: {
-    name: 'Самовивіз',
+    name: 'Самовивіз з магазину',
     price: 0,
-    description: 'Безкоштовно, м. Харків, вул. Полтавський Шлях, 115',
+    description: 'м. Харків, вул. Полтавський Шлях, 115',
   },
   novaposhta: {
-    name: 'Нова Пошта',
-    price: 80,
+    name: 'Доставка Новою Поштою',
+    price: 'За тарифами перевізника',
     description: 'Доставка у відділення або поштомат',
+    delivery: '2-4 дні',
   },
 };
 
 export default function CheckoutPage() {
   const { items, removeItem, getTotalPrice, clearCart, increaseQuantity, decreaseQuantity } = useCart();
 
-  const getDeliveryPrice = () => DELIVERY_METHODS[deliveryInfo.method].price;
-
-  const getTotalWithDelivery = () => getTotalPrice() + getDeliveryPrice();
   const { user, isAuthenticated, isInitialCheckComplete } = useAuth();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({
+    firstName: false,
+    lastName: false,
+    email: false,
+    phone: false,
+    novaPoshtaCity: false,
+    novaPoshtaBranch: false,
+  });
 
   useEffect(() => {
     document.title = 'Оформлення замовлення - Sirius Auto';
@@ -56,7 +62,6 @@ export default function CheckoutPage() {
     email: user?.email || '',
     phone: '+38 (0__) ___-__-__',
   });
-
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
     method: 'pickup',
     novaPoshtaBranch: '',
@@ -121,13 +126,20 @@ export default function CheckoutPage() {
       setError('Кошик порожній');
       return;
     }
-    if (!customerInfo.firstName || !customerInfo.email || !customerInfo.phone || customerInfo.phone.includes('_')) {
-      setError("Будь ласка, заповніть усі обов'язкові поля");
-      return;
-    }
+    const errors = {
+      firstName: !customerInfo.firstName,
+      lastName: !customerInfo.lastName,
+      email: !customerInfo.email,
+      phone: !customerInfo.phone || customerInfo.phone.includes('_'),
+      novaPoshtaCity: deliveryInfo.method === 'novaposhta' && !deliveryInfo.novaPoshtaCity,
+      novaPoshtaBranch: deliveryInfo.method === 'novaposhta' && !deliveryInfo.novaPoshtaBranch,
+    };
 
-    if (deliveryInfo.method === 'novaposhta' && (!deliveryInfo.novaPoshtaCity || !deliveryInfo.novaPoshtaBranch)) {
-      setError('Будь ласка, вкажіть місто та відділення Нової Пошти');
+    setFieldErrors(errors);
+
+    const hasErrors = Object.values(errors).some((error) => error);
+    if (hasErrors) {
+      setError("Будь ласка, заповніть усі обов'язкові поля");
       return;
     }
 
@@ -148,7 +160,6 @@ export default function CheckoutPage() {
           })),
           customerInfo,
           deliveryInfo,
-          deliveryPrice: getDeliveryPrice(),
         }),
       });
 
@@ -184,7 +195,6 @@ export default function CheckoutPage() {
 
     let newValue = template;
     const digits = value.replace(/[^0-9]/g, '').slice(0, 9);
-
     for (let i = 0; i < digits.length; i++) {
       if (digitPositions[i] !== undefined) {
         newValue = newValue.substring(0, digitPositions[i]) + digits[i] + newValue.substring(digitPositions[i] + 1);
@@ -192,6 +202,7 @@ export default function CheckoutPage() {
     }
 
     setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+    setFieldErrors((prev) => ({ ...prev, phone: false }));
     requestAnimationFrame(() => {
       const nextDigitPosition = digitPositions.find((pos) => pos > cursorPosition);
       if (nextDigitPosition !== undefined && digits.length > 0) {
@@ -214,6 +225,7 @@ export default function CheckoutPage() {
       if (prevDigitPosition !== undefined) {
         const newValue = input.value.substring(0, prevDigitPosition) + '_' + input.value.substring(prevDigitPosition + 1);
         setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+        setFieldErrors((prev) => ({ ...prev, phone: false }));
 
         requestAnimationFrame(() => {
           input.setSelectionRange(prevDigitPosition, prevDigitPosition);
@@ -221,11 +233,11 @@ export default function CheckoutPage() {
       }
     } else if (e.key === 'Delete') {
       e.preventDefault();
-
       const currentDigitPosition = digitPositions.find((pos) => pos >= cursorPosition);
       if (currentDigitPosition !== undefined) {
         const newValue = input.value.substring(0, currentDigitPosition) + '_' + input.value.substring(currentDigitPosition + 1);
         setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+        setFieldErrors((prev) => ({ ...prev, phone: false }));
       }
     } else if (e.key >= '0' && e.key <= '9') {
       e.preventDefault();
@@ -234,6 +246,7 @@ export default function CheckoutPage() {
       if (nextDigitPosition !== undefined) {
         const newValue = input.value.substring(0, nextDigitPosition) + e.key + input.value.substring(nextDigitPosition + 1);
         setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+        setFieldErrors((prev) => ({ ...prev, phone: false }));
         requestAnimationFrame(() => {
           const nextEmptyPosition = digitPositions.find((pos) => pos > nextDigitPosition && newValue[pos] === '_');
           const targetPosition = nextEmptyPosition !== undefined ? nextEmptyPosition : nextDigitPosition + 1;
@@ -255,10 +268,18 @@ export default function CheckoutPage() {
       });
     }
   };
-
   const handleInputChange = (field: keyof CustomerInfo, value: string) => {
     setCustomerInfo((prev) => ({ ...prev, [field]: value }));
+    setFieldErrors((prev) => ({ ...prev, [field]: false }));
   };
+  const getFieldClassName = (hasError: boolean) => {
+    const baseClasses = 'w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2';
+    if (hasError) {
+      return `${baseClasses} border-red-500 focus:ring-red-500 bg-red-50`;
+    }
+    return `${baseClasses} border-gray-300 focus:ring-blue-500`;
+  };
+
   if (items.length === 0) {
     return (
       <div className='min-h-screen bg-gray-100 flex flex-col'>
@@ -291,51 +312,74 @@ export default function CheckoutPage() {
               {error && <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4'>{error}</div>}
 
               <form onSubmit={handleSubmit} className='space-y-4'>
+                {' '}
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
                   <div>
                     <label className='block text-sm font-medium text-gray-700 mb-1'>Ім&apos;я *</label>
-                    <input type='text' required value={customerInfo.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
-                  </div>
+                    <input type='text' value={customerInfo.firstName} onChange={(e) => handleInputChange('firstName', e.target.value)} className={getFieldClassName(fieldErrors.firstName)} />
+                  </div>{' '}
                   <div>
-                    <label className='block text-sm font-medium text-gray-700 mb-1'>Прізвище</label>
-                    <input type='text' value={customerInfo.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
+                    <label className='block text-sm font-medium text-gray-700 mb-1'>Прізвище *</label>
+                    <input type='text' value={customerInfo.lastName} onChange={(e) => handleInputChange('lastName', e.target.value)} className={getFieldClassName(fieldErrors.lastName)} />
                   </div>
                 </div>
                 <div>
                   <label className='block text-sm font-medium text-gray-700 mb-1'>Email *</label>
-                  <input type='email' required value={customerInfo.email} onChange={(e) => handleInputChange('email', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
+                  <input type='email' value={customerInfo.email} onChange={(e) => handleInputChange('email', e.target.value)} className={getFieldClassName(fieldErrors.email)} />
                 </div>{' '}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label> <input type='tel' required value={customerInfo.phone} onChange={handlePhoneChange} onKeyDown={handlePhoneKeyDown} onClick={handlePhoneClick} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label> <input type='tel' value={customerInfo.phone} onChange={handlePhoneChange} onKeyDown={handlePhoneKeyDown} onClick={handlePhoneClick} className={getFieldClassName(fieldErrors.phone)} />
                 </div>
                 <div className='border-t pt-6 mt-6'>
-                  <h3 className='text-lg font-semibold mb-4'>Спосіб доставки</h3>
-
+                  <h3 className='text-lg font-semibold mb-4'>Спосіб доставки</h3>{' '}
                   <div className='space-y-3'>
                     {Object.entries(DELIVERY_METHODS).map(([method, info]) => (
-                      <label key={method} className='flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors'>
-                        <input type='radio' name='deliveryMethod' value={method} checked={deliveryInfo.method === method} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, method: e.target.value as 'pickup' | 'novaposhta' }))} className='mt-1 mr-3' />
-                        <div className='flex-1'>
-                          <div className='flex justify-between items-center'>
-                            <span className='font-medium'>{info.name}</span>
-                            <span className='font-semibold text-blue-600'>{info.price === 0 ? 'Безкоштовно' : `₴${info.price}`}</span>
+                      <div key={method} className='border rounded-lg p-4 hover:bg-gray-50 transition-colors'>
+                        <label className='flex items-center cursor-pointer'>
+                          <input type='radio' name='deliveryMethod' value={method} checked={deliveryInfo.method === method} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, method: e.target.value as 'pickup' | 'novaposhta' }))} className='mr-3' />
+                          <div className='flex-1'>
+                            <div className='flex justify-between items-start'>
+                              <div>
+                                <span className='font-medium'>{info.name}</span>
+                                <p className='text-sm text-gray-600 mt-1'>{info.description}</p>
+                              </div>{' '}
+                              <div className='text-right ml-4'>
+                                <span className='font-semibold text-blue-600'>{info.price === 0 ? 'Безкоштовно' : info.price}</span>
+                                {'delivery' in info && <p className='text-xs text-gray-500'>{info.delivery}</p>}
+                              </div>
+                            </div>
                           </div>
-                          <p className='text-sm text-gray-600 mt-1'>{info.description}</p>
-                        </div>
-                      </label>
+                        </label>
+                      </div>
                     ))}
-                  </div>
-
+                  </div>{' '}
                   {deliveryInfo.method === 'novaposhta' && (
                     <div className='mt-4 p-4 bg-blue-50 rounded-lg'>
                       <div className='space-y-4'>
+                        {' '}
                         <div>
                           <label className='block text-sm font-medium text-gray-700 mb-1'>Місто доставки *</label>
-                          <input type='text' required value={deliveryInfo.novaPoshtaCity || ''} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, novaPoshtaCity: e.target.value }))} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' placeholder='Наприклад: Київ, Харків, Одеса' />
+                          <input
+                            type='text'
+                            value={deliveryInfo.novaPoshtaCity || ''}
+                            onChange={(e) => {
+                              setDeliveryInfo((prev) => ({ ...prev, novaPoshtaCity: e.target.value }));
+                              setFieldErrors((prev) => ({ ...prev, novaPoshtaCity: false }));
+                            }}
+                            className={getFieldClassName(fieldErrors.novaPoshtaCity)}
+                          />
                         </div>
                         <div>
-                          <label className='block text-sm font-medium text-gray-700 mb-1'>Відділення або поштомат *</label>
-                          <input type='text' required value={deliveryInfo.novaPoshtaBranch || ''} onChange={(e) => setDeliveryInfo((prev) => ({ ...prev, novaPoshtaBranch: e.target.value }))} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' placeholder='Наприклад: Відділення №1, Поштомат №5001' />
+                          <label className='block text-sm font-medium text-gray-700 mb-1'>Номер відділення або поштомату *</label>
+                          <input
+                            type='text'
+                            value={deliveryInfo.novaPoshtaBranch || ''}
+                            onChange={(e) => {
+                              setDeliveryInfo((prev) => ({ ...prev, novaPoshtaBranch: e.target.value }));
+                              setFieldErrors((prev) => ({ ...prev, novaPoshtaBranch: false }));
+                            }}
+                            className={getFieldClassName(fieldErrors.novaPoshtaBranch)}
+                          />
                         </div>
                       </div>
                     </div>
@@ -393,14 +437,14 @@ export default function CheckoutPage() {
                   <div className='flex justify-between items-center'>
                     <span>Товари:</span>
                     <span>₴{getTotalPrice().toFixed(2)}</span>
-                  </div>
+                  </div>{' '}
                   <div className='flex justify-between items-center'>
                     <span>{DELIVERY_METHODS[deliveryInfo.method].name}:</span>
-                    <span>{getDeliveryPrice() === 0 ? 'Безкоштовно' : `₴${getDeliveryPrice().toFixed(2)}`}</span>
+                    <span>{DELIVERY_METHODS[deliveryInfo.method].price === 0 ? 'Безкоштовно' : DELIVERY_METHODS[deliveryInfo.method].price}</span>
                   </div>
                   <div className='border-t pt-2 flex justify-between items-center text-lg font-semibold'>
                     <span>Загальна сума:</span>
-                    <span>₴{getTotalWithDelivery().toFixed(2)}</span>
+                    <span>₴{getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
