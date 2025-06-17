@@ -62,9 +62,7 @@ export async function PUT(request: NextRequest) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       userId: number;
       email: string;
-    };
-
-    const { firstName, lastName, currentPassword, newPassword } = await request.json();
+    }; const { firstName, lastName, email, currentPassword, newPassword } = await request.json();
 
     if (!firstName) {
       return NextResponse.json(
@@ -72,13 +70,34 @@ export async function PUT(request: NextRequest) {
         { status: 400 }
       );
     }
-    const updateData: {
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Email є обов\'язковим' },
+        { status: 400 }
+      );
+    }
+
+    if (email !== decoded.email) {
+      const existingUser = await prisma.user.findUnique({
+        where: { email },
+      });
+
+      if (existingUser && existingUser.id !== decoded.userId) {
+        return NextResponse.json(
+          { error: 'Цей email вже використовується' },
+          { status: 400 }
+        );
+      }
+    } const updateData: {
       firstName: string;
       lastName: string | null;
+      email: string;
       passwordHash?: string;
     } = {
       firstName,
       lastName: lastName || null,
+      email,
     };
 
     if (newPassword) {

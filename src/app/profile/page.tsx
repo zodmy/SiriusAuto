@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     currentPassword: '',
     newPassword: '',
     confirmNewPassword: '',
@@ -84,6 +85,7 @@ export default function ProfilePage() {
         setFormData({
           firstName: data.firstName,
           lastName: data.lastName || '',
+          email: data.email,
           currentPassword: '',
           newPassword: '',
           confirmNewPassword: '',
@@ -211,11 +213,13 @@ export default function ProfilePage() {
       const updateData: {
         firstName: string;
         lastName: string | null;
+        email: string;
         currentPassword?: string;
         newPassword?: string;
       } = {
         firstName: formData.firstName,
         lastName: formData.lastName || null,
+        email: formData.email,
       };
 
       if (formData.newPassword) {
@@ -409,18 +413,15 @@ export default function ProfilePage() {
                         <input id='lastName' name='lastName' type='text' value={formData.lastName} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
                       </div>
                     </div>
-                  </div>
-
+                  </div>{' '}
                   <div>
                     <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
                       Email адреса
                     </label>
                     <div className='mt-1'>
-                      <input id='email' type='email' value={profileData.email} disabled className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 sm:text-sm cursor-not-allowed' />
-                      <p className='mt-1 text-xs text-gray-500'>Email адресу неможливо змінити</p>
+                      <input id='email' name='email' type='email' required value={formData.email} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
                     </div>
                   </div>
-
                   <div className='border-t border-gray-200 pt-6'>
                     <h3 className='text-lg font-medium text-gray-900 mb-4'>Зміна пароля</h3>
                     <p className='text-sm text-gray-600 mb-4'>Залиште поля порожніми, якщо не хочете змінювати пароль</p>
@@ -463,7 +464,6 @@ export default function ProfilePage() {
                       </div>
                     </div>
                   </div>
-
                   <div className='flex justify-end space-x-3'>
                     <button
                       type='button'
@@ -472,6 +472,7 @@ export default function ProfilePage() {
                         setFormData({
                           firstName: profileData.firstName,
                           lastName: profileData.lastName || '',
+                          email: profileData.email,
                           currentPassword: '',
                           newPassword: '',
                           confirmNewPassword: '',
@@ -499,21 +500,11 @@ export default function ProfilePage() {
                       <dt className='text-sm font-medium text-gray-500'>Прізвище</dt>
                       <dd className='mt-1 text-sm text-gray-900'>{profileData.lastName || 'Не вказано'}</dd>
                     </div>
-                  </div>
+                  </div>{' '}
                   <div>
                     <dt className='text-sm font-medium text-gray-500'>Email адреса</dt>
                     <dd className='mt-1 text-sm text-gray-900'>{profileData.email}</dd>
                   </div>
-                  <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
-                    <div>
-                      <dt className='text-sm font-medium text-gray-500'>Дата реєстрації</dt>
-                      <dd className='mt-1 text-sm text-gray-900'>{new Date(profileData.createdAt).toLocaleDateString('uk-UA')}</dd>
-                    </div>
-                    <div>
-                      <dt className='text-sm font-medium text-gray-500'>Останнє оновлення</dt>
-                      <dd className='mt-1 text-sm text-gray-900'>{new Date(profileData.updatedAt).toLocaleDateString('uk-UA')}</dd>
-                    </div>{' '}
-                  </div>{' '}
                 </div>
               )}
             </div>
@@ -564,13 +555,10 @@ export default function ProfilePage() {
                           </p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getOrderStatusColor(order.status)}`}>{getOrderStatusText(order.status)}</span>
-                      </div>{' '}                      <div className='grid gap-4 mb-4'>
+                      </div>{' '}
+                      <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (
-                          <Link
-                            key={item.id}
-                            href={`/products/${item.product.id}`}
-                            className='flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer'
-                          >
+                          <Link key={item.id} href={`/products/${item.product.id}`} className='flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer'>
                             <div className='flex-shrink-0'>
                               {item.product.imageUrl ? (
                                 <Image src={item.product.imageUrl} alt={item.product.name} width={64} height={64} className='w-16 h-16 object-cover rounded-md' />
