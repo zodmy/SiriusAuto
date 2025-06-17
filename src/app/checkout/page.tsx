@@ -54,7 +54,7 @@ export default function CheckoutPage() {
     firstName: user?.firstName || '',
     lastName: user?.lastName || '',
     email: user?.email || '',
-    phone: '',
+    phone: '+38 (0__) ___-__-__',
   });
 
   const [deliveryInfo, setDeliveryInfo] = useState<DeliveryInfo>({
@@ -121,8 +121,7 @@ export default function CheckoutPage() {
       setError('Кошик порожній');
       return;
     }
-
-    if (!customerInfo.firstName || !customerInfo.email || !customerInfo.phone) {
+    if (!customerInfo.firstName || !customerInfo.email || !customerInfo.phone || customerInfo.phone.includes('_')) {
       setError("Будь ласка, заповніть усі обов'язкові поля");
       return;
     }
@@ -166,6 +165,94 @@ export default function CheckoutPage() {
       setError("Помилка з'єднання із сервером");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const value = input.value;
+    const cursorPosition = input.selectionStart || 0;
+
+    const allowedChars = /[0-9+() -]/;
+    const char = value[cursorPosition - 1];
+
+    if (char && !allowedChars.test(char)) {
+      return;
+    }
+
+    const template = '+38 (0__) ___-__-__';
+    const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+
+    let newValue = template;
+    const digits = value.replace(/[^0-9]/g, '').slice(0, 9);
+
+    for (let i = 0; i < digits.length; i++) {
+      if (digitPositions[i] !== undefined) {
+        newValue = newValue.substring(0, digitPositions[i]) + digits[i] + newValue.substring(digitPositions[i] + 1);
+      }
+    }
+
+    setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+    requestAnimationFrame(() => {
+      const nextDigitPosition = digitPositions.find((pos) => pos > cursorPosition);
+      if (nextDigitPosition !== undefined && digits.length > 0) {
+        input.setSelectionRange(nextDigitPosition, nextDigitPosition);
+      }
+    });
+  };
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const cursorPosition = input.selectionStart || 0;
+    const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const prevDigitPosition = digitPositions
+        .slice()
+        .reverse()
+        .find((pos) => pos < cursorPosition);
+      if (prevDigitPosition !== undefined) {
+        const newValue = input.value.substring(0, prevDigitPosition) + '_' + input.value.substring(prevDigitPosition + 1);
+        setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+
+        requestAnimationFrame(() => {
+          input.setSelectionRange(prevDigitPosition, prevDigitPosition);
+        });
+      }
+    } else if (e.key === 'Delete') {
+      e.preventDefault();
+
+      const currentDigitPosition = digitPositions.find((pos) => pos >= cursorPosition);
+      if (currentDigitPosition !== undefined) {
+        const newValue = input.value.substring(0, currentDigitPosition) + '_' + input.value.substring(currentDigitPosition + 1);
+        setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+      }
+    } else if (e.key >= '0' && e.key <= '9') {
+      e.preventDefault();
+
+      const nextDigitPosition = digitPositions.find((pos) => pos >= cursorPosition && input.value[pos] === '_');
+      if (nextDigitPosition !== undefined) {
+        const newValue = input.value.substring(0, nextDigitPosition) + e.key + input.value.substring(nextDigitPosition + 1);
+        setCustomerInfo((prev) => ({ ...prev, phone: newValue }));
+        requestAnimationFrame(() => {
+          const nextEmptyPosition = digitPositions.find((pos) => pos > nextDigitPosition && newValue[pos] === '_');
+          const targetPosition = nextEmptyPosition !== undefined ? nextEmptyPosition : nextDigitPosition + 1;
+          input.setSelectionRange(targetPosition, targetPosition);
+        });
+      }
+    } else if (!['ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+  const handlePhoneClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+    const firstEmptyPosition = digitPositions.find((pos) => input.value[pos] === '_');
+
+    if (firstEmptyPosition !== undefined) {
+      requestAnimationFrame(() => {
+        input.setSelectionRange(firstEmptyPosition, firstEmptyPosition);
+      });
     }
   };
 
@@ -219,8 +306,7 @@ export default function CheckoutPage() {
                   <input type='email' required value={customerInfo.email} onChange={(e) => handleInputChange('email', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
                 </div>{' '}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label>
-                  <input type='tel' required value={customerInfo.phone} onChange={(e) => handleInputChange('phone', e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label> <input type='tel' required value={customerInfo.phone} onChange={handlePhoneChange} onKeyDown={handlePhoneKeyDown} onClick={handlePhoneClick} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500' />
                 </div>
                 <div className='border-t pt-6 mt-6'>
                   <h3 className='text-lg font-semibold mb-4'>Спосіб доставки</h3>
