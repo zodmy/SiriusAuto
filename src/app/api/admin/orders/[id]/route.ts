@@ -15,28 +15,37 @@ export async function PUT(
         { error: 'Недостатньо прав доступу' },
         { status: 403 }
       );
-    }
+    } const { id } = await params;
+    const orderId = parseInt(id);
+    const requestData = await request.json();
 
-    const orderId = parseInt(params.id);
-    const { status } = await request.json();
-
-    if (!orderId || !status) {
+    if (!orderId) {
       return NextResponse.json(
-        { error: 'ID замовлення та статус є обов\'язковими' },
+        { error: 'ID замовлення є обов\'язковим' },
         { status: 400 }
       );
     }
+    const updateData: Record<string, string | OrderStatus> = {};
 
-    if (!Object.values(OrderStatus).includes(status)) {
-      return NextResponse.json(
-        { error: 'Недійсний статус замовлення' },
-        { status: 400 }
-      );
+    if (requestData.status !== undefined) {
+      if (!Object.values(OrderStatus).includes(requestData.status)) {
+        return NextResponse.json(
+          { error: 'Недійсний статус замовлення' },
+          { status: 400 }
+        );
+      }
+      updateData.status = requestData.status;
     }
 
-    const updatedOrder = await prisma.order.update({
+    if (requestData.customerFirstName !== undefined) updateData.customerFirstName = requestData.customerFirstName;
+    if (requestData.customerLastName !== undefined) updateData.customerLastName = requestData.customerLastName;
+    if (requestData.customerEmail !== undefined) updateData.customerEmail = requestData.customerEmail;
+    if (requestData.customerPhone !== undefined) updateData.customerPhone = requestData.customerPhone;
+    if (requestData.deliveryMethod !== undefined) updateData.deliveryMethod = requestData.deliveryMethod;
+    if (requestData.novaPoshtaCity !== undefined) updateData.novaPoshtaCity = requestData.novaPoshtaCity;
+    if (requestData.novaPoshtaBranch !== undefined) updateData.novaPoshtaBranch = requestData.novaPoshtaBranch; const updatedOrder = await prisma.order.update({
       where: { id: orderId },
-      data: { status },
+      data: updateData,
       include: {
         orderItems: {
           include: {
