@@ -225,9 +225,11 @@ model Review {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PROCESSING
   SHIPPED
   DELIVERED
+  COMPLETED
   CANCELLED
 
   @@map("order_statuses")

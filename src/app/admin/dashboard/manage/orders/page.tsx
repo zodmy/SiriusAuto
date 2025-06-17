@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
-import { HiOutlineArrowLeft, HiOutlineEye, HiOutlineCheck, HiOutlineX, HiOutlineClock } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineEye, HiOutlineX } from 'react-icons/hi';
 
 interface OrderItem {
   id: number;
@@ -95,16 +95,19 @@ export default function OrdersManagementPage() {
       setError('Помилка оновлення статусу замовлення');
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING':
         return 'bg-yellow-100 text-yellow-800';
       case 'CONFIRMED':
         return 'bg-blue-100 text-blue-800';
+      case 'PROCESSING':
+        return 'bg-indigo-100 text-indigo-800';
       case 'SHIPPED':
         return 'bg-purple-100 text-purple-800';
       case 'DELIVERED':
+        return 'bg-teal-100 text-teal-800';
+      case 'COMPLETED':
         return 'bg-green-100 text-green-800';
       case 'CANCELLED':
         return 'bg-red-100 text-red-800';
@@ -112,22 +115,39 @@ export default function OrdersManagementPage() {
         return 'bg-gray-100 text-gray-800';
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'PENDING':
         return 'Очікує';
       case 'CONFIRMED':
         return 'Підтверджено';
+      case 'PROCESSING':
+        return 'Обробляється';
       case 'SHIPPED':
         return 'Відправлено';
       case 'DELIVERED':
         return 'Доставлено';
+      case 'COMPLETED':
+        return 'Виконано';
       case 'CANCELLED':
         return 'Скасовано';
       default:
         return status;
     }
+  };
+
+  const getStatusOptions = () => {
+    const allStatuses = [
+      { value: 'PENDING', label: 'Очікує' },
+      { value: 'CONFIRMED', label: 'Підтверджено' },
+      { value: 'PROCESSING', label: 'Обробляється' },
+      { value: 'SHIPPED', label: 'Відправлено' },
+      { value: 'DELIVERED', label: 'Доставлено' },
+      { value: 'COMPLETED', label: 'Виконано' },
+      { value: 'CANCELLED', label: 'Скасовано' },
+    ];
+
+    return allStatuses;
   };
 
   const filteredOrders = orders.filter((order) => statusFilter === 'all' || order.status === statusFilter);
@@ -158,12 +178,15 @@ export default function OrdersManagementPage() {
           <div className='flex justify-between items-center mb-6'>
             <h1 className='text-2xl font-bold text-gray-900'>Керування замовленнями</h1>
             <div className='flex items-center gap-4'>
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className='px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'>
+              {' '}
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className='px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer'>
                 <option value='all'>Всі замовлення</option>
                 <option value='PENDING'>Очікують</option>
                 <option value='CONFIRMED'>Підтверджені</option>
+                <option value='PROCESSING'>Обробляються</option>
                 <option value='SHIPPED'>Відправлені</option>
                 <option value='DELIVERED'>Доставлені</option>
+                <option value='COMPLETED'>Виконані</option>
                 <option value='CANCELLED'>Скасовані</option>
               </select>
             </div>
@@ -202,8 +225,8 @@ export default function OrdersManagementPage() {
                         </p>
                       </div>
                       <div className='flex items-center gap-2'>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>{getStatusText(order.status)}</span>
-                        <button onClick={() => setSelectedOrder(order)} className='p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors' title='Переглянути деталі'>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>{getStatusText(order.status)}</span>{' '}
+                        <button onClick={() => setSelectedOrder(order)} className='p-2 text-blue-600 hover:bg-blue-50 rounded-md transition-colors cursor-pointer' title='Переглянути деталі'>
                           <HiOutlineEye size={20} />
                         </button>
                       </div>
@@ -212,32 +235,15 @@ export default function OrdersManagementPage() {
                     <div className='flex justify-between items-center'>
                       <div className='text-sm text-gray-600'>
                         Товарів: {order.orderItems.length} • Сума: ₴{parseFloat(order.totalPrice).toFixed(2)}
-                      </div>
-                      <div className='flex gap-2'>
-                        {order.status === 'PENDING' && (
-                          <>
-                            <button onClick={() => updateOrderStatus(order.id, 'CONFIRMED')} className='px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition-colors flex items-center gap-1'>
-                              <HiOutlineCheck size={14} />
-                              Підтвердити
-                            </button>
-                            <button onClick={() => updateOrderStatus(order.id, 'CANCELLED')} className='px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors flex items-center gap-1'>
-                              <HiOutlineX size={14} />
-                              Скасувати
-                            </button>
-                          </>
-                        )}
-                        {order.status === 'CONFIRMED' && (
-                          <button onClick={() => updateOrderStatus(order.id, 'SHIPPED')} className='px-3 py-1 bg-purple-600 text-white text-xs rounded-md hover:bg-purple-700 transition-colors flex items-center gap-1'>
-                            <HiOutlineClock size={14} />
-                            Відправити
-                          </button>
-                        )}
-                        {order.status === 'SHIPPED' && (
-                          <button onClick={() => updateOrderStatus(order.id, 'DELIVERED')} className='px-3 py-1 bg-blue-600 text-white text-xs rounded-md hover:bg-blue-700 transition-colors flex items-center gap-1'>
-                            <HiOutlineCheck size={14} />
-                            Доставлено
-                          </button>
-                        )}
+                      </div>{' '}
+                      <div className='flex gap-2 items-center'>
+                        <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)} className='px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer'>
+                          {getStatusOptions().map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
@@ -246,15 +252,14 @@ export default function OrdersManagementPage() {
             </div>
           )}
         </div>
-      </div>
-
+      </div>{' '}
       {selectedOrder && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'>
-          <div className='bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto'>
+        <div className='fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center p-4 z-50'>
+          <div className='bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200'>
             <div className='p-6'>
               <div className='flex justify-between items-center mb-4'>
                 <h2 className='text-xl font-bold'>Деталі замовлення #{selectedOrder.id}</h2>
-                <button onClick={() => setSelectedOrder(null)} className='p-2 hover:bg-gray-100 rounded-md'>
+                <button onClick={() => setSelectedOrder(null)} className='p-2 hover:bg-gray-100 rounded-md cursor-pointer'>
                   <HiOutlineX size={20} />
                 </button>
               </div>
@@ -278,10 +283,10 @@ export default function OrdersManagementPage() {
                 </div>
 
                 <div>
-                  <h3 className='font-medium text-gray-900 mb-2'>Товари</h3>
+                  <h3 className='font-medium text-gray-900 mb-2'>Товари</h3>{' '}
                   <div className='space-y-2'>
                     {selectedOrder.orderItems.map((item) => (
-                      <div key={item.id} className='flex items-center space-x-3 p-3 bg-gray-50 rounded-lg'>
+                      <Link key={item.id} href={`/products/${item.product.id}`} className='flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer'>
                         <div className='flex-shrink-0'>
                           {item.product.imageUrl ? (
                             <Image src={item.product.imageUrl} alt={item.product.name} width={48} height={48} className='w-12 h-12 object-cover rounded-md' />
@@ -292,13 +297,13 @@ export default function OrdersManagementPage() {
                           )}
                         </div>
                         <div className='flex-1'>
-                          <h4 className='text-sm font-medium text-gray-900'>{item.product.name}</h4>
+                          <h4 className='text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors'>{item.product.name}</h4>
                           <p className='text-sm text-gray-500'>
                             Кількість: {item.quantity} × ₴{parseFloat(item.price).toFixed(2)}
                           </p>
                         </div>
                         <div className='text-sm font-medium text-gray-900'>₴{(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
