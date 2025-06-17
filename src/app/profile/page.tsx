@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/components/AuthProvider';
@@ -23,6 +25,8 @@ interface OrderItem {
   product: {
     id: number;
     name: string;
+    imageUrl?: string;
+    price: string;
   };
 }
 
@@ -560,19 +564,33 @@ export default function ProfilePage() {
                           </p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getOrderStatusColor(order.status)}`}>{getOrderStatusText(order.status)}</span>
-                      </div>
-
-                      <div className='space-y-2 mb-3'>
+                      </div>{' '}                      <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (
-                          <div key={item.id} className='flex justify-between items-center text-sm'>
-                            <span className='text-gray-700'>
-                              {item.product.name} × {item.quantity}
-                            </span>
-                            <span className='font-medium'>{parseFloat(item.price).toFixed(2)} ₴</span>
-                          </div>
+                          <Link
+                            key={item.id}
+                            href={`/products/${item.product.id}`}
+                            className='flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer'
+                          >
+                            <div className='flex-shrink-0'>
+                              {item.product.imageUrl ? (
+                                <Image src={item.product.imageUrl} alt={item.product.name} width={64} height={64} className='w-16 h-16 object-cover rounded-md' />
+                              ) : (
+                                <div className='w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center'>
+                                  <span className='text-gray-400 text-xs'>Фото</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className='flex-1 min-w-0'>
+                              <h4 className='text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition-colors'>{item.product.name}</h4>
+                              <p className='text-sm text-gray-500'>Кількість: {item.quantity}</p>
+                              <p className='text-sm font-medium text-gray-900'>{parseFloat(item.price).toFixed(2)} ₴ за одиницю</p>
+                            </div>
+                            <div className='text-right'>
+                              <p className='text-sm font-bold text-gray-900'>{(parseFloat(item.price) * item.quantity).toFixed(2)} ₴</p>
+                            </div>
+                          </Link>
                         ))}
                       </div>
-
                       <div className='border-t pt-3 flex justify-between items-center'>
                         <span className='text-sm text-gray-500'>Загальна сума:</span>
                         <span className='font-bold text-lg text-gray-900'>{parseFloat(order.totalPrice).toFixed(2)} ₴</span>
