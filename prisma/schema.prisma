@@ -171,7 +171,6 @@ model Order {
   customerEmail     String
   customerPhone     String
   deliveryMethod    String
-  deliveryPrice     Decimal     @default(0)
   novaPoshtaCity    String?
   novaPoshtaBranch  String?
   createdAt         DateTime    @default(now())

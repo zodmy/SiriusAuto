@@ -27,7 +27,6 @@ interface Order {
   customerEmail: string;
   customerPhone: string;
   deliveryMethod: string;
-  deliveryPrice: number;
   novaPoshtaCity?: string;
   novaPoshtaBranch?: string;
   orderItems: OrderItem[];

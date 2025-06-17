@@ -20,7 +20,6 @@ interface CreateOrderRequest {
     novaPoshtaBranch?: string;
     novaPoshtaCity?: string;
   };
-  deliveryPrice: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CreateOrderRequest = await request.json();
-    const { items, customerInfo, deliveryInfo, deliveryPrice } = body;
+    const { items, customerInfo, deliveryInfo } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Кошик порожній' }, { status: 400 });
@@ -82,7 +81,6 @@ export async function POST(request: NextRequest) {
           customerEmail: customerInfo.email,
           customerPhone: customerInfo.phone,
           deliveryMethod: deliveryInfo.method,
-          deliveryPrice: deliveryPrice || 0,
           novaPoshtaCity: deliveryInfo.novaPoshtaCity || null,
           novaPoshtaBranch: deliveryInfo.novaPoshtaBranch || null,
           orderItems: {
