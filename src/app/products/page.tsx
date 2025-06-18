@@ -38,6 +38,14 @@ interface Product {
     id: number;
     name: string;
   };
+  compatibleVehicles?: Array<{
+    id: number;
+    carMake: { id: number; name: string };
+    carModel: { id: number; name: string };
+    carYear: { id: number; year: number };
+    carBodyType: { id: number; name: string };
+    carEngine: { id: number; name: string };
+  }>;
 }
 
 interface SavedCarSelection {
@@ -148,6 +156,20 @@ function ProductsPageContent() {
           params.append('category', categoryName);
         }
 
+        if (debouncedSearchQuery) {
+          params.append('search', debouncedSearchQuery);
+        }
+
+        if (priceRange.min) {
+          params.append('minPrice', priceRange.min);
+        }
+        if (priceRange.max) {
+          params.append('maxPrice', priceRange.max);
+        }
+        if (inStockOnly) {
+          params.append('inStock', 'true');
+        }
+
         if (savedCar && !showAllProducts) {
           params.append('carMake', savedCar.makeName);
           params.append('carModel', savedCar.modelName);
@@ -175,7 +197,7 @@ function ProductsPageContent() {
       }
     };
     fetchManufacturers();
-  }, [categoryName, savedCar, showAllProducts]);
+  }, [categoryName, debouncedSearchQuery, priceRange, inStockOnly, savedCar, showAllProducts]);
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -493,9 +515,9 @@ function ProductsPageContent() {
                           )}
                         </div>
                         <div className={`${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : 'flex-1 flex flex-col'}`}>
+                          {' '}
                           <div className='mb-2'>
-                            <h3 className={`font-semibold text-gray-900 line-clamp-2 ${viewMode === 'list' ? 'text-lg mb-1' : 'text-base mb-2'}`}>{product.name}</h3>
-                            {product.manufacturer && <p className='text-xs text-gray-500 mb-1'>{product.manufacturer.name}</p>}
+                            <h3 className={`font-semibold text-gray-900 line-clamp-2 ${viewMode === 'list' ? 'text-lg mb-1' : 'text-base mb-2'}`}>{product.name}</h3> <div className='flex items-center gap-2 mb-1'>{product.manufacturer && <p className='text-xs text-gray-500'>{product.manufacturer.name}</p>}</div>
                           </div>
                           {product.description && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow'>{product.description}</p>}
                           <div className='mt-auto'>

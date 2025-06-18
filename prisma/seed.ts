@@ -67,7 +67,6 @@ async function main() {
   await prisma.product.deleteMany()
   await prisma.category.deleteMany()
   await prisma.manufacturer.deleteMany()
-
   console.log('🌱 Створення категорій...')
 
   await Promise.all([
@@ -169,6 +168,20 @@ async function main() {
             { name: 'Термостати' },
             { name: 'Вентилятори радіатора' },
             { name: 'Радіатори пічки' }
+          ]
+        }
+      }
+    }),
+    prisma.category.create({
+      data: {
+        name: 'Аксесуари',
+        children: {
+          create: [
+            { name: 'Інструменти' },
+            { name: 'Безпека та аварійність' },
+            { name: 'Догляд за автомобілем' },
+            { name: 'Комфорт та зручність' },
+            { name: 'Захисні покриття' }
           ]
         }
       }
@@ -687,6 +700,12 @@ async function main() {
   const thermostatCategory = await prisma.category.findFirst({ where: { name: 'Термостати' } })
   const generatorCategory = await prisma.category.findFirst({ where: { name: 'Генератори та комплектуючі' } })
   const clutchCategory = await prisma.category.findFirst({ where: { name: 'Комплекти зчеплення' } })
+
+  const toolsCategory = await prisma.category.findFirst({ where: { name: 'Інструменти' } })
+  const safetyCategory = await prisma.category.findFirst({ where: { name: 'Безпека та аварійність' } })
+  const careCategory = await prisma.category.findFirst({ where: { name: 'Догляд за автомобілем' } })
+  const comfortCategory = await prisma.category.findFirst({ where: { name: 'Комфорт та зручність' } })
+  const protectionCategory = await prisma.category.findFirst({ where: { name: 'Захисні покриття' } })
 
   console.log('🌱 Створення товарів...')
 
@@ -1248,6 +1267,150 @@ async function main() {
         isVariant: false,
         productOptions: { create: [{ name: 'Положення', value: 'Передня вісь' }, { name: 'Матеріал втулок', value: 'Поліуретан' }] }
       }
+    }),
+
+    prisma.product.create({
+      data: {
+        name: 'Домкрат гідравлічний подкатний 2т',
+        description: 'Надійний гідравлічний домкрат для підняття автомобіля. Максимальна вантажопідйомність 2 тонни.',
+        price: 2500.00,
+        stockQuantity: 15,
+        imageUrl: getNextProductImage(),
+        categoryId: toolsCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Тип', value: 'Гідравлічний' }, { name: 'Вантажопідйомність', value: '2 т' }, { name: 'Висота підйому', value: '85-330 мм' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Набір ключів гайкових 8-24мм',
+        description: 'Набір гайкових ключів з хромованої сталі для обслуговування автомобіля.',
+        price: 1200.00,
+        stockQuantity: 25,
+        imageUrl: getNextProductImage(),
+        categoryId: toolsCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Матеріал', value: 'Хромована сталь' }, { name: 'Кількість', value: '12 шт' }, { name: 'Розміри', value: '8-24 мм' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Сокира туристична компактна',
+        description: 'Компактна сокира для аварійних ситуацій та туристичних поїздок.',
+        price: 850.00,
+        stockQuantity: 30,
+        imageUrl: getNextProductImage(),
+        categoryId: safetyCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Довжина', value: '35 см' }, { name: 'Вага', value: '0.8 кг' }, { name: 'Матеріал рукоятки', value: 'Фібергласс' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Аптечка автомобільна АМА-1',
+        description: 'Стандартна автомобільна аптечка відповідно до вимог ПДР України.',
+        price: 420.00,
+        stockQuantity: 50,
+        imageUrl: getNextProductImage(),
+        categoryId: safetyCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Тип', value: 'АМА-1' }, { name: 'Кількість позицій', value: '18 шт' }, { name: 'Термін придатності', value: '3 роки' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Трикутник аварійний відбиваючий',
+        description: 'Складний аварійний знак для позначення місця ДТП або поломки.',
+        price: 180.00,
+        stockQuantity: 40,
+        imageUrl: getNextProductImage(),
+        categoryId: safetyCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Hella')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Матеріал', value: 'Пластик з відбивачами' }, { name: 'Розмір', value: '440x440x440 мм' }, { name: 'Вага', value: '0.5 кг' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Вогнегасник автомобільний 2кг',
+        description: 'Порошковий вогнегасник для автомобіля. Придатний для гасіння пожеж класу A, B, C.',
+        price: 650.00,
+        stockQuantity: 20,
+        imageUrl: getNextProductImage(),
+        categoryId: safetyCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Bosch')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Тип', value: 'Порошковий' }, { name: 'Вага', value: '2 кг' }, { name: 'Класи пожеж', value: 'A, B, C' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Шампунь для миття авто концентрат 1л',
+        description: 'Концентрований шампунь для безконтактного миття автомобіля. Нейтральний pH.',
+        price: 320.00,
+        stockQuantity: 35,
+        imageUrl: getNextProductImage(),
+        categoryId: careCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Shell')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Тип', value: 'Концентрат' }, { name: "Об'єм", value: '1 л' }, { name: 'pH', value: 'Нейтральний' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Воск для захисту кузова 500мл',
+        description: 'Захисний воск для кузова автомобіля з водовідштовхувальним ефектом.',
+        price: 450.00,
+        stockQuantity: 25,
+        imageUrl: getNextProductImage(),
+        categoryId: careCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Shell')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Тип', value: 'Рідкий воск' }, { name: "Об'єм", value: '500 мл' }, { name: 'Ефект', value: 'Водовідштовхувальний' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Підлокітник універсальний чорний',
+        description: 'Універсальний підлокітник зі штучної шкіри для підвищення комфорту водіння.',
+        price: 850.00,
+        stockQuantity: 20,
+        imageUrl: getNextProductImage(),
+        categoryId: comfortCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Continental')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Колір', value: 'Чорний' }, { name: 'Матеріал', value: 'Штучна шкіра' }, { name: 'Розміри', value: '300x200x80 мм' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Килимки гумові універсальні 4шт',
+        description: 'Набір універсальних гумових килимків для салону автомобіля.',
+        price: 1200.00,
+        stockQuantity: 30,
+        imageUrl: getNextProductImage(),
+        categoryId: protectionCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Continental')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Матеріал', value: 'Гума' }, { name: 'Кількість', value: '4 шт' }, { name: 'Тип', value: 'Universal' }] }
+      }
+    }),
+    prisma.product.create({
+      data: {
+        name: 'Чохли на сидіння універсальні тканинні',
+        description: 'Універсальні чохли на передні сидіння з міцної тканини.',
+        price: 2200.00,
+        stockQuantity: 15,
+        imageUrl: getNextProductImage(),
+        categoryId: protectionCategory!.id,
+        manufacturerId: manufacturers.find(m => m.name === 'Continental')!.id,
+        isVariant: false,
+        productOptions: { create: [{ name: 'Матеріал', value: 'Поліестер' }, { name: 'Комплект', value: 'Передні сидіння' }, { name: 'Колір', value: 'Сірий' }] }
+      }
     })
   ])
 
@@ -1260,7 +1423,7 @@ async function main() {
     }
   })
 
-  const compatibilities = []
+  const compatibilities: ReturnType<typeof prisma.compatibility.create>[] = []
 
   const productAirFilterBosch = products.find(p => p.name === 'Повітряний фільтр Bosch S0123')
   const carToyotaCamry2018_20L = allCarYears.find(cy =>
@@ -1571,6 +1734,185 @@ async function main() {
         },
       })
     );
+  }
+
+  const productOilFilter = products.find(p => p.name === 'Масляний фільтр Mann W 712/75');
+  if (productOilFilter) {
+    const carToyotaRAV4 = allCarYears.find(cy =>
+      cy.model.make.name === 'Toyota' &&
+      cy.model.name === 'RAV4' &&
+      cy.year === 2019
+    );
+    if (carToyotaRAV4) {
+      const bodyType = carToyotaRAV4.bodyTypes.find(bt => bt.name === 'SUV')!;
+      const engine = bodyType.engines.find(e => e.name === '2.0L I4')!;
+      compatibilities.push(
+        prisma.compatibility.create({
+          data: {
+            productId: productOilFilter.id,
+            carMakeId: carToyotaRAV4.model.make.id,
+            carModelId: carToyotaRAV4.model.id,
+            carYearId: carToyotaRAV4.id,
+            carBodyTypeId: bodyType.id,
+            carEngineId: engine.id,
+          },
+        })
+      );
+    }
+  }
+
+  const productFuelFilter = products.find(p => p.name === 'Паливний фільтр Bosch F 026 402 067');
+  if (productFuelFilter) {
+    const carBMW3Series = allCarYears.find(cy =>
+      cy.model.make.name === 'BMW' &&
+      cy.model.name === '3 Series' &&
+      cy.year === 2019
+    );
+    if (carBMW3Series) {
+      const bodyType = carBMW3Series.bodyTypes.find(bt => bt.name === 'Седан')!;
+      const engine = bodyType.engines.find(e => e.name === '2.0L I4 Turbo')!;
+      compatibilities.push(
+        prisma.compatibility.create({
+          data: {
+            productId: productFuelFilter.id,
+            carMakeId: carBMW3Series.model.make.id,
+            carModelId: carBMW3Series.model.id,
+            carYearId: carBMW3Series.id,
+            carBodyTypeId: bodyType.id,
+            carEngineId: engine.id,
+          },
+        })
+      );
+    }
+  }
+  const productSparkPlugNGK2 = products.find(p => p.name === 'Свічка запалювання NGK BKR6E-11');
+  if (productSparkPlugNGK2) {
+    const carHondaCRV = allCarYears.find(cy =>
+      cy.model.make.name === 'Honda' &&
+      cy.model.name === 'CR-V' &&
+      cy.year === 2018
+    );
+    if (carHondaCRV) {
+      const bodyType = carHondaCRV.bodyTypes.find(bt => bt.name === 'SUV')!;
+      const engine = bodyType.engines.find(e => e.name === '1.5L VTEC Turbo')!;
+      compatibilities.push(
+        prisma.compatibility.create({
+          data: {
+            productId: productSparkPlugNGK2.id,
+            carMakeId: carHondaCRV.model.make.id,
+            carModelId: carHondaCRV.model.id,
+            carYearId: carHondaCRV.id,
+            carBodyTypeId: bodyType.id,
+            carEngineId: engine.id,
+          },
+        })
+      );
+    }
+  }
+
+  const productSparkPlugDenso = products.find(p => p.name === 'Свічка запалювання Denso IK20TT');
+  if (productSparkPlugDenso) {
+    const carVWPassat = allCarYears.find(cy =>
+      cy.model.make.name === 'Volkswagen' &&
+      cy.model.name === 'Passat' &&
+      cy.year === 2019
+    );
+    if (carVWPassat) {
+      const bodyType = carVWPassat.bodyTypes.find(bt => bt.name === 'Седан')!;
+      const engine = bodyType.engines.find(e => e.name === '1.4L TSI')!;
+      compatibilities.push(
+        prisma.compatibility.create({
+          data: {
+            productId: productSparkPlugDenso.id,
+            carMakeId: carVWPassat.model.make.id,
+            carModelId: carVWPassat.model.id,
+            carYearId: carVWPassat.id,
+            carBodyTypeId: bodyType.id,
+            carEngineId: engine.id,
+          },
+        })
+      );
+    }
+  }
+
+  const productBrakesTRW = products.find(p => p.name === 'Гальмівні колодки TRW GDB1515');
+  if (productBrakesTRW) {
+    const carFordFocus = allCarYears.find(cy =>
+      cy.model.make.name === 'Ford' &&
+      cy.model.name === 'Focus' &&
+      cy.year === 2018
+    );
+    if (carFordFocus) {
+      const bodyType = carFordFocus.bodyTypes.find(bt => bt.name === 'Хетчбек')!;
+      const engine = bodyType.engines.find(e => e.name === '1.0L EcoBoost')!;
+      compatibilities.push(
+        prisma.compatibility.create({
+          data: {
+            productId: productBrakesTRW.id,
+            carMakeId: carFordFocus.model.make.id,
+            carModelId: carFordFocus.model.id,
+            carYearId: carFordFocus.id,
+            carBodyTypeId: bodyType.id,
+            carEngineId: engine.id,
+          },
+        })
+      );
+    }
+  }
+  const productsWithCompatibility = new Set([
+    products.find(p => p.name === 'Повітряний фільтр Bosch S0123')?.id,
+    products.find(p => p.name === 'Гальмівні колодки Brembo P 83 140')?.id,
+    products.find(p => p.name === 'Моторна олива Shell Helix Ultra 5W-40')?.id,
+    products.find(p => p.name === 'Амортизатор Monroe 72532')?.id,
+    products.find(p => p.name === 'Ремінь ГРМ Gates 5491XS')?.id,
+    products.find(p => p.name === 'Водяна помпа Gates WP0031')?.id,
+    products.find(p => p.name === 'Термостат Gates TH33882G1')?.id,
+    products.find(p => p.name === 'Комплект зчеплення Sachs 3000 951 301')?.id,
+    products.find(p => p.name === 'Генератор Bosch 0124525037')?.id,
+    products.find(p => p.name === 'Свічка розжарювання Bosch 0250403009')?.id,
+    products.find(p => p.name === 'Салонний фільтр Mann CU 2545')?.id,
+    products.find(p => p.name === 'Моторна олива Total Quartz 9000 5W-30')?.id,
+    products.find(p => p.name === 'Масляний фільтр Mann W 712/75')?.id,
+    products.find(p => p.name === 'Паливний фільтр Bosch F 026 402 067')?.id,
+    products.find(p => p.name === 'Свічка запалювання NGK BKR6E-11')?.id,
+    products.find(p => p.name === 'Свічка запалювання Denso IK20TT')?.id,
+    products.find(p => p.name === 'Гальмівні колодки TRW GDB1515')?.id,
+  ].filter(id => id !== undefined));
+
+  const productsWithoutCompatibility = products.filter(product => {
+    const productCategory = [
+      toolsCategory, safetyCategory, careCategory, comfortCategory, protectionCategory
+    ].find(cat => cat && cat.id === product.categoryId);
+
+    if (productCategory) return false;
+
+    return !productsWithCompatibility.has(product.id);
+  });
+
+  const universalCar = allCarYears.find(cy =>
+    cy.model.make.name === 'Toyota' &&
+    cy.model.name === 'Camry' &&
+    cy.year === 2018
+  );
+
+  if (universalCar) {
+    const bodyType = universalCar.bodyTypes.find(bt => bt.name === 'Седан')!;
+    const engine = bodyType.engines.find(e => e.name === '2.0L I4')!;
+
+    productsWithoutCompatibility.forEach(product => {
+      compatibilities.push(
+        prisma.compatibility.create({
+          data: {
+            productId: product.id,
+            carMakeId: universalCar.model.make.id,
+            carModelId: universalCar.model.id,
+            carYearId: universalCar.id,
+            carBodyTypeId: bodyType.id,
+            carEngineId: engine.id,
+          },
+        })
+      );
+    });
   }
 
   await Promise.all(compatibilities)
