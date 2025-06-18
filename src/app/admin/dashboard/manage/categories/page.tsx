@@ -79,7 +79,7 @@ export default function ManageCategoriesPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
   useEffect(() => {
-    document.title = 'Управління категоріями - Адміністратор | Sirius Auto';
+    document.title = 'Управління категоріями - Адміністратор - Sirius Auto';
   }, []);
 
   const normalizeString = useCallback((str: string) => {

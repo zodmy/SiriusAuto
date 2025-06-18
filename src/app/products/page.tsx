@@ -76,13 +76,12 @@ function ProductsPageContent() {
   const [showNotification, setShowNotification] = useState(false);
   const [notificationProductName, setNotificationProductName] = useState('');
   const { breadcrumbRef, scrollToEnd } = useBreadcrumbScroll();
-
   useEffect(() => {
     let title = 'Товари - Sirius Auto';
     if (currentCategory) {
-      title = `${currentCategory.name} - автозапчастини | Sirius Auto`;
+      title = `${currentCategory.name} - автозапчастини - Sirius Auto`;
     } else if (debouncedSearchQuery) {
-      title = `Пошук "${debouncedSearchQuery}" - автозапчастини | Sirius Auto`;
+      title = `Пошук "${debouncedSearchQuery}" - автозапчастини - Sirius Auto`;
     }
     document.title = title;
   }, [currentCategory, debouncedSearchQuery]);

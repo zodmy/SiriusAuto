@@ -77,7 +77,7 @@ export default function Home() {
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
 
   useEffect(() => {
-    document.title = 'Sirius Auto - автозапчастини онлайн | Магазин автозапчастин';
+    document.title = 'Sirius Auto - автозапчастини онлайн - Магазин автозапчастин';
   }, []);
 
   useEffect(() => {

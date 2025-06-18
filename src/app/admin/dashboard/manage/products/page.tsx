@@ -615,7 +615,7 @@ export default function ManageProductsPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
   useEffect(() => {
-    document.title = 'Управління товарами - Адміністратор | Sirius Auto';
+    document.title = 'Управління товарами - Адміністратор - Sirius Auto';
   }, []);
 
   const [products, setProducts] = useState<Product[]>([]);

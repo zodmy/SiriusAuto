@@ -14,10 +14,6 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: {
-    default: 'Sirius Auto - магазин автомобільних запчастин',
-    template: '%s | Sirius Auto',
-  },
   description: 'Sirius Auto - ваш надійний партнер у світі автомобільних запчастин. Великий вибір запчастин, швидка доставка, доступні ціни.',
   keywords: ['автозапчастини', 'запчастини', 'автомобіль', 'ремонт', 'обслуговування', 'Україна'],
   authors: [{ name: 'Sirius Auto' }],
@@ -49,6 +45,7 @@ export default function RootLayout({
   return (
     <html lang='uk'>
       <head>
+        <title>Sirius Auto - магазин автомобільних запчастин</title>
         <meta name='viewport' content='width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no' />
         <meta name='apple-mobile-web-app-capable' content='yes' />
         <meta name='mobile-web-app-capable' content='yes' />

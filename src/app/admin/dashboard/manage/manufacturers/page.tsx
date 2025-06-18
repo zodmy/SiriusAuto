@@ -77,7 +77,7 @@ export default function ManageManufacturersPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
   useEffect(() => {
-    document.title = 'Управління виробниками - Адміністратор | Sirius Auto';
+    document.title = 'Управління виробниками - Адміністратор - Sirius Auto';
   }, []);
 
   const normalizeString = useCallback((str: string) => {
