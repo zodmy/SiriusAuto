@@ -210,6 +210,9 @@ export default function CategoryPage() {
           params.append('carBodyType', savedCar.bodyTypeName);
           params.append('carEngine', savedCar.engineName);
         }
+        if (showAllProducts) {
+          params.append('showAllProducts', 'true');
+        }
 
         params.append('sort', sortBy);
 
@@ -360,12 +363,12 @@ export default function CategoryPage() {
                         <input type='checkbox' checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
                         <span className='text-sm font-medium text-gray-700'>Тільки в наявності</span>
                       </label>
-                    </div>
+                    </div>{' '}
                     {savedCar && (
                       <div>
                         <label className='flex items-center gap-2 cursor-pointer'>
                           <input type='checkbox' checked={showAllProducts} onChange={(e) => setShowAllProducts(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
-                          <span className='text-sm font-medium text-gray-700'>Показати всі товари</span>
+                          <span className='text-sm font-medium text-gray-700'>Показувати несумісні</span>
                         </label>
                         <p className='text-xs text-gray-500 mt-1'>Показувати товари, несумісні з обраним автомобілем</p>
                       </div>

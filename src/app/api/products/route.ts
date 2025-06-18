@@ -12,13 +12,12 @@ export async function GET(request: NextRequest) {
     const manufacturers = searchParams.get('manufacturers');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
-    const inStock = searchParams.get('inStock');
-
-    const carMake = searchParams.get('carMake');
+    const inStock = searchParams.get('inStock'); const carMake = searchParams.get('carMake');
     const carModel = searchParams.get('carModel');
     const carYear = searchParams.get('carYear');
     const carBodyType = searchParams.get('carBodyType');
     const carEngine = searchParams.get('carEngine');
+    const showAllProducts = searchParams.get('showAllProducts');
 
     const baseConditions: Prisma.ProductWhereInput[] = [];
 
@@ -73,9 +72,7 @@ export async function GET(request: NextRequest) {
 
     if (baseConditions.length > 0) {
       where.AND = baseConditions;
-    }
-
-    if (carMake && carModel && carYear && carBodyType && carEngine) {
+    } if (carMake && carModel && carYear && carBodyType && carEngine && showAllProducts !== 'true') {
       const carCompatibilityCondition = {
         OR: [
           {
