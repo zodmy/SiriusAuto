@@ -3,6 +3,10 @@ import { checkAdmin } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { OrderStatus } from '@prisma/client';
 
+const normalizePhoneNumber = (phone: string) => {
+  return phone.replace(/[^\d+]/g, '');
+};
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -35,12 +39,10 @@ export async function PUT(
         );
       }
       updateData.status = requestData.status;
-    }
-
-    if (requestData.customerFirstName !== undefined) updateData.customerFirstName = requestData.customerFirstName;
+    } if (requestData.customerFirstName !== undefined) updateData.customerFirstName = requestData.customerFirstName;
     if (requestData.customerLastName !== undefined) updateData.customerLastName = requestData.customerLastName;
     if (requestData.customerEmail !== undefined) updateData.customerEmail = requestData.customerEmail;
-    if (requestData.customerPhone !== undefined) updateData.customerPhone = requestData.customerPhone;
+    if (requestData.customerPhone !== undefined) updateData.customerPhone = normalizePhoneNumber(requestData.customerPhone);
     if (requestData.deliveryMethod !== undefined) updateData.deliveryMethod = requestData.deliveryMethod;
     if (requestData.novaPoshtaCity !== undefined) updateData.novaPoshtaCity = requestData.novaPoshtaCity;
     if (requestData.novaPoshtaBranch !== undefined) updateData.novaPoshtaBranch = requestData.novaPoshtaBranch; const updatedOrder = await prisma.order.update({

@@ -101,31 +101,52 @@ export default function OrdersManagementPage() {
       setError('Помилка оновлення статусу замовлення');
     }
   };
-
   const startEditingOrder = (order: Order) => {
     setEditingOrder(order.id);
+
+    const formatPhoneForEdit = (phone: string) => {
+      const normalized = normalizePhoneNumber(phone);
+      const template = '+38 (0__) ___-__-__';
+      const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+
+      let newValue = template;
+      const digits = normalized.replace(/[^0-9]/g, '').slice(-9);
+
+      for (let i = 0; i < digits.length; i++) {
+        if (digitPositions[i] !== undefined) {
+          newValue = newValue.substring(0, digitPositions[i]) + digits[i] + newValue.substring(digitPositions[i] + 1);
+        }
+      }
+
+      return newValue;
+    };
+
     setEditForm({
       customerFirstName: order.customerFirstName,
       customerLastName: order.customerLastName,
       customerEmail: order.customerEmail,
-      customerPhone: order.customerPhone,
+      customerPhone: formatPhoneForEdit(order.customerPhone),
       deliveryMethod: order.deliveryMethod,
       novaPoshtaCity: order.novaPoshtaCity || '',
       novaPoshtaBranch: order.novaPoshtaBranch || '',
     });
   };
-
   const updateOrderDetails = async (orderId: number) => {
     try {
+      const normalizedEditForm = {
+        ...editForm,
+        customerPhone: normalizePhoneNumber(editForm.customerPhone),
+      };
+
       const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editForm),
+        body: JSON.stringify(normalizedEditForm),
       });
       if (response.ok) {
-        setOrders(orders.map((order) => (order.id === orderId ? { ...order, ...editForm } : order)));
+        setOrders(orders.map((order) => (order.id === orderId ? { ...order, ...normalizedEditForm } : order)));
         setEditingOrder(null);
       } else {
         setError('Помилка оновлення деталей замовлення');
@@ -135,18 +156,105 @@ export default function OrdersManagementPage() {
       setError('Помилка оновлення деталей замовлення');
     }
   };
-
   const cancelEditing = () => {
     setEditingOrder(null);
     setEditForm({
       customerFirstName: '',
       customerLastName: '',
       customerEmail: '',
-      customerPhone: '',
+      customerPhone: '+38 (0__) ___-__-__',
       deliveryMethod: '',
       novaPoshtaCity: '',
       novaPoshtaBranch: '',
     });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const value = input.value;
+    const cursorPosition = input.selectionStart || 0;
+
+    const allowedChars = /[0-9+() -]/;
+    const char = value[cursorPosition - 1];
+
+    if (char && !allowedChars.test(char)) {
+      return;
+    }
+
+    const template = '+38 (0__) ___-__-__';
+    const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+
+    let newValue = template;
+    const digits = value.replace(/[^0-9]/g, '').slice(0, 9);
+    for (let i = 0; i < digits.length; i++) {
+      if (digitPositions[i] !== undefined) {
+        newValue = newValue.substring(0, digitPositions[i]) + digits[i] + newValue.substring(digitPositions[i] + 1);
+      }
+    }
+
+    setEditForm({ ...editForm, customerPhone: newValue });
+    requestAnimationFrame(() => {
+      const nextDigitPosition = digitPositions.find((pos) => pos > cursorPosition);
+      if (nextDigitPosition !== undefined && digits.length > 0) {
+        input.setSelectionRange(nextDigitPosition, nextDigitPosition);
+      }
+    });
+  };
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const cursorPosition = input.selectionStart || 0;
+    const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+      const prevDigitPosition = digitPositions
+        .slice()
+        .reverse()
+        .find((pos) => pos < cursorPosition);
+      if (prevDigitPosition !== undefined) {
+        const newValue = input.value.substring(0, prevDigitPosition) + '_' + input.value.substring(prevDigitPosition + 1);
+        setEditForm({ ...editForm, customerPhone: newValue });
+
+        requestAnimationFrame(() => {
+          input.setSelectionRange(prevDigitPosition, prevDigitPosition);
+        });
+      }
+    } else if (e.key === 'Delete') {
+      e.preventDefault();
+      const currentDigitPosition = digitPositions.find((pos) => pos >= cursorPosition);
+      if (currentDigitPosition !== undefined) {
+        const newValue = input.value.substring(0, currentDigitPosition) + '_' + input.value.substring(currentDigitPosition + 1);
+        setEditForm({ ...editForm, customerPhone: newValue });
+      }
+    } else if (e.key >= '0' && e.key <= '9') {
+      e.preventDefault();
+
+      const nextDigitPosition = digitPositions.find((pos) => pos >= cursorPosition && input.value[pos] === '_');
+      if (nextDigitPosition !== undefined) {
+        const newValue = input.value.substring(0, nextDigitPosition) + e.key + input.value.substring(nextDigitPosition + 1);
+        setEditForm({ ...editForm, customerPhone: newValue });
+        requestAnimationFrame(() => {
+          const nextEmptyPosition = digitPositions.find((pos) => pos > nextDigitPosition && newValue[pos] === '_');
+          const targetPosition = nextEmptyPosition !== undefined ? nextEmptyPosition : nextDigitPosition + 1;
+          input.setSelectionRange(targetPosition, targetPosition);
+        });
+      }
+    } else if (!['ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePhoneClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    const input = e.target as HTMLInputElement;
+    const digitPositions = [6, 7, 10, 11, 12, 14, 15, 17, 18];
+    const firstEmptyPosition = digitPositions.find((pos) => input.value[pos] === '_');
+
+    if (firstEmptyPosition !== undefined) {
+      requestAnimationFrame(() => {
+        input.setSelectionRange(firstEmptyPosition, firstEmptyPosition);
+      });
+    }
   };
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -210,7 +318,6 @@ export default function OrdersManagementPage() {
         return status;
     }
   };
-
   const getStatusOptions = () => {
     return [
       { value: 'PENDING', label: 'Очікує' },
@@ -222,10 +329,25 @@ export default function OrdersManagementPage() {
       { value: 'CANCELLED', label: 'Скасовано' },
     ];
   };
+  const normalizePhoneNumber = (phone: string) => {
+    return phone.replace(/[^\d+]/g, '');
+  };
 
+  const formatPhoneNumber = (phone: string) => {
+    const normalized = normalizePhoneNumber(phone);
+    if (normalized.startsWith('+380') && normalized.length === 13) {
+      return `+38 (0${normalized.slice(4, 6)}) ${normalized.slice(6, 9)}-${normalized.slice(9, 11)}-${normalized.slice(11, 13)}`;
+    } else if (normalized.startsWith('380') && normalized.length === 12) {
+      return `+38 (0${normalized.slice(3, 5)}) ${normalized.slice(5, 8)}-${normalized.slice(8, 10)}-${normalized.slice(10, 12)}`;
+    }
+    return phone;
+  };
   const filteredOrders = orders.filter((order) => {
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-    const matchesSearch = searchQuery === '' || order.id.toString().includes(searchQuery) || order.customerFirstName.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerLastName.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerPhone.includes(searchQuery);
+    const normalizedSearchQuery = normalizePhoneNumber(searchQuery);
+    const normalizedOrderPhone = normalizePhoneNumber(order.customerPhone);
+
+    const matchesSearch = searchQuery === '' || order.id.toString().includes(searchQuery) || order.customerFirstName.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerLastName.toLowerCase().includes(searchQuery.toLowerCase()) || order.customerEmail.toLowerCase().includes(searchQuery.toLowerCase()) || normalizedOrderPhone.includes(normalizedSearchQuery);
     return matchesStatus && matchesSearch;
   });
 
@@ -368,7 +490,7 @@ export default function OrdersManagementPage() {
                           {order.customerFirstName} {order.customerLastName}
                         </p>
                         <p className='text-sm text-gray-600'>{order.customerEmail}</p>
-                        <p className='text-sm text-gray-600'>{order.customerPhone}</p>
+                        <p className='text-sm text-gray-600'>{formatPhoneNumber(order.customerPhone)}</p>
                       </div>
                       <div>
                         <h4 className='text-sm font-medium text-gray-700 mb-2'>Доставка</h4>
@@ -407,10 +529,10 @@ export default function OrdersManagementPage() {
                             <div>
                               <label className='block text-sm font-medium text-gray-700 mb-1'>Email</label>
                               <input type='email' value={editForm.customerEmail} onChange={(e) => setEditForm({ ...editForm, customerEmail: e.target.value })} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text' />
-                            </div>
+                            </div>{' '}
                             <div>
                               <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон</label>
-                              <input type='tel' value={editForm.customerPhone} onChange={(e) => setEditForm({ ...editForm, customerPhone: e.target.value })} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text' />
+                              <input type='tel' value={editForm.customerPhone} onChange={handlePhoneChange} onKeyDown={handlePhoneKeyDown} onClick={handlePhoneClick} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text' />
                             </div>
                             <div>
                               <label className='block text-sm font-medium text-gray-700 mb-1'>Спосіб доставки</label>

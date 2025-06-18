@@ -53,6 +53,10 @@ export default function CheckoutPage() {
     novaPoshtaBranch: false,
   });
 
+  const normalizePhoneNumber = (phone: string) => {
+    return phone.replace(/[^\d+]/g, '');
+  };
+
   useEffect(() => {
     document.title = 'Оформлення замовлення - Sirius Auto';
   }, []);
@@ -142,11 +146,15 @@ export default function CheckoutPage() {
       setError("Будь ласка, заповніть усі обов'язкові поля");
       return;
     }
-
     setIsSubmitting(true);
     setError('');
 
     try {
+      const normalizedCustomerInfo = {
+        ...customerInfo,
+        phone: normalizePhoneNumber(customerInfo.phone),
+      };
+
       const response = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
@@ -158,7 +166,7 @@ export default function CheckoutPage() {
             quantity: item.quantity,
             price: item.price,
           })),
-          customerInfo,
+          customerInfo: normalizedCustomerInfo,
           deliveryInfo,
         }),
       });
