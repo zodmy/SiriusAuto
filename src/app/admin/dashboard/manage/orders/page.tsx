@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
-import { HiOutlineArrowLeft, HiOutlineFilter, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle, HiOutlineShoppingBag, HiOutlineCalendar } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineFilter, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle, HiOutlineShoppingBag, HiOutlineCalendar, HiOutlineChevronDown } from 'react-icons/hi';
 
 interface OrderItem {
   id: number;
@@ -47,6 +47,7 @@ export default function OrdersManagementPage() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
+  const [openStatusDropdown, setOpenStatusDropdown] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
     customerFirstName: '',
     customerLastName: '',
@@ -56,13 +57,23 @@ export default function OrdersManagementPage() {
     novaPoshtaCity: '',
     novaPoshtaBranch: '',
   });
-
   useEffect(() => {
     document.title = 'Керування замовленнями - Sirius Auto Admin';
     if (isAdmin) {
       fetchOrders();
     }
   }, [isAdmin]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.status-dropdown')) {
+        setOpenStatusDropdown(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const fetchOrders = async () => {
     try {
@@ -101,6 +112,7 @@ export default function OrdersManagementPage() {
       setError('Помилка оновлення статусу замовлення');
     }
   };
+
   const startEditingOrder = (order: Order) => {
     setEditingOrder(order.id);
 
@@ -131,6 +143,7 @@ export default function OrdersManagementPage() {
       novaPoshtaBranch: order.novaPoshtaBranch || '',
     });
   };
+
   const updateOrderDetails = async (orderId: number) => {
     try {
       const normalizedEditForm = {
@@ -459,12 +472,42 @@ export default function OrdersManagementPage() {
                 <div key={order.id} className='bg-white rounded-lg shadow-sm border border-gray-200'>
                   <div className='p-4 sm:p-6 border-b border-gray-100'>
                     <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                      {' '}
                       <div className='flex items-center space-x-4'>
-                        <h3 className='text-lg font-semibold text-gray-900'>Замовлення #{order.id}</h3>
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(order.status)}`}>
-                          {getStatusIcon(order.status)}
-                          {getStatusText(order.status)}
-                        </span>
+                        <h3 className='text-lg font-semibold text-gray-900'>Замовлення #{order.id}</h3>{' '}
+                        <div className='relative status-dropdown'>
+                          {' '}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('Button clicked, current dropdown:', openStatusDropdown, 'order.id:', order.id);
+                              setOpenStatusDropdown(openStatusDropdown === order.id ? null : order.id);
+                            }}
+                            className={`inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${getStatusColor(order.status)}`}
+                          >
+                            {getStatusIcon(order.status)}
+                            {getStatusText(order.status)}
+                            <HiOutlineChevronDown className={`h-4 w-4 transition-transform ${openStatusDropdown === order.id ? 'rotate-180' : ''}`} />
+                          </button>
+                          {openStatusDropdown === order.id && (
+                            <div className='absolute top-full left-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-20'>
+                              {' '}
+                              {getStatusOptions().map((option) => (
+                                <button
+                                  key={option.value}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, option.value);
+                                    setOpenStatusDropdown(null);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg transition-colors cursor-pointer ${order.status === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>{' '}
                       <div className='flex items-center space-x-3'>
                         <div className='text-sm text-gray-500'>
@@ -502,16 +545,7 @@ export default function OrdersManagementPage() {
                         <h4 className='text-sm font-medium text-gray-700 mb-2'>Замовлення</h4>
                         <p className='text-sm text-gray-900'>{order.orderItems.length} товарів</p>
                         <p className='text-lg font-semibold text-blue-600'>₴{parseFloat(order.totalPrice).toFixed(2)}</p>
-                      </div>
-                    </div>{' '}
-                    <div className='flex items-center justify-start gap-4 mb-4 pb-4 border-b border-gray-100'>
-                      <select value={order.status} onChange={(e) => updateOrderStatus(order.id, e.target.value)} className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 ${getStatusColor(order.status)}`}>
-                        {getStatusOptions().map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                      </div>{' '}
                     </div>{' '}
                     <div className='border-t border-gray-100 pt-4 space-y-6'>
                       {editingOrder === order.id ? (
@@ -593,12 +627,11 @@ export default function OrdersManagementPage() {
                                 </Link>
                               ))}
                             </div>
-                          </div>
+                          </div>{' '}
                           <div className='flex items-center justify-between pt-4 border-t border-gray-100'>
-                            {' '}
                             <button onClick={() => startEditingOrder(order)} className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer'>
                               Редагувати замовлення
-                            </button>{' '}
+                            </button>
                           </div>{' '}
                         </>
                       )}

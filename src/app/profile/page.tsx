@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/components/AuthProvider';
-import { HiCheckCircle, HiXCircle, HiEye, HiEyeOff } from 'react-icons/hi';
+import { HiCheckCircle, HiXCircle, HiEye, HiEyeOff, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle } from 'react-icons/hi';
 
 interface ProfileData {
   id: number;
@@ -259,34 +259,63 @@ export default function ProfilePage() {
     }
   };
 
-  const getOrderStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800';
-      case 'shipped':
-        return 'bg-purple-100 text-purple-800';
-      case 'delivered':
-        return 'bg-green-100 text-green-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
+  const getOrderStatusIcon = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return <HiOutlineClock className='h-4 w-4' />;
+      case 'CONFIRMED':
+        return <HiOutlineCheckCircle className='h-4 w-4' />;
+      case 'PROCESSING':
+        return <HiOutlineClock className='h-4 w-4' />;
+      case 'SHIPPED':
+        return <HiOutlineTruck className='h-4 w-4' />;
+      case 'DELIVERED':
+        return <HiOutlineCheckCircle className='h-4 w-4' />;
+      case 'COMPLETED':
+        return <HiOutlineCheckCircle className='h-4 w-4' />;
+      case 'CANCELLED':
+        return <HiOutlineExclamationCircle className='h-4 w-4' />;
       default:
-        return 'bg-gray-100 text-gray-800';
+        return <HiOutlineClock className='h-4 w-4' />;
+    }
+  };
+
+  const getOrderStatusColor = (status: string) => {
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'CONFIRMED':
+        return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'PROCESSING':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      case 'SHIPPED':
+        return 'bg-purple-50 text-purple-700 border-purple-200';
+      case 'DELIVERED':
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'COMPLETED':
+        return 'bg-green-50 text-green-700 border-green-200';
+      case 'CANCELLED':
+        return 'bg-red-50 text-red-700 border-red-200';
+      default:
+        return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
 
   const getOrderStatusText = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Очікує обробки';
-      case 'confirmed':
+    switch (status.toUpperCase()) {
+      case 'PENDING':
+        return 'Очікує';
+      case 'CONFIRMED':
         return 'Підтверджено';
-      case 'shipped':
+      case 'PROCESSING':
+        return 'Обробляється';
+      case 'SHIPPED':
         return 'Відправлено';
-      case 'delivered':
+      case 'DELIVERED':
         return 'Доставлено';
-      case 'cancelled':
+      case 'COMPLETED':
+        return 'Виконано';
+      case 'CANCELLED':
         return 'Скасовано';
       default:
         return status;
@@ -554,7 +583,10 @@ export default function ProfilePage() {
                             })}
                           </p>
                         </div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getOrderStatusColor(order.status)}`}>{getOrderStatusText(order.status)}</span>
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getOrderStatusColor(order.status)}`}>
+                          {getOrderStatusIcon(order.status)}
+                          {getOrderStatusText(order.status)}
+                        </span>
                       </div>{' '}
                       <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (
