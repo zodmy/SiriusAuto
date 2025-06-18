@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/lib/components/AuthProvider';
-import { HiCheckCircle, HiXCircle, HiEye, HiEyeOff, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle } from 'react-icons/hi';
+import { HiCheckCircle, HiXCircle, HiEye, HiEyeOff, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle, HiStar } from 'react-icons/hi';
 
 interface ProfileData {
   id: number;
@@ -60,6 +60,18 @@ export default function ProfilePage() {
     new: false,
     confirm: false,
   });
+  const [selectedProduct, setSelectedProduct] = useState<{ productId: number; orderId: number; productName: string } | null>(null);
+  const [reviewForm, setReviewForm] = useState({
+    productId: 0,
+    orderId: 0,
+    rating: 5,
+    comment: '',
+  });
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState('');
+  const [reviewSuccess, setReviewSuccess] = useState('');
+  const [reviewableItems, setReviewableItems] = useState<Set<string>>(new Set());
+
   const router = useRouter();
   const { isAuthenticated, isInitialCheckComplete: authReady, logout } = useAuth();
 
@@ -121,12 +133,103 @@ export default function ProfilePage() {
     }
   }, []);
 
+  const fetchReviewableItems = useCallback(async () => {
+    try {
+      const response = await fetch('/api/user/orders/reviewable', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const reviewableSet = new Set<string>();
+        data.forEach((order: { id: number; orderItems: { productId: number }[] }) => {
+          order.orderItems.forEach((item: { productId: number }) => {
+            reviewableSet.add(`${item.productId}-${order.id}`);
+          });
+        });
+
+        setReviewableItems(reviewableSet);
+      }
+    } catch (error) {
+      console.error('Error fetching reviewable items:', error);
+    }
+  }, []);
+
+  const openReviewModal = (productId: number, orderId: number, productName: string) => {
+    setSelectedProduct({ productId, orderId, productName });
+    setReviewForm({
+      productId,
+      orderId,
+      rating: 5,
+      comment: '',
+    });
+    setReviewError('');
+    setReviewSuccess('');
+  };
+
+  const closeReviewModal = () => {
+    setSelectedProduct(null);
+    setReviewForm({
+      productId: 0,
+      orderId: 0,
+      rating: 5,
+      comment: '',
+    });
+    setReviewError('');
+    setReviewSuccess('');
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmittingReview(true);
+    setReviewError('');
+
+    try {
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(reviewForm),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setReviewSuccess('Відгук успішно додано!');
+        setTimeout(() => {
+          closeReviewModal();
+          fetchReviewableItems();
+        }, 2000);
+      } else {
+        setReviewError(data.error || 'Помилка створення відгуку');
+      }
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      setReviewError('Мережева помилка');
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const renderStars = (rating: number, interactive: boolean = false) => {
+    return (
+      <div className='flex space-x-1'>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <HiStar key={star} className={`h-5 w-5 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'} ${interactive ? 'cursor-pointer hover:text-yellow-500' : ''}`} onClick={interactive ? () => setReviewForm((prev) => ({ ...prev, rating: star })) : undefined} />
+        ))}
+      </div>
+    );
+  };
+
   useEffect(() => {
     if (authReady && isAuthenticated) {
       fetchProfile();
       fetchOrders();
+      fetchReviewableItems();
     }
-  }, [authReady, isAuthenticated, fetchProfile, fetchOrders]);
+  }, [authReady, isAuthenticated, fetchProfile, fetchOrders, fetchReviewableItems]);
 
   if (!authReady) {
     return (
@@ -590,7 +693,7 @@ export default function ProfilePage() {
                       </div>{' '}
                       <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (
-                          <Link key={item.id} href={`/products/${item.product.id}`} className='flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer'>
+                          <div key={item.id} className='flex items-center space-x-4 p-3 bg-gray-50 rounded-lg'>
                             <div className='flex-shrink-0'>
                               {item.product.imageUrl ? (
                                 <Image src={item.product.imageUrl} alt={item.product.name} width={64} height={64} className='w-16 h-16 object-cover rounded-md' />
@@ -601,14 +704,23 @@ export default function ProfilePage() {
                               )}
                             </div>
                             <div className='flex-1 min-w-0'>
-                              <h4 className='text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition-colors'>{item.product.name}</h4>
+                              <Link href={`/products/${item.product.id}`} className='block'>
+                                <h4 className='text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition-colors'>{item.product.name}</h4>
+                              </Link>
                               <p className='text-sm text-gray-500'>Кількість: {item.quantity}</p>
-                              <p className='text-sm font-medium text-gray-900'>{parseFloat(item.price).toFixed(2)} ₴ за одиницю</p>
+                              <p className='text-sm font-medium text-gray-900'>{parseFloat(item.price).toFixed(2)} ₴</p>
+                            </div>{' '}
+                            <div className='flex items-center space-x-3'>
+                              {order.status === 'COMPLETED' && reviewableItems.has(`${item.product.id}-${order.id}`) && (
+                                <button onClick={() => openReviewModal(item.product.id, order.id, item.product.name)} className='bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium cursor-pointer'>
+                                  Залишити відгук
+                                </button>
+                              )}
+                              <div className='text-right'>
+                                <p className='text-sm font-bold text-gray-900'>{(parseFloat(item.price) * item.quantity).toFixed(2)} ₴</p>
+                              </div>
                             </div>
-                            <div className='text-right'>
-                              <p className='text-sm font-bold text-gray-900'>{(parseFloat(item.price) * item.quantity).toFixed(2)} ₴</p>
-                            </div>
-                          </Link>
+                          </div>
                         ))}
                       </div>
                       <div className='border-t pt-3 flex justify-between items-center'>
@@ -619,10 +731,53 @@ export default function ProfilePage() {
                   ))}
                 </div>
               )}
-            </div>
+            </div>{' '}
           </div>
         </div>
-      </div>
+      </div>{' '}
+      {selectedProduct && (
+        <div className='fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50'>
+          <div className='bg-white rounded-lg max-w-md w-full p-6 shadow-2xl border border-gray-200'>
+            <h3 className='text-lg font-semibold text-gray-900 mb-4'>Відгук на товар</h3>
+            <p className='text-gray-600 mb-4'>{selectedProduct.productName}</p>
+
+            {reviewSuccess && (
+              <div className='bg-green-50 border border-green-200 rounded-md p-3 mb-4'>
+                <p className='text-green-800'>{reviewSuccess}</p>
+              </div>
+            )}
+
+            {reviewError && (
+              <div className='bg-red-50 border border-red-200 rounded-md p-3 mb-4'>
+                <p className='text-red-800'>{reviewError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitReview} className='space-y-4'>
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>Оцінка</label>
+                {renderStars(reviewForm.rating, true)}
+              </div>
+
+              <div>
+                <label htmlFor='comment' className='block text-sm font-medium text-gray-700 mb-2'>
+                  Коментар (необов&apos;язково)
+                </label>
+                <textarea id='comment' rows={4} value={reviewForm.comment} onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500' placeholder='Поділіться своїм досвідом використання товару...' />
+              </div>
+
+              <div className='flex space-x-3'>
+                <button type='submit' disabled={submittingReview} className='flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer'>
+                  {submittingReview ? 'Додавання...' : 'Додати відгук'}
+                </button>
+                <button type='button' onClick={closeReviewModal} className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium cursor-pointer'>
+                  Скасувати
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       <Footer />
     </div>
   );
