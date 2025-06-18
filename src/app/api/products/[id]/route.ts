@@ -158,7 +158,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     if (typeof error === 'object' && error !== null && 'code' in error) {
       const prismaError = error as { code?: string };
       if (prismaError.code === 'P2025') {
-        return NextResponse.json({ message: `Товар з ID ${id} не знайдено` }, { status: 404 });
+        return NextResponse.json({ message: `Товар не знайдено в каталозі` }, { status: 404 });
       }
     }
     return NextResponse.json({ error: 'Не вдалося видалити товар' }, { status: 500 });

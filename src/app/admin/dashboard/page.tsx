@@ -2,7 +2,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HiOutlineCog, HiOutlineTag, HiOutlineCube, HiOutlineOfficeBuilding, HiOutlineLogout, HiOutlineClipboardList } from 'react-icons/hi';
+import { HiOutlineCog, HiOutlineTag, HiOutlineCube, HiOutlineOfficeBuilding, HiOutlineLogout, HiOutlineClipboardList, HiOutlineTruck } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 
@@ -64,9 +64,12 @@ export default function AdminDashboard() {
             <HiOutlineLogout size={20} />
             Вийти
           </button>
-        </div>
+        </div>{' '}
         <div className='grid grid-cols-1 gap-4 mb-6'>
           {' '}
+          <Link href='/admin/dashboard/supply' className='flex items-center justify-center gap-2 bg-indigo-600 text-white p-4 rounded-lg shadow hover:bg-indigo-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 cursor-pointer'>
+            <HiOutlineTruck size={22} /> Розділ постачання
+          </Link>
           <Link href='/admin/dashboard/manage/car-variations' className='flex items-center justify-center gap-2 bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer'>
             <LuCar size={22} /> Керування автомобілями
           </Link>

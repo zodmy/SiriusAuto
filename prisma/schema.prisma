@@ -159,23 +159,24 @@ model User {
 }
 
 model Order {
-  id                Int         @id @default(autoincrement())
+  id                Int           @id @default(autoincrement())
   userId            Int
-  user              User        @relation(fields: [userId], references: [id])
+  user              User          @relation(fields: [userId], references: [id])
   orderItems        OrderItem[]
   reviews           Review[]
   totalPrice        Decimal
-  orderDate         DateTime    @default(now())
+  orderDate         DateTime      @default(now())
   status            OrderStatus
   customerFirstName String
-  customerLastName  String?
+  customerLastName  String
   customerEmail     String
   customerPhone     String
+  paymentMethod     PaymentMethod @default(CARD)
   deliveryMethod    String
   novaPoshtaCity    String?
   novaPoshtaBranch  String?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@map("orders")
 }
@@ -227,7 +228,7 @@ model Review {
 
 enum OrderStatus {
   PENDING
-  CONFIRMED
+  PAID
   PROCESSING
   SHIPPED
   DELIVERED
@@ -235,4 +236,11 @@ enum OrderStatus {
   CANCELLED
 
   @@map("order_statuses")
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+
+  @@map("payment_methods")
 }

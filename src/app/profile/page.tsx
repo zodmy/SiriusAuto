@@ -361,11 +361,12 @@ export default function ProfilePage() {
       setIsSubmitting(false);
     }
   };
-
   const getOrderStatusIcon = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PENDING':
         return <HiOutlineClock className='h-4 w-4' />;
+      case 'PAID':
+        return <HiOutlineCheckCircle className='h-4 w-4' />;
       case 'CONFIRMED':
         return <HiOutlineCheckCircle className='h-4 w-4' />;
       case 'PROCESSING':
@@ -382,11 +383,12 @@ export default function ProfilePage() {
         return <HiOutlineClock className='h-4 w-4' />;
     }
   };
-
   const getOrderStatusColor = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PENDING':
         return 'bg-amber-50 text-amber-700 border-amber-200';
+      case 'PAID':
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'CONFIRMED':
         return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'PROCESSING':
@@ -403,11 +405,12 @@ export default function ProfilePage() {
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
-
   const getOrderStatusText = (status: string) => {
     switch (status.toUpperCase()) {
       case 'PENDING':
         return 'Очікує';
+      case 'PAID':
+        return 'Оплачено';
       case 'CONFIRMED':
         return 'Підтверджено';
       case 'PROCESSING':

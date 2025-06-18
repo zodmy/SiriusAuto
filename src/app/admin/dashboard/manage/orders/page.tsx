@@ -275,6 +275,8 @@ export default function OrdersManagementPage() {
         return <HiOutlineClock className='h-4 w-4' />;
       case 'CONFIRMED':
         return <HiOutlineCheckCircle className='h-4 w-4' />;
+      case 'PAID':
+        return <HiOutlineCheckCircle className='h-4 w-4' />;
       case 'PROCESSING':
         return <HiOutlineClock className='h-4 w-4' />;
       case 'SHIPPED':
@@ -289,13 +291,14 @@ export default function OrdersManagementPage() {
         return <HiOutlineClock className='h-4 w-4' />;
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'PENDING':
         return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'CONFIRMED':
         return 'bg-blue-50 text-blue-700 border-blue-200';
+      case 'PAID':
+        return 'bg-green-50 text-green-700 border-green-200';
       case 'PROCESSING':
         return 'bg-indigo-50 text-indigo-700 border-indigo-200';
       case 'SHIPPED':
@@ -310,13 +313,14 @@ export default function OrdersManagementPage() {
         return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
-
   const getStatusText = (status: string) => {
     switch (status) {
       case 'PENDING':
         return 'Очікує';
       case 'CONFIRMED':
         return 'Підтверджено';
+      case 'PAID':
+        return 'Оплачено';
       case 'PROCESSING':
         return 'Обробляється';
       case 'SHIPPED':
@@ -335,6 +339,7 @@ export default function OrdersManagementPage() {
     return [
       { value: 'PENDING', label: 'Очікує' },
       { value: 'CONFIRMED', label: 'Підтверджено' },
+      { value: 'PAID', label: 'Оплачено' },
       { value: 'PROCESSING', label: 'Обробляється' },
       { value: 'SHIPPED', label: 'Відправлено' },
       { value: 'DELIVERED', label: 'Доставлено' },
@@ -409,11 +414,12 @@ export default function OrdersManagementPage() {
                 <input type='text' placeholder='Пошук за номером, клієнтом, email або телефоном...' value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-text' />
               </div>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Статус замовлення</label>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>Статус замовлення</label>{' '}
                 <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer'>
                   <option value='all'>Всі замовлення</option>
                   <option value='PENDING'>Очікують</option>
                   <option value='CONFIRMED'>Підтверджені</option>
+                  <option value='PAID'>Оплачені</option>
                   <option value='PROCESSING'>Обробляються</option>
                   <option value='SHIPPED'>Відправлені</option>
                   <option value='DELIVERED'>Доставлені</option>
@@ -429,11 +435,12 @@ export default function OrdersManagementPage() {
             <div className='flex items-center space-x-2'>
               <HiOutlineFilter className='h-5 w-5 text-gray-400' />
               <span className='text-sm font-medium text-gray-700'>Фільтри:</span>
-            </div>
+            </div>{' '}
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className='px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm cursor-pointer'>
               <option value='all'>Всі замовлення</option>
               <option value='PENDING'>Очікують</option>
               <option value='CONFIRMED'>Підтверджені</option>
+              <option value='PAID'>Оплачені</option>
               <option value='PROCESSING'>Обробляються</option>
               <option value='SHIPPED'>Відправлені</option>
               <option value='DELIVERED'>Доставлені</option>

@@ -23,6 +23,10 @@ interface DeliveryInfo {
   novaPoshtaBranch?: string;
 }
 
+interface PaymentInfo {
+  method: 'CASH' | 'CARD';
+}
+
 const DELIVERY_METHODS = {
   pickup: {
     name: 'Самовивіз з магазину',
@@ -34,6 +38,19 @@ const DELIVERY_METHODS = {
     price: 'За тарифами перевізника',
     description: 'Доставка у відділення або поштомат',
     delivery: '2-4 дні',
+  },
+};
+
+const PAYMENT_METHODS = {
+  CASH: {
+    name: 'Готівкою при отриманні',
+    description: 'Оплата готівкою при отриманні замовлення',
+    icon: '💵',
+  },
+  CARD: {
+    name: 'Карткою онлайн',
+    description: 'Оплата карткою через LiqPay',
+    icon: '💳',
   },
 };
 
@@ -70,6 +87,9 @@ export default function CheckoutPage() {
     method: 'pickup',
     novaPoshtaBranch: '',
     novaPoshtaCity: '',
+  });
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+    method: 'CARD',
   });
 
   useEffect(() => {
@@ -148,7 +168,6 @@ export default function CheckoutPage() {
     }
     setIsSubmitting(true);
     setError('');
-
     try {
       const normalizedCustomerInfo = {
         ...customerInfo,
@@ -168,14 +187,51 @@ export default function CheckoutPage() {
           })),
           customerInfo: normalizedCustomerInfo,
           deliveryInfo,
+          paymentMethod: paymentInfo.method,
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json();      if (response.ok) {
+        const orderId = data.orderId;
 
-      if (response.ok) {
         clearCart();
-        router.push(`/order-success?orderId=${data.orderId}`);
+        if (paymentInfo.method === 'CASH') {
+          router.push(`/order-success?orderId=${orderId}`);
+        } else {
+          const checkoutResponse = await fetch(`/api/orders/${orderId}/checkout`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (checkoutResponse.ok) {
+            const paymentData = await checkoutResponse.json();
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'https://www.liqpay.ua/api/3/checkout';
+            form.style.display = 'none';
+
+            const dataInput = document.createElement('input');
+            dataInput.type = 'hidden';
+            dataInput.name = 'data';
+            dataInput.value = paymentData.data;
+            form.appendChild(dataInput);
+
+            const signatureInput = document.createElement('input');
+            signatureInput.type = 'hidden';
+            signatureInput.name = 'signature';
+            signatureInput.value = paymentData.signature;
+            form.appendChild(signatureInput);
+
+            document.body.appendChild(form);
+            form.submit();
+          } else {
+            const checkoutError = await checkoutResponse.json();
+            setError(checkoutError.error || 'Помилка створення платежу');
+          }
+        }
       } else {
         setError(data.error || 'Помилка створення замовлення');
       }
@@ -295,8 +351,8 @@ export default function CheckoutPage() {
         <main className='flex-1 flex items-center justify-center'>
           <div className='max-w-2xl mx-auto text-center'>
             <h1 className='text-2xl font-bold text-gray-900 mb-4'>Кошик порожній</h1>
-            <p className='text-gray-600 mb-8'>Додайте товари до кошика для оформлення замовлення</p>
-            <button onClick={() => router.push('/products')} className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md cursor-pointer'>
+            <p className='text-gray-600 mb-8'>Додайте товари до кошика для оформлення замовлення</p>{' '}
+            <button onClick={() => router.push('/')} className='bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md cursor-pointer'>
               Перейти до товарів
             </button>
           </div>
@@ -336,7 +392,28 @@ export default function CheckoutPage() {
                   <input type='email' value={customerInfo.email} onChange={(e) => handleInputChange('email', e.target.value)} className={getFieldClassName(fieldErrors.email)} />
                 </div>{' '}
                 <div>
-                  <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label> <input type='tel' value={customerInfo.phone} onChange={handlePhoneChange} onKeyDown={handlePhoneKeyDown} onClick={handlePhoneClick} className={getFieldClassName(fieldErrors.phone)} />
+                  <label className='block text-sm font-medium text-gray-700 mb-1'>Телефон *</label> <input type='tel' value={customerInfo.phone} onChange={handlePhoneChange} onKeyDown={handlePhoneKeyDown} onClick={handlePhoneClick} className={getFieldClassName(fieldErrors.phone)} />{' '}
+                </div>
+                <div className='border-t pt-6 mt-6'>
+                  <h3 className='text-lg font-semibold mb-4'>Спосіб оплати</h3>
+                  <div className='space-y-3'>
+                    {Object.entries(PAYMENT_METHODS).map(([method, info]) => (
+                      <div key={method} className='border rounded-lg p-4 hover:bg-gray-50 transition-colors'>
+                        <label className='flex items-center cursor-pointer'>
+                          <input type='radio' name='paymentMethod' value={method} checked={paymentInfo.method === method} onChange={(e) => setPaymentInfo((prev) => ({ ...prev, method: e.target.value as 'CASH' | 'CARD' }))} className='mr-3' />
+                          <div className='flex-1'>
+                            <div className='flex items-center'>
+                              <span className='text-2xl mr-3'>{info.icon}</span>
+                              <div>
+                                <span className='font-medium'>{info.name}</span>
+                                <p className='text-sm text-gray-600 mt-1'>{info.description}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className='border-t pt-6 mt-6'>
                   <h3 className='text-lg font-semibold mb-4'>Спосіб доставки</h3>{' '}
@@ -392,9 +469,10 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                   )}
-                </div>
+                </div>{' '}
                 <button type='submit' disabled={isSubmitting} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-md font-medium cursor-pointer disabled:cursor-not-allowed'>
-                  {isSubmitting ? 'Оформлення...' : 'Оформити замовлення'}
+                  {' '}
+                  {isSubmitting ? (paymentInfo.method === 'CASH' ? 'Оформлення замовлення...' : 'Перенаправлення на оплату...') : paymentInfo.method === 'CASH' ? 'Оформити замовлення' : 'Оплатити замовлення'}
                 </button>
               </form>
             </div>{' '}

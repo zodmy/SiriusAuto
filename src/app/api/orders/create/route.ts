@@ -20,6 +20,7 @@ interface CreateOrderRequest {
     novaPoshtaBranch?: string;
     novaPoshtaCity?: string;
   };
+  paymentMethod: 'CASH' | 'CARD';
 }
 
 export async function POST(request: NextRequest) {
@@ -34,10 +35,8 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Помилка верифікації токена:', error);
       }
-    }
-
-    const body: CreateOrderRequest = await request.json();
-    const { items, customerInfo, deliveryInfo } = body;
+    } const body: CreateOrderRequest = await request.json();
+    const { items, customerInfo, deliveryInfo, paymentMethod } = body;
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: 'Кошик порожній' }, { status: 400 });
@@ -49,19 +48,17 @@ export async function POST(request: NextRequest) {
 
     if (deliveryInfo.method === 'novaposhta' && (!deliveryInfo.novaPoshtaCity || !deliveryInfo.novaPoshtaBranch)) {
       return NextResponse.json({ error: 'Для доставки Новою Поштою необхідно вказати місто та відділення' }, { status: 400 });
-    }
-
-    const productIds = items.map(item => item.productId);
+    } const productIds = items.map(item => item.productId);
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } },
-      select: { id: true, stockQuantity: true, price: true }
+      select: { id: true, name: true, stockQuantity: true, price: true }
     }); for (const item of items) {
       const product = products.find(p => p.id === item.productId);
       if (!product) {
-        return NextResponse.json({ error: `Товар з ID ${item.productId} не знайдено` }, { status: 400 });
+        return NextResponse.json({ error: `Товар не знайдено в каталозі. Будь ласка, оновіть сторінку або оберіть інший товар.` }, { status: 400 });
       }
       if (product.stockQuantity < item.quantity) {
-        return NextResponse.json({ error: `Недостатньо товару на складі для товару з ID ${item.productId}` }, { status: 400 });
+        return NextResponse.json({ error: `Вибачте, але товар "${product.name}" закінчився` }, { status: 400 });
       }
     }
     const totalPrice = items.reduce((total, item) => {
@@ -81,6 +78,7 @@ export async function POST(request: NextRequest) {
           customerEmail: customerInfo.email,
           customerPhone: customerInfo.phone,
           deliveryMethod: deliveryInfo.method,
+          paymentMethod: paymentMethod,
           novaPoshtaCity: deliveryInfo.novaPoshtaCity || null,
           novaPoshtaBranch: deliveryInfo.novaPoshtaBranch || null,
           orderItems: {
