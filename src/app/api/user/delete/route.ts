@@ -87,6 +87,9 @@ export async function DELETE(request: NextRequest) {
       path: '/',
     });
 
+    response.cookies.delete('selectedCar');
+    response.cookies.delete('cart');
+
     return response;
   } catch (error) {
     console.error('Error deleting user account:', error); return NextResponse.json(
