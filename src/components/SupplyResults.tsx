@@ -126,8 +126,10 @@ export default function SupplyResults({ results, isVisible }: SupplyResultsProps
                       <div className='flex items-start gap-3'>
                         {getStatusIcon(record.status)}
                         <div className='flex-1'>
+                          {' '}
                           <div className='flex items-center gap-2 mb-1'>
-                            <span className='text-sm text-gray-600'>{String(record.data.name || 'Невідомо')}</span> {record.type === 'category' && record.data.parentName && <span className='text-xs text-gray-500'>(підкатегорія: {String(record.data.parentName)})</span>}
+                            <span className='text-sm text-gray-600'>{String(record.data.name || 'Невідомо')}</span>
+                            {record.type === 'category' && record.data.parentName ? <span className='text-xs text-gray-500'>(підкатегорія: {String(record.data.parentName)})</span> : null}
                             {record.type === 'product' && (
                               <div className='flex items-center gap-2 text-xs text-gray-500'>
                                 <span>{String(record.data.categoryName || '')}</span>

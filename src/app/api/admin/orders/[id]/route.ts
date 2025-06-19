@@ -9,7 +9,7 @@ const normalizePhoneNumber = (phone: string) => {
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const isAdmin = await checkAdmin({ req: request });
@@ -20,7 +20,7 @@ export async function PUT(
         { status: 403 }
       );
     }
-    const { id } = params;
+    const { id } = await params;
     const orderId = parseInt(id);
     const requestData = await request.json();
 
