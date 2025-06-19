@@ -540,13 +540,9 @@ export default function ProfilePage() {
             <div className='px-6 py-4 border-b border-gray-200'>
               {' '}
               <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>
-                <div className='flex space-x-3'>
+                <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>                <div className='flex space-x-3'>
                   {!isEditing && (
                     <>
-                      <button onClick={openDeleteModal} className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
-                        Видалити обліковий запис
-                      </button>
                       <button onClick={() => setIsEditing(true)} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
                         Редагувати
                       </button>
