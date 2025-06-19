@@ -196,9 +196,9 @@ export default function ReviewManagement() {
 
             <div className='space-y-3'>
               {order.orderItems.map((item) => (
-                <div key={item.id} className='flex items-center justify-between bg-gray-50 rounded-lg p-3'>
-                  <div className='flex items-center space-x-3'>
-                    <div className='w-12 h-12 relative'>
+                <div key={item.id} className='flex flex-col sm:flex-row sm:items-center sm:justify-between bg-gray-50 rounded-lg p-3 gap-3'>
+                  <div className='flex items-center space-x-3 flex-1 min-w-0'>
+                    <div className='w-12 h-12 relative flex-shrink-0'>
                       {item.product.imageUrl ? (
                         <Image src={item.product.imageUrl} alt={item.product.name} fill className='object-cover rounded-md' />
                       ) : (
@@ -207,14 +207,14 @@ export default function ReviewManagement() {
                         </div>
                       )}
                     </div>
-                    <div>
-                      <p className='font-medium text-gray-900'>{item.product.name}</p>
+                    <div className='min-w-0 flex-1'>
+                      <p className='font-medium text-gray-900 break-words'>{item.product.name}</p>
                       <p className='text-sm text-gray-500'>
                         {item.quantity} шт. × {item.price.toString()} грн
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => openReviewModal(item.productId, order.id, item.product.name)} className='bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium'>
+                  <button onClick={() => openReviewModal(item.productId, order.id, item.product.name)} className='bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap flex-shrink-0 w-full sm:w-auto'>
                     Залишити відгук
                   </button>
                 </div>

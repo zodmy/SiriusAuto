@@ -762,26 +762,28 @@ export default function ProfilePage() {
                       </div>{' '}
                       <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (
-                          <div key={item.id} className='flex items-center space-x-4 p-3 bg-gray-50 rounded-lg'>
-                            <div className='flex-shrink-0'>
-                              {item.product.imageUrl ? (
-                                <Image src={item.product.imageUrl} alt={item.product.name} width={64} height={64} className='w-16 h-16 object-cover rounded-md' />
-                              ) : (
-                                <div className='w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center'>
-                                  <span className='text-gray-400 text-xs'>Фото</span>
-                                </div>
-                              )}
+                          <div key={item.id} className='flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 bg-gray-50 rounded-lg'>
+                            <div className='flex items-center space-x-4 flex-1 min-w-0'>
+                              <div className='flex-shrink-0'>
+                                {item.product.imageUrl ? (
+                                  <Image src={item.product.imageUrl} alt={item.product.name} width={64} height={64} className='w-16 h-16 object-cover rounded-md' />
+                                ) : (
+                                  <div className='w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center'>
+                                    <span className='text-gray-400 text-xs'>Фото</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className='flex-1 min-w-0'>
+                                <Link href={`/products/${item.product.id}`} className='block'>
+                                  <h4 className='text-sm font-medium text-gray-900 break-words hover:text-blue-600 transition-colors'>{item.product.name}</h4>
+                                </Link>
+                                <p className='text-sm text-gray-500'>Кількість: {item.quantity}</p>
+                                <p className='text-sm font-medium text-gray-900'>{parseFloat(item.price).toFixed(2)} ₴</p>
+                              </div>
                             </div>
-                            <div className='flex-1 min-w-0'>
-                              <Link href={`/products/${item.product.id}`} className='block'>
-                                <h4 className='text-sm font-medium text-gray-900 truncate hover:text-blue-600 transition-colors'>{item.product.name}</h4>
-                              </Link>
-                              <p className='text-sm text-gray-500'>Кількість: {item.quantity}</p>
-                              <p className='text-sm font-medium text-gray-900'>{parseFloat(item.price).toFixed(2)} ₴</p>
-                            </div>{' '}
-                            <div className='flex items-center space-x-3'>
+                            <div className='flex items-center justify-between sm:justify-end space-x-3 flex-shrink-0'>
                               {order.status === 'COMPLETED' && reviewableItems.has(`${item.product.id}-${order.id}`) && (
-                                <button onClick={() => openReviewModal(item.product.id, order.id, item.product.name)} className='bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium cursor-pointer'>
+                                <button onClick={() => openReviewModal(item.product.id, order.id, item.product.name)} className='bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium cursor-pointer whitespace-nowrap'>
                                   Залишити відгук
                                 </button>
                               )}
