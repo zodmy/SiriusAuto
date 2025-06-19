@@ -4,11 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/components/AuthProvider';
-import AuthLayout from '@/components/AuthLayout';
-import FormField from '@/components/FormField';
-import PasswordInput from '@/components/PasswordInput';
-import Button from '@/components/Button';
-import Alert from '@/components/Alert';
+import { AuthLayout, FormField, PasswordInput, Button, Alert, Grid, LoadingSpinner } from '@/components';
 
 function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -91,111 +87,40 @@ function RegisterForm() {
     }
     setIsSubmitting(false);
   };
-
   return (
-    <div className='flex flex-col min-h-screen bg-gray-50'>
-      <Header />
-      <div className='flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-        {' '}
-        <div className='max-w-md w-full space-y-8'>
-          <div className='text-center'>
-            <h2 className='text-3xl font-extrabold text-gray-900'>Створення облікового запису</h2>{' '}
-            <p className='mt-2 text-sm text-gray-600'>
-              Уже маєте обліковий запис?{' '}
-              <Link href={`/login${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className='font-medium text-blue-600 hover:text-blue-500 cursor-pointer'>
-                Увійдіть
-              </Link>
-            </p>
-          </div>
+    <AuthLayout
+      title='Створення облікового запису'
+      subtitle={
+        <p>
+          Уже маєте обліковий запис?{' '}
+          <Link href={`/login${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className='font-medium text-blue-600 hover:text-blue-500 transition-colors'>
+            Увійдіть
+          </Link>
+        </p>
+      }
+    >
+      {error && <Alert type='error' message={error} className='mb-6' />}
 
-          <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-            <div className='space-y-4'>
-              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
-                <div>
-                  {' '}
-                  <label htmlFor='firstName' className='block text-sm font-medium text-gray-700'>
-                    {"Ім'я"} <span className='text-red-500'>*</span>
-                  </label>
-                  <div className='mt-1'>
-                    <input id='firstName' name='firstName' type='text' autoComplete='given-name' required value={formData.firstName} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder={"Ваше ім'я"} />
-                  </div>
-                </div>
+      <form onSubmit={handleSubmit} className='space-y-4'>
+        <Grid cols={{ default: 1, sm: 2 }} gap='md'>
+          <FormField id='firstName' name='firstName' type='text' label="Ім'я" placeholder="Ваше ім'я" value={formData.firstName} onChange={handleInputChange} required autoComplete='given-name' disabled={isSubmitting} />
 
-                <div>
-                  <label htmlFor='lastName' className='block text-sm font-medium text-gray-700'>
-                    Прізвище
-                  </label>
-                  <div className='mt-1'>
-                    <input id='lastName' name='lastName' type='text' autoComplete='family-name' value={formData.lastName} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder='Ваше прізвище' />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
-                  Email адреса <span className='text-red-500'>*</span>
-                </label>
-                <div className='mt-1'>
-                  <input id='email' name='email' type='email' autoComplete='email' required value={formData.email} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder='Введіть ваш email' />
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor='password' className='block text-sm font-medium text-gray-700'>
-                  Пароль <span className='text-red-500'>*</span>
-                </label>
-                <div className='mt-1 relative'>
-                  <input id='password' name='password' type={showPassword ? 'text' : 'password'} autoComplete='new-password' required value={formData.password} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder='Створіть пароль (мін. 6 символів)' />
-                  <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label htmlFor='confirmPassword' className='block text-sm font-medium text-gray-700'>
-                  Підтвердіть пароль <span className='text-red-500'>*</span>
-                </label>
-                <div className='mt-1 relative'>
-                  <input id='confirmPassword' name='confirmPassword' type={showConfirmPassword ? 'text' : 'password'} autoComplete='new-password' required value={formData.confirmPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors font-semibold text-gray-900' placeholder='Повторіть пароль' />
-                  <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                    {showConfirmPassword ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {error && (
-              <div className='rounded-md bg-red-50 p-4'>
-                <div className='flex'>
-                  <div className='flex-shrink-0'>
-                    <svg className='h-5 w-5 text-red-400' viewBox='0 0 20 20' fill='currentColor'>
-                      <path fillRule='evenodd' d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z' clipRule='evenodd' />
-                    </svg>
-                  </div>
-                  <div className='ml-3'>
-                    <div className='text-sm text-red-800'>{error}</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div>
-              <button type='submit' disabled={isSubmitting} className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer'>
-                {isSubmitting ? 'Реєстрація...' : 'Створити обліковий запис'}{' '}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-      <Footer />
-    </div>
+          <FormField id='lastName' name='lastName' type='text' label='Прізвище' placeholder='Ваше прізвище' value={formData.lastName} onChange={handleInputChange} autoComplete='family-name' disabled={isSubmitting} />
+        </Grid>
+        <FormField id='email' name='email' type='email' label='Email адреса' placeholder='Введіть ваш email' value={formData.email} onChange={handleInputChange} required autoComplete='email' disabled={isSubmitting} />
+        <PasswordInput id='password' name='password' label='Пароль' placeholder='Створіть пароль (мін. 6 символів)' value={formData.password} onChange={handleInputChange} required autoComplete='new-password' disabled={isSubmitting} />
+        <PasswordInput id='confirmPassword' name='confirmPassword' label='Підтвердіть пароль' placeholder='Повторіть пароль' value={formData.confirmPassword} onChange={handleInputChange} required autoComplete='new-password' disabled={isSubmitting} />{' '}
+        <Button type='submit' disabled={isSubmitting} isLoading={isSubmitting} fullWidth size='lg' className='mt-6'>
+          {isSubmitting ? 'Реєстрація...' : 'Створити обліковий запис'}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingSpinner />}>
       <RegisterForm />
     </Suspense>
   );
