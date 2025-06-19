@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import Button from '@/components/Button';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
@@ -36,17 +38,11 @@ export default function AdminLogin() {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);
-  if (isChecking) {
+  }, [checkAuth]);  if (isChecking) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100'>
         <div className='text-center bg-white p-8 rounded-xl shadow-lg border border-gray-200'>
-          <div className='flex items-center justify-center gap-2'>
-            <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
-            <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
-            <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce'></div>
-          </div>
-          <p className='text-gray-700 mt-4'>Перевірка авторизації...</p>
+          <LoadingSpinner size='lg' text='Перевірка авторизації...' />
         </div>
       </div>
     );
@@ -115,17 +111,15 @@ export default function AdminLogin() {
               <div id='password-error' className='bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm' role='alert'>
                 {error}
               </div>
-            )}
-            <button type='submit' disabled={isSubmitting || !password.trim()} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center gap-2'>
-              {isSubmitting ? (
-                <>
-                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                  Вхід...
-                </>
-              ) : (
-                'Увійти до панелі'
-              )}
-            </button>{' '}
+            )}            <Button
+              type='submit'
+              isLoading={isSubmitting}
+              disabled={!password.trim()}
+              fullWidth
+              size='lg'
+            >
+              Увійти до панелі
+            </Button>{' '}
           </form>
         </div>
       </div>
