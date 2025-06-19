@@ -125,7 +125,6 @@ function ProductPageContent() {
       }
     }
   }, []);
-
   useEffect(() => {
     const fetchProduct = async () => {
       if (!productId) return;
@@ -137,9 +136,13 @@ function ProductPageContent() {
           const data = await response.json();
           setProduct(data);
           scrollToEnd();
-          if (savedCar && data.compatibleVehicles) {
+          // Перевіряємо сумісність тільки якщо товар має хоча б одну сумісність з автомобілями
+          if (savedCar && data.compatibleVehicles && data.compatibleVehicles.length > 0) {
             const compatible = data.compatibleVehicles.some((vehicle: { carMake: { name: string }; carModel: { name: string }; carYear: { year: number }; carBodyType: { name: string }; carEngine: { name: string } }) => vehicle.carMake.name === savedCar.makeName && vehicle.carModel.name === savedCar.modelName && vehicle.carYear.year === savedCar.year && vehicle.carBodyType.name === savedCar.bodyTypeName && vehicle.carEngine.name === savedCar.engineName);
             setIsCompatible(compatible);
+          } else {
+            // Якщо товар взагалі не має сумісності, не показуємо перевірку
+            setIsCompatible(null);
           }
         } else if (response.status === 404) {
           setError('Товар не знайдено');
@@ -268,8 +271,8 @@ function ProductPageContent() {
               </nav>
             </div>
           </div>
-        </div>
-        {savedCar && (
+        </div>{' '}
+        {savedCar && product?.compatibleVehicles && product.compatibleVehicles.length > 0 && (
           <div className={`border-b ${isCompatible === true ? 'bg-green-50 border-green-200' : isCompatible === false ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
               <div className='flex items-center gap-3'>
@@ -312,13 +315,11 @@ function ProductPageContent() {
                   </div>
                 )}
               </div>
-
               <div className='mb-6'>
                 <div className='flex items-baseline gap-2'>
                   <span className='text-3xl font-bold text-blue-600'>₴{Number(product.price).toFixed(2)}</span>
                 </div>
               </div>
-
               <div className='mb-6'>
                 {' '}
                 <div className='flex items-center gap-2'>
@@ -335,7 +336,6 @@ function ProductPageContent() {
                   )}
                 </div>
               </div>
-
               {product.stockQuantity > 0 && (
                 <div className='mb-6'>
                   <div className='flex items-center gap-4 mb-4'>
@@ -357,9 +357,8 @@ function ProductPageContent() {
                     </button>
                   </div>
                 </div>
-              )}
-
-              {isCompatible === false && (
+              )}{' '}
+              {isCompatible === false && product?.compatibleVehicles && product.compatibleVehicles.length > 0 && (
                 <div className='bg-red-50 border border-red-200 rounded-md p-4 mb-6'>
                   <div className='flex items-start gap-3'>
                     <HiInformationCircle className='w-5 h-5 text-red-600 mt-0.5' />
