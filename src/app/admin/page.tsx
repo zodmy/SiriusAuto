@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
-import SiriusAutoLogoDynamic from '@/components/SiriusAutoLogoDynamic';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
@@ -42,7 +41,6 @@ export default function AdminLogin() {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100'>
         <div className='text-center bg-white p-8 rounded-xl shadow-lg border border-gray-200'>
-          <SiriusAutoLogoDynamic textColor='#1c5eae' iconColor='#1c5eae' width={180} height={60} className='max-w-full h-auto mb-4' />
           <div className='flex items-center justify-center gap-2'>
             <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
             <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
@@ -92,10 +90,6 @@ export default function AdminLogin() {
   return (
     <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4 py-8'>
       <div className='w-full max-w-md'>
-        <div className='text-center mb-8'>
-          <SiriusAutoLogoDynamic textColor='#1c5eae' iconColor='#1c5eae' width={200} height={66} className='max-w-full h-auto mx-auto' />
-        </div>
-
         <div className='bg-white rounded-xl shadow-xl border border-gray-200 p-8'>
           <div className='text-center mb-6'>
             <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
@@ -117,13 +111,11 @@ export default function AdminLogin() {
                 </button>
               </div>
             </div>
-
             {error && (
               <div id='password-error' className='bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm' role='alert'>
                 {error}
               </div>
             )}
-
             <button type='submit' disabled={isSubmitting || !password.trim()} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center gap-2'>
               {isSubmitting ? (
                 <>
@@ -133,12 +125,8 @@ export default function AdminLogin() {
               ) : (
                 'Увійти до панелі'
               )}
-            </button>
+            </button>{' '}
           </form>
-        </div>
-
-        <div className='text-center mt-6'>
-          <p className='text-xs text-gray-500'>Доступ тільки для авторизованих адміністраторів</p>
         </div>
       </div>
     </div>
