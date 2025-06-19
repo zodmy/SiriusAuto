@@ -41,26 +41,18 @@ const aligns = {
   right: 'text-right',
 };
 
-export default function Heading({ 
-  level,
-  size,
-  weight = 'bold',
-  color = 'default',
-  align = 'left',
-  className = '',
-  children,
-  ...props 
-}: HeadingProps) {
-  
+export default function Heading({ level, size, weight = 'bold', color = 'default', align = 'left', className = '', children, ...props }: HeadingProps) {
   // Auto-size based on level if size not provided
-  const autoSize = size || {
-    1: '3xl',
-    2: '2xl',
-    3: 'xl',
-    4: 'lg',
-    5: 'md',
-    6: 'sm',
-  }[level] as keyof typeof sizes;
+  const autoSize =
+    size ||
+    ({
+      1: '3xl',
+      2: '2xl',
+      3: 'xl',
+      4: 'lg',
+      5: 'md',
+      6: 'sm',
+    }[level] as keyof typeof sizes);
 
   const headingClasses = `
     ${sizes[autoSize]}

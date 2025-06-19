@@ -42,18 +42,7 @@ const aligns = {
   justify: 'text-justify',
 };
 
-export default function Text({ 
-  size = 'md',
-  weight = 'normal',
-  color = 'default',
-  align = 'left',
-  truncate = false,
-  as: Component = 'p',
-  className = '',
-  children,
-  ...props 
-}: TextProps) {
-  
+export default function Text({ size = 'md', weight = 'normal', color = 'default', align = 'left', truncate = false, as: Component = 'p', className = '', children, ...props }: TextProps) {
   const textClasses = `
     ${sizes[size]}
     ${weights[weight]}

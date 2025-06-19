@@ -4,9 +4,11 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/components/AuthProvider';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { HiEye, HiEyeOff } from 'react-icons/hi';
+import AuthLayout from '@/components/AuthLayout';
+import FormField from '@/components/FormField';
+import PasswordInput from '@/components/PasswordInput';
+import Button from '@/components/Button';
+import Alert from '@/components/Alert';
 
 function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -18,8 +20,6 @@ function RegisterForm() {
   });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const { register, isAuthenticated, isInitialCheckComplete } = useAuth();

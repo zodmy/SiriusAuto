@@ -51,62 +51,27 @@ function LoginForm() {
     setIsSubmitting(false);
   };
   return (
-    <AuthLayout 
-      title="Вхід до системи"
+    <AuthLayout
+      title='Вхід до системи'
       subtitle={
         <p>
           Не маєте облікового запису?{' '}
-          <Link 
-            href={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} 
-            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
-          >
+          <Link href={`/register${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className='font-medium text-blue-600 hover:text-blue-500 transition-colors'>
             Зареєструйтесь
           </Link>
         </p>
       }
     >
-      {successMessage && (
-        <Alert type="success" message={successMessage} className="mb-6" />
-      )}
-      
-      {error && (
-        <Alert type="error" message={error} className="mb-6" />
-      )}
+      {successMessage && <Alert type='success' message={successMessage} className='mb-6' />}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <FormField
-          id="email"
-          name="email"
-          type="email"
-          label="Email адреса"
-          placeholder="Введіть ваш email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          autoComplete="email"
-          disabled={isSubmitting}
-        />
+      {error && <Alert type='error' message={error} className='mb-6' />}
 
-        <PasswordInput
-          id="password"
-          name="password"
-          label="Пароль"
-          placeholder="Введіть ваш пароль"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          autoComplete="current-password"
-          disabled={isSubmitting}
-        />
+      <form onSubmit={handleSubmit} className='space-y-4'>
+        <FormField id='email' name='email' type='email' label='Email адреса' placeholder='Введіть ваш email' value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete='email' disabled={isSubmitting} />
 
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          isLoading={isSubmitting}
-          fullWidth
-          size="lg"
-          className="mt-6"
-        >
+        <PasswordInput id='password' name='password' label='Пароль' placeholder='Введіть ваш пароль' value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete='current-password' disabled={isSubmitting} />
+
+        <Button type='submit' disabled={isSubmitting} isLoading={isSubmitting} fullWidth size='lg' className='mt-6'>
           Увійти
         </Button>
       </form>

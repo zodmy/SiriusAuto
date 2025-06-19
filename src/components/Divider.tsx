@@ -9,7 +9,7 @@ interface DividerProps extends React.HTMLAttributes<HTMLHRElement> {
 
 const spacings = {
   sm: 'my-2',
-  md: 'my-4', 
+  md: 'my-4',
   lg: 'my-6',
 };
 
@@ -25,31 +25,23 @@ const variants = {
   dotted: 'border-dotted',
 };
 
-export default function Divider({ 
-  orientation = 'horizontal',
-  variant = 'solid',
-  spacing = 'md',
-  children,
-  className = '',
-  ...props 
-}: DividerProps) {
-  
+export default function Divider({ orientation = 'horizontal', variant = 'solid', spacing = 'md', children, className = '', ...props }: DividerProps) {
   if (children && orientation === 'horizontal') {
     return (
       <div className={`relative ${spacings[spacing]} ${className}`}>
-        <div className="absolute inset-0 flex items-center" aria-hidden="true">
+        <div className='absolute inset-0 flex items-center' aria-hidden='true'>
           <div className={`w-full border-t border-gray-200 ${variants[variant]}`} />
         </div>
-        <div className="relative flex justify-center">
-          <span className="bg-white px-3 text-sm text-gray-500">{children}</span>
+        <div className='relative flex justify-center'>
+          <span className='bg-white px-3 text-sm text-gray-500'>{children}</span>
         </div>
       </div>
     );
   }
-  
+
   if (orientation === 'vertical') {
     return (
-      <div 
+      <div
         className={`
           inline-block border-l border-gray-200 
           ${variants[variant]} 
@@ -60,9 +52,9 @@ export default function Divider({
       />
     );
   }
-  
+
   return (
-    <hr 
+    <hr
       className={`
         border-0 border-t border-gray-200 
         ${variants[variant]} 

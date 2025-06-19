@@ -10,7 +10,7 @@ interface ContainerProps extends React.HTMLAttributes<HTMLDivElement> {
 const maxWidths = {
   sm: 'max-w-sm',
   md: 'max-w-md',
-  lg: 'max-w-lg', 
+  lg: 'max-w-lg',
   xl: 'max-w-xl',
   '2xl': 'max-w-2xl',
   '7xl': 'max-w-7xl',
@@ -24,14 +24,7 @@ const paddings = {
   lg: 'px-6 sm:px-8 lg:px-12',
 };
 
-export default function Container({ 
-  maxWidth = '7xl',
-  padding = 'md',
-  center = true,
-  className = '',
-  children,
-  ...props 
-}: ContainerProps) {
+export default function Container({ maxWidth = '7xl', padding = 'md', center = true, className = '', children, ...props }: ContainerProps) {
   const containerClasses = `
     ${maxWidths[maxWidth]}
     ${paddings[padding]}

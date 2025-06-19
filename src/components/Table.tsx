@@ -40,38 +40,24 @@ interface TableHeaderProps extends TableCellProps {
 
 function Table({ children, className = '', responsive = true }: TableProps) {
   const tableClasses = `min-w-full divide-y divide-gray-200 ${className}`;
-  
+
   if (responsive) {
     return (
-      <div className="overflow-x-auto">
-        <table className={tableClasses}>
-          {children}
-        </table>
+      <div className='overflow-x-auto'>
+        <table className={tableClasses}>{children}</table>
       </div>
     );
   }
-  
-  return (
-    <table className={tableClasses}>
-      {children}
-    </table>
-  );
+
+  return <table className={tableClasses}>{children}</table>;
 }
 
 function TableHead({ children, className = '' }: TableHeadProps) {
-  return (
-    <thead className={`bg-gray-50 ${className}`}>
-      {children}
-    </thead>
-  );
+  return <thead className={`bg-gray-50 ${className}`}>{children}</thead>;
 }
 
 function TableBody({ children, className = '' }: TableBodyProps) {
-  return (
-    <tbody className={`bg-white divide-y divide-gray-200 ${className}`}>
-      {children}
-    </tbody>
-  );
+  return <tbody className={`bg-white divide-y divide-gray-200 ${className}`}>{children}</tbody>;
 }
 
 function TableRow({ children, className = '', onClick, hover = false }: TableRowProps) {
@@ -80,7 +66,7 @@ function TableRow({ children, className = '', onClick, hover = false }: TableRow
     ${onClick ? 'cursor-pointer' : ''}
     ${className}
   `.trim();
-  
+
   return (
     <tr className={rowClasses} onClick={onClick}>
       {children}
@@ -94,13 +80,13 @@ function TableCell({ children, className = '', align = 'left', width }: TableCel
     center: 'text-center',
     right: 'text-right',
   };
-  
+
   const cellClasses = `
     px-6 py-4 whitespace-nowrap text-sm text-gray-900
     ${alignClasses[align]}
     ${className}
   `.trim();
-  
+
   return (
     <td className={cellClasses} style={{ width }}>
       {children}
@@ -108,37 +94,25 @@ function TableCell({ children, className = '', align = 'left', width }: TableCel
   );
 }
 
-function TableHeader({ 
-  children, 
-  className = '', 
-  align = 'left', 
-  width, 
-  sortable = false, 
-  onSort, 
-  sortDirection 
-}: TableHeaderProps) {
+function TableHeader({ children, className = '', align = 'left', width, sortable = false, onSort, sortDirection }: TableHeaderProps) {
   const alignClasses = {
     left: 'text-left',
-    center: 'text-center', 
+    center: 'text-center',
     right: 'text-right',
   };
-  
+
   const headerClasses = `
     px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider
     ${alignClasses[align]}
     ${sortable ? 'cursor-pointer hover:bg-gray-100 select-none' : ''}
     ${className}
   `.trim();
-  
+
   return (
     <th className={headerClasses} onClick={sortable ? onSort : undefined} style={{ width }}>
-      <div className="flex items-center gap-1">
+      <div className='flex items-center gap-1'>
         {children}
-        {sortable && (
-          <span className="text-gray-400">
-            {sortDirection === 'asc' ? '↑' : sortDirection === 'desc' ? '↓' : '↕'}
-          </span>
-        )}
+        {sortable && <span className='text-gray-400'>{sortDirection === 'asc' ? '↑' : sortDirection === 'desc' ? '↓' : '↕'}</span>}
       </div>
     </th>
   );

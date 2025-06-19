@@ -20,27 +20,17 @@ const animations = {
   none: '',
 };
 
-export default function Skeleton({ 
-  width,
-  height,
-  variant = 'rectangular',
-  lines = 1,
-  animation = 'pulse',
-  className = '',
-  style,
-  ...props 
-}: SkeletonProps) {
-  
+export default function Skeleton({ width, height, variant = 'rectangular', lines = 1, animation = 'pulse', className = '', style, ...props }: SkeletonProps) {
   if (variant === 'text' && lines > 1) {
     return (
       <div className={`space-y-2 ${className}`} {...props}>
         {Array.from({ length: lines }).map((_, index) => (
-          <div 
+          <div
             key={index}
             className={`bg-gray-200 h-4 ${variants[variant]} ${animations[animation]}`}
             style={{
               width: index === lines - 1 ? '75%' : '100%',
-              ...style
+              ...style,
             }}
           />
         ))}
@@ -51,14 +41,8 @@ export default function Skeleton({
   const skeletonStyle = {
     width,
     height: height || (variant === 'text' ? '1rem' : undefined),
-    ...style
+    ...style,
   };
 
-  return (
-    <div 
-      className={`bg-gray-200 ${variants[variant]} ${animations[animation]} ${className}`}
-      style={skeletonStyle}
-      {...props}
-    />
-  );
+  return <div className={`bg-gray-200 ${variants[variant]} ${animations[animation]} ${className}`} style={skeletonStyle} {...props} />;
 }

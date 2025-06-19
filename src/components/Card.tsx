@@ -20,7 +20,7 @@ const variants = {
 
 const sizes = {
   sm: 'rounded-md',
-  md: 'rounded-lg', 
+  md: 'rounded-lg',
   lg: 'rounded-xl',
 };
 
@@ -31,19 +31,8 @@ const paddings = {
   lg: 'p-6 sm:p-8',
 };
 
-const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ 
-    variant = 'default',
-    size = 'md',
-    padding = 'md',
-    hover = false,
-    clickable = false,
-    className = '',
-    children,
-    ...props 
-  }, ref) => {
-    
-    const baseClasses = `
+const Card = forwardRef<HTMLDivElement, CardProps>(({ variant = 'default', size = 'md', padding = 'md', hover = false, clickable = false, className = '', children, ...props }, ref) => {
+  const baseClasses = `
       ${variants[variant]}
       ${sizes[size]}
       ${paddings[padding]}
@@ -52,13 +41,12 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
       ${className}
     `.trim();
 
-    return (
-      <div ref={ref} className={baseClasses} {...props}>
-        {children}
-      </div>
-    );
-  }
-);
+  return (
+    <div ref={ref} className={baseClasses} {...props}>
+      {children}
+    </div>
+  );
+});
 
 Card.displayName = 'Card';
 

@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 import PageLayout from '@/components/PageLayout';
 import CategoryCard from '@/components/CategoryCard';
+import Container from '@/components/Container';
+import Card from '@/components/Card';
+import Grid from '@/components/Grid';
+import Heading from '@/components/Heading';
+import Text from '@/components/Text';
+import Skeleton from '@/components/Skeleton';
 
 interface Category {
   id: number;
@@ -48,36 +54,40 @@ export default function CategoriesPage() {
   const getTopLevelCategories = () => {
     return categories.filter((cat) => !cat.parent).sort((a, b) => a.name.localeCompare(b.name, 'uk', { sensitivity: 'base' }));
   };
-
   return (
     <PageLayout breadcrumbs={breadcrumbs}>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8'>
-        <div className='bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8'>
+      <Container maxWidth='7xl' padding='md'>
+        <Card padding='md' className='mb-6 sm:mb-8'>
           <div className='text-center'>
-            <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 mb-3 sm:mb-4'>Категорії</h1>
-            <p className='text-sm sm:text-base text-gray-600 max-w-2xl mx-auto'>Оберіть потрібну категорію для перегляду товарів</p>
+            <Heading level={1} size='2xl' className='mb-3 sm:mb-4'>
+              Категорії
+            </Heading>
+            <Text size='sm' color='muted' className='max-w-2xl mx-auto'>
+              Оберіть потрібну категорію для перегляду товарів
+            </Text>
           </div>
-        </div>{' '}
+        </Card>
+
         {isLoading ? (
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
+          <Grid cols={{ default: 1, sm: 2, lg: 3 }} gap='md'>
             {[...Array(6)].map((_, index) => (
-              <div key={index} className='bg-white rounded-xl shadow-sm p-4 sm:p-6'>
-                <div className='animate-pulse text-center'>
-                  <div className='w-12 h-12 sm:w-16 sm:h-16 bg-gray-200 rounded-full mx-auto mb-3 sm:mb-4'></div>
-                  <div className='h-4 bg-gray-200 rounded w-3/4 mx-auto mb-2'></div>
-                  <div className='h-3 bg-gray-200 rounded w-1/2 mx-auto'></div>
+              <Card key={index} padding='md'>
+                <div className='text-center'>
+                  <Skeleton variant='circular' width={48} height={48} className='mx-auto mb-3 sm:mb-4' />
+                  <Skeleton variant='text' width='75%' className='mx-auto mb-2' />
+                  <Skeleton variant='text' width='50%' className='mx-auto' />
                 </div>
-              </div>
+              </Card>
             ))}
-          </div>
+          </Grid>
         ) : (
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6'>
+          <Grid cols={{ default: 1, sm: 2, lg: 3 }} gap='md'>
             {getTopLevelCategories().map((category) => (
               <CategoryCard key={category.id} category={category} showChildren={true} />
             ))}
-          </div>
+          </Grid>
         )}
-      </div>
+      </Container>
     </PageLayout>
   );
 }

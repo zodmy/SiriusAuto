@@ -94,19 +94,9 @@ export default function AdminLogin() {
             </div>
             <h1 className='text-2xl font-bold text-gray-900 mb-2'>Адміністративна панель</h1>
             <p className='text-gray-600'>Введіть пароль для доступу до системи управління</p>
-          </div>          <form onSubmit={handleLogin} className='space-y-6'>
-            <PasswordInput
-              id='password'
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder='Введіть ваш пароль'
-              label='Пароль адміністратора'
-              disabled={isSubmitting}
-              autoFocus
-              autoComplete='current-password'
-              error={error}
-              className='w-full px-4 py-3 text-base'
-            />
+          </div>{' '}
+          <form onSubmit={handleLogin} className='space-y-6'>
+            <PasswordInput id='password' value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Введіть ваш пароль' label='Пароль адміністратора' disabled={isSubmitting} autoFocus autoComplete='current-password' error={error} className='w-full px-4 py-3 text-base' />
 
             <Button type='submit' isLoading={isSubmitting} disabled={!password.trim()} fullWidth size='lg'>
               Увійти до панелі
