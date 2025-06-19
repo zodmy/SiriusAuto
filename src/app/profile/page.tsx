@@ -36,6 +36,7 @@ interface Order {
   orderDate: string;
   status: string;
   orderItems: OrderItem[];
+  trackingNumber?: string | null;
 }
 
 export default function ProfilePage() {
@@ -746,10 +747,18 @@ export default function ProfilePage() {
                             })}
                           </p>
                         </div>
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getOrderStatusColor(order.status)}`}>
-                          {getOrderStatusIcon(order.status)}
-                          {getOrderStatusText(order.status)}
-                        </span>
+                        <div className='flex flex-col items-end'>
+                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getOrderStatusColor(order.status)}`}>
+                            {getOrderStatusIcon(order.status)}
+                            {getOrderStatusText(order.status)}
+                          </span>
+                          {order.status === 'SHIPPED' && order.trackingNumber && (
+                            <div className='mt-2 text-right'>
+                              <span className='text-xs text-gray-500 block'>Номер накладної:</span>
+                              <span className='font-mono text-purple-700 bg-purple-50 py-1 px-2 rounded-md text-sm'>{order.trackingNumber}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>{' '}
                       <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (

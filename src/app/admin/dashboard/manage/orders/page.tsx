@@ -30,6 +30,7 @@ interface Order {
   novaPoshtaCity?: string;
   novaPoshtaBranch?: string;
   orderItems: OrderItem[];
+  trackingNumber?: string | null;
   user?: {
     id: number;
     email: string;
@@ -48,6 +49,8 @@ export default function OrdersManagementPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [openStatusDropdown, setOpenStatusDropdown] = useState<number | null>(null);
+  const [orderForTracking, setOrderForTracking] = useState<Order | null>(null);
+  const [trackingNumber, setTrackingNumber] = useState('');
   const [editForm, setEditForm] = useState({
     customerFirstName: '',
     customerLastName: '',
@@ -92,24 +95,44 @@ export default function OrdersManagementPage() {
       setLoading(false);
     }
   };
-  const updateOrderStatus = async (orderId: number, newStatus: string) => {
+  const updateOrderStatus = async (orderId: number, newStatus: string, trackingNumber?: string | null) => {
     try {
       const response = await fetch(`/api/admin/orders/${orderId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ status: newStatus }),
+        body: JSON.stringify({ status: newStatus, trackingNumber }),
       });
 
       if (response.ok) {
-        setOrders(orders.map((order) => (order.id === orderId ? { ...order, status: newStatus } : order)));
+        setOrders(orders.map((order) => (order.id === orderId ? { ...order, status: newStatus, trackingNumber: trackingNumber } : order)));
       } else {
         setError('Помилка оновлення статусу замовлення');
       }
     } catch (error) {
       console.error('Error updating order status:', error);
       setError('Помилка оновлення статусу замовлення');
+    }
+  };
+
+  const handleStatusChange = (orderId: number, newStatus: string) => {
+    if (newStatus === 'SHIPPED') {
+      const order = orders.find((o) => o.id === orderId);
+      if (order) {
+        setOrderForTracking(order);
+        setTrackingNumber(order.trackingNumber || '');
+      }
+    } else {
+      updateOrderStatus(orderId, newStatus);
+    }
+    setOpenStatusDropdown(null);
+  };
+
+  const handleTrackingNumberSubmit = () => {
+    if (orderForTracking) {
+      updateOrderStatus(orderForTracking.id, 'SHIPPED', trackingNumber);
+      setOrderForTracking(null);
     }
   };
 
@@ -504,8 +527,7 @@ export default function OrdersManagementPage() {
                                   key={option.value}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    updateOrderStatus(order.id, option.value);
-                                    setOpenStatusDropdown(null);
+                                    handleStatusChange(order.id, option.value);
                                   }}
                                   className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg transition-colors cursor-pointer ${order.status === option.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}
                                 >
@@ -547,6 +569,7 @@ export default function OrdersManagementPage() {
                         <p className='text-sm text-gray-900'>{order.deliveryMethod === 'pickup' ? 'Самовивіз' : 'Нова Пошта'}</p>
                         {order.novaPoshtaCity && <p className='text-sm text-gray-600'>{order.novaPoshtaCity}</p>}
                         {order.novaPoshtaBranch && <p className='text-sm text-gray-600'>{order.novaPoshtaBranch}</p>}
+                        {order.trackingNumber && <p className='text-sm text-gray-600 font-medium'>ТТН: {order.trackingNumber}</p>}
                       </div>
                       <div>
                         <h4 className='text-sm font-medium text-gray-700 mb-2'>Замовлення</h4>
@@ -649,6 +672,27 @@ export default function OrdersManagementPage() {
             )}
           </div>
         )}{' '}
+        {orderForTracking && (
+          <div className='fixed inset-0 z-50 flex items-center justify-center p-4' onClick={() => setOrderForTracking(null)}>
+            <div className='relative z-10 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white' onClick={(e) => e.stopPropagation()}>
+              <h3 className='text-lg font-medium leading-6 text-gray-900'>Введіть номер накладної</h3>
+              <div className='mt-2'>
+                <p className='text-sm text-gray-500'>Для замовлення #{orderForTracking.id}</p>
+              </div>
+              <div className='mt-4'>
+                <input type='text' value={trackingNumber} onChange={(e) => setTrackingNumber(e.target.value)} className='w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500' placeholder='Номер накладної' />
+              </div>
+              <div className='flex items-center justify-end space-x-3 mt-4'>
+                <button onClick={() => setOrderForTracking(null)} className='px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors cursor-pointer'>
+                  Скасувати
+                </button>
+                <button onClick={handleTrackingNumberSubmit} className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer'>
+                  Зберегти
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

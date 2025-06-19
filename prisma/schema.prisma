@@ -175,6 +175,7 @@ model Order {
   deliveryMethod    String
   novaPoshtaCity    String?
   novaPoshtaBranch  String?
+  trackingNumber    String? // Номер накладної для доставки
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

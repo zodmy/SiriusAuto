@@ -19,7 +19,8 @@ export async function PUT(
         { error: 'Недостатньо прав доступу' },
         { status: 403 }
       );
-    } const { id } = await params;
+    }
+    const { id } = params;
     const orderId = parseInt(id);
     const requestData = await request.json();
 
@@ -29,7 +30,7 @@ export async function PUT(
         { status: 400 }
       );
     }
-    const updateData: Record<string, string | OrderStatus> = {};
+    const updateData: Record<string, string | OrderStatus | null> = {};
 
     if (requestData.status !== undefined) {
       if (!Object.values(OrderStatus).includes(requestData.status)) {
@@ -39,13 +40,18 @@ export async function PUT(
         );
       }
       updateData.status = requestData.status;
-    } if (requestData.customerFirstName !== undefined) updateData.customerFirstName = requestData.customerFirstName;
+    }
+    if (requestData.trackingNumber !== undefined) {
+      updateData.trackingNumber = requestData.trackingNumber;
+    }
+    if (requestData.customerFirstName !== undefined) updateData.customerFirstName = requestData.customerFirstName;
     if (requestData.customerLastName !== undefined) updateData.customerLastName = requestData.customerLastName;
     if (requestData.customerEmail !== undefined) updateData.customerEmail = requestData.customerEmail;
     if (requestData.customerPhone !== undefined) updateData.customerPhone = normalizePhoneNumber(requestData.customerPhone);
     if (requestData.deliveryMethod !== undefined) updateData.deliveryMethod = requestData.deliveryMethod;
     if (requestData.novaPoshtaCity !== undefined) updateData.novaPoshtaCity = requestData.novaPoshtaCity;
-    if (requestData.novaPoshtaBranch !== undefined) updateData.novaPoshtaBranch = requestData.novaPoshtaBranch; const updatedOrder = await prisma.order.update({
+    if (requestData.novaPoshtaBranch !== undefined) updateData.novaPoshtaBranch = requestData.novaPoshtaBranch;
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: updateData,
       include: {
