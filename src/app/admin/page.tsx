@@ -38,7 +38,8 @@ export default function AdminLogin() {
 
   useEffect(() => {
     checkAuth();
-  }, [checkAuth]);  if (isChecking) {
+  }, [checkAuth]);
+  if (isChecking) {
     return (
       <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100'>
         <div className='text-center bg-white p-8 rounded-xl shadow-lg border border-gray-200'>
@@ -111,13 +112,8 @@ export default function AdminLogin() {
               <div id='password-error' className='bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm' role='alert'>
                 {error}
               </div>
-            )}            <Button
-              type='submit'
-              isLoading={isSubmitting}
-              disabled={!password.trim()}
-              fullWidth
-              size='lg'
-            >
+            )}{' '}
+            <Button type='submit' isLoading={isSubmitting} disabled={!password.trim()} fullWidth size='lg'>
               Увійти до панелі
             </Button>{' '}
           </form>
