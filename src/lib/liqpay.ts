@@ -10,6 +10,7 @@ export interface LiqPayFormData {
   order_id: string;
   result_url: string;
   server_url: string;
+  sandbox?: number;
 }
 
 export interface LiqPayResponse {
@@ -50,6 +51,10 @@ export class LiqPayService {
       result_url: orderData.resultUrl,
       server_url: orderData.serverUrl,
     };
+
+    if (this.publicKey.startsWith('sandbox_')) {
+      formData.sandbox = 1;
+    }
 
     const data = Buffer.from(JSON.stringify(formData)).toString('base64');
     const signature = this.generateSignature(data);

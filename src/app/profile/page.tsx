@@ -71,6 +71,10 @@ export default function ProfilePage() {
   const [reviewError, setReviewError] = useState('');
   const [reviewSuccess, setReviewSuccess] = useState('');
   const [reviewableItems, setReviewableItems] = useState<Set<string>>(new Set());
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const router = useRouter();
   const { isAuthenticated, isInitialCheckComplete: authReady, logout } = useAuth();
@@ -427,12 +431,54 @@ export default function ProfilePage() {
         return status;
     }
   };
-
   const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
     setShowPasswords((prev) => ({
       ...prev,
       [field]: !prev[field],
     }));
+  };
+
+  const handleDeleteAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsDeleting(true);
+    setDeleteError('');
+
+    try {
+      const response = await fetch('/api/user/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: deletePassword }),
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Перенаправляємо на головну сторінку після успішного видалення
+        router.push('/');
+      } else {
+        setDeleteError(data.error || 'Помилка видалення облікового запису');
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      setDeleteError('Мережева помилка');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const openDeleteModal = () => {
+    setShowDeleteModal(true);
+    setDeletePassword('');
+    setDeleteError('');
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+    setDeletePassword('');
+    setDeleteError('');
   };
   if (!authReady) {
     return <div className='min-h-screen bg-gray-50'></div>;
@@ -491,13 +537,21 @@ export default function ProfilePage() {
 
           <div className='bg-white shadow rounded-lg'>
             <div className='px-6 py-4 border-b border-gray-200'>
+              {' '}
               <div className='flex justify-between items-center'>
                 <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>
-                {!isEditing && (
-                  <button onClick={() => setIsEditing(true)} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
-                    Редагувати
-                  </button>
-                )}
+                <div className='flex space-x-3'>
+                  {!isEditing && (
+                    <>
+                      <button onClick={openDeleteModal} className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
+                        Видалити обліковий запис
+                      </button>
+                      <button onClick={() => setIsEditing(true)} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
+                        Редагувати
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -598,8 +652,11 @@ export default function ProfilePage() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </div>{' '}
                   <div className='flex justify-end space-x-3'>
+                    <button type='button' onClick={openDeleteModal} className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
+                      Видалити обліковий запис
+                    </button>
                     <button
                       type='button'
                       onClick={() => {
@@ -774,6 +831,44 @@ export default function ProfilePage() {
                   {submittingReview ? 'Додавання...' : 'Додати відгук'}
                 </button>
                 <button type='button' onClick={closeReviewModal} className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium cursor-pointer'>
+                  Скасувати
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Модальне вікно видалення облікового запису */}
+      {showDeleteModal && (
+        <div className='fixed inset-0 flex items-center justify-center z-50'>
+          <div className='bg-white rounded-lg max-w-md w-full mx-4 p-6 shadow-2xl border border-gray-200 ring-1 ring-gray-300'>
+            <div className='mb-4'>
+              <h3 className='text-lg font-semibold text-red-900 mb-2'>Видалення облікового запису</h3>
+              <p className='text-gray-600 mb-4'>Ця дія незворотна. Всі ваші дані, замовлення та відгуки будуть видалені назавжди.</p>
+              <div className='bg-red-50 border border-red-200 rounded-md p-3 mb-4'>
+                <p className='text-red-800 text-sm font-medium'>⚠️ Увага: Після видалення облікового запису ви не зможете його відновити!</p>
+              </div>
+            </div>
+
+            {deleteError && (
+              <div className='bg-red-50 border border-red-200 rounded-md p-3 mb-4'>
+                <p className='text-red-800'>{deleteError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleDeleteAccount} className='space-y-4'>
+              <div>
+                <label htmlFor='deletePassword' className='block text-sm font-medium text-gray-700 mb-2'>
+                  Введіть ваш пароль для підтвердження
+                </label>
+                <input id='deletePassword' type='password' value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500' placeholder='Введіть ваш пароль' required />
+              </div>
+
+              <div className='flex space-x-3'>
+                <button type='submit' disabled={isDeleting || !deletePassword} className='flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer'>
+                  {isDeleting ? 'Видалення...' : 'Підтвердити видалення'}
+                </button>
+                <button type='button' onClick={closeDeleteModal} disabled={isDeleting} className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
                   Скасувати
                 </button>
               </div>
