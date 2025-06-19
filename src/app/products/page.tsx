@@ -8,6 +8,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart, HiFilter } from 'react-icons/hi';
 import { FaCar } from 'react-icons/fa';
+import { useCart } from '@/lib/hooks/useCart';
+import { useBreadcrumbScroll } from '@/lib/hooks/useBreadcrumbScroll';
+import CartNotification from '@/components/CartNotification';
 
 interface Category {
   id: number;
@@ -35,6 +38,14 @@ interface Product {
     id: number;
     name: string;
   };
+  compatibleVehicles?: Array<{
+    id: number;
+    carMake: { id: number; name: string };
+    carModel: { id: number; name: string };
+    carYear: { id: number; year: number };
+    carBodyType: { id: number; name: string };
+    carEngine: { id: number; name: string };
+  }>;
 }
 
 interface SavedCarSelection {
@@ -55,6 +66,7 @@ function ProductsPageContent() {
   const router = useRouter();
   const categoryName = searchParams.get('category');
   const urlSearchQuery = searchParams.get('search');
+  const { addItem } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
@@ -69,6 +81,19 @@ function ProductsPageContent() {
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [showAllProducts, setShowAllProducts] = useState<boolean>(false);
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationProductName, setNotificationProductName] = useState('');
+  const { breadcrumbRef, scrollToEnd } = useBreadcrumbScroll();
+  useEffect(() => {
+    let title = 'Товари - Sirius Auto';
+    if (currentCategory) {
+      title = `${currentCategory.name} - автозапчастини - Sirius Auto`;
+    } else if (debouncedSearchQuery) {
+      title = `Пошук "${debouncedSearchQuery}" - автозапчастини - Sirius Auto`;
+    }
+    document.title = title;
+  }, [currentCategory, debouncedSearchQuery]);
+
   useEffect(() => {
     if (urlSearchQuery) {
       const query = decodeURIComponent(urlSearchQuery);
@@ -76,7 +101,6 @@ function ProductsPageContent() {
       setDebouncedSearchQuery(query);
     }
   }, [urlSearchQuery]);
-
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery);
@@ -84,6 +108,12 @@ function ProductsPageContent() {
 
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  useEffect(() => {
+    if (debouncedSearchQuery) {
+      scrollToEnd();
+    }
+  }, [debouncedSearchQuery, scrollToEnd]);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -95,6 +125,7 @@ function ProductsPageContent() {
           if (categoryName) {
             const category = data.find((cat: Category) => cat.name === decodeURIComponent(categoryName));
             setCurrentCategory(category || null);
+            scrollToEnd();
           }
         }
       } catch (error) {
@@ -102,7 +133,7 @@ function ProductsPageContent() {
       }
     };
     fetchCategories();
-  }, [categoryName]);
+  }, [categoryName, scrollToEnd]);
 
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
@@ -123,6 +154,20 @@ function ProductsPageContent() {
 
         if (categoryName) {
           params.append('category', categoryName);
+        }
+
+        if (debouncedSearchQuery) {
+          params.append('search', debouncedSearchQuery);
+        }
+
+        if (priceRange.min) {
+          params.append('minPrice', priceRange.min);
+        }
+        if (priceRange.max) {
+          params.append('maxPrice', priceRange.max);
+        }
+        if (inStockOnly) {
+          params.append('inStock', 'true');
         }
 
         if (savedCar && !showAllProducts) {
@@ -152,7 +197,7 @@ function ProductsPageContent() {
       }
     };
     fetchManufacturers();
-  }, [categoryName, savedCar, showAllProducts]);
+  }, [categoryName, debouncedSearchQuery, priceRange, inStockOnly, savedCar, showAllProducts]);
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
@@ -183,6 +228,9 @@ function ProductsPageContent() {
           params.append('carYear', savedCar.year.toString());
           params.append('carBodyType', savedCar.bodyTypeName);
           params.append('carEngine', savedCar.engineName);
+        }
+        if (showAllProducts) {
+          params.append('showAllProducts', 'true');
         }
 
         params.append('sort', sortBy);
@@ -261,29 +309,34 @@ function ProductsPageContent() {
       <Header />
       <main className='flex-grow'>
         <div className='bg-white border-b'>
+          {' '}
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-            <nav className='flex items-center space-x-2 text-sm'>
-              {breadcrumbs().map((crumb, index) => (
-                <div key={index} className='flex items-center'>
-                  {index > 0 && <HiChevronRight className='text-gray-400 mx-2' />}
-                  {index === 0 ? <HiHome className='text-gray-400 mr-1' /> : null}
-                  {index === breadcrumbs().length - 1 ? (
-                    <span className='text-gray-900 font-medium'>{crumb.name}</span>
-                  ) : (
-                    <Link href={crumb.href} className='text-blue-600 hover:text-blue-800'>
-                      {crumb.name}
-                    </Link>
-                  )}
+            <div className='relative'>
+              <nav ref={breadcrumbRef} className='breadcrumb-container flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
+                <div className='flex items-center space-x-1 sm:space-x-2 min-w-max'>
+                  {breadcrumbs().map((crumb, index) => (
+                    <div key={index} className='flex items-center'>
+                      {index > 0 && <HiChevronRight className='text-gray-400 mx-1 sm:mx-2 flex-shrink-0' />}
+                      {index === 0 ? <HiHome className='text-gray-400 mr-1 flex-shrink-0' /> : null}
+                      {index === breadcrumbs().length - 1 ? (
+                        <span className='text-gray-900 font-medium whitespace-nowrap'>{crumb.name}</span>
+                      ) : (
+                        <Link href={crumb.href} className='text-blue-600 hover:text-blue-800 whitespace-nowrap'>
+                          {crumb.name}
+                        </Link>
+                      )}
+                    </div>
+                  ))}{' '}
                 </div>
-              ))}
-            </nav>
+              </nav>
+            </div>
           </div>
         </div>{' '}
         {savedCar && (
           <div className='bg-green-50 border-b border-green-200'>
             <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
               <div className='flex items-center space-x-3'>
-                <FaCar className='text-green-600' />
+                <FaCar className='text-green-600' />{' '}
                 <span className='text-sm text-green-800'>
                   <strong>Вибраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
                 </span>
@@ -329,12 +382,12 @@ function ProductsPageContent() {
                         <input type='checkbox' checked={inStockOnly} onChange={(e) => setInStockOnly(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
                         <span className='text-sm font-medium text-gray-700'>Тільки в наявності</span>
                       </label>
-                    </div>
+                    </div>{' '}
                     {savedCar && (
                       <div>
                         <label className='flex items-center gap-2 cursor-pointer'>
                           <input type='checkbox' checked={showAllProducts} onChange={(e) => setShowAllProducts(e.target.checked)} className='rounded border-gray-300 text-blue-600 focus:ring-blue-500' />
-                          <span className='text-sm font-medium text-gray-700'>Показати всі товари</span>
+                          <span className='text-sm font-medium text-gray-700'>Показувати несумісні</span>
                         </label>
                         <p className='text-xs text-gray-500 mt-1'>Показувати товари, несумісні з обраним автомобілем</p>
                       </div>
@@ -465,9 +518,9 @@ function ProductsPageContent() {
                           )}
                         </div>
                         <div className={`${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : 'flex-1 flex flex-col'}`}>
+                          {' '}
                           <div className='mb-2'>
-                            <h3 className={`font-semibold text-gray-900 line-clamp-2 ${viewMode === 'list' ? 'text-lg mb-1' : 'text-base mb-2'}`}>{product.name}</h3>
-                            {product.manufacturer && <p className='text-xs text-gray-500 mb-1'>{product.manufacturer.name}</p>}
+                            <h3 className={`font-semibold text-gray-900 line-clamp-2 ${viewMode === 'list' ? 'text-lg mb-1' : 'text-base mb-2'}`}>{product.name}</h3> <div className='flex items-center gap-2 mb-1'>{product.manufacturer && <p className='text-xs text-gray-500'>{product.manufacturer.name}</p>}</div>
                           </div>
                           {product.description && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow'>{product.description}</p>}
                           <div className='mt-auto'>
@@ -490,24 +543,46 @@ function ProductsPageContent() {
                                 disabled={product.stockQuantity === 0}
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  if (product.stockQuantity > 0) {
+                                    addItem({
+                                      id: product.id,
+                                      name: product.name,
+                                      price: product.price,
+                                      image: product.imageUrl,
+                                      stockQuantity: product.stockQuantity,
+                                    });
+                                    setNotificationProductName(product.name);
+                                    setShowNotification(true);
+                                  }
                                 }}
                                 className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed cursor-pointer'
                               >
-                                {product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
+                                {product.stockQuantity > 0 ? 'Додати до кошику' : 'Немає в наявності'}
                               </button>
                             )}
                           </div>
                         </div>
                         {viewMode === 'list' && (
                           <div className='flex-shrink-0 flex items-center gap-3'>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>{' '}
                             <button
                               disabled={product.stockQuantity === 0}
                               onClick={(e) => {
                                 e.stopPropagation();
+                                if (product.stockQuantity > 0) {
+                                  addItem({
+                                    id: product.id,
+                                    name: product.name,
+                                    price: product.price,
+                                    image: product.imageUrl,
+                                    stockQuantity: product.stockQuantity,
+                                  });
+                                  setNotificationProductName(product.name);
+                                  setShowNotification(true);
+                                }
                               }}
                               className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
-                              title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Повідомити про надходження'}
+                              title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Немає в наявності'}
                             >
                               <HiShoppingCart className='w-5 h-5' />
                             </button>
@@ -519,10 +594,12 @@ function ProductsPageContent() {
                 )}
               </div>
             </div>
-          )}
+          )}{' '}
         </div>
       </main>
       <Footer />
+
+      <CartNotification show={showNotification} productName={notificationProductName} onHide={() => setShowNotification(false)} />
     </div>
   );
 }
@@ -534,7 +611,7 @@ function ProductsPageLoading() {
       <main className='flex-grow flex items-center justify-center'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Завантаження...</p>
+          <p className='text-gray-600'>Завантаження...</p>{' '}
         </div>
       </main>
       <Footer />

@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/components/AuthProvider';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,12 +21,18 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { register, isAuthenticated, isInitialCheckComplete } = useAuth();
+
+  useEffect(() => {
+    document.title = 'Реєстрація акаунта - Sirius Auto';
+  }, []);
   useEffect(() => {
     if (isInitialCheckComplete && isAuthenticated) {
-      router.push('/');
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
     }
-  }, [isInitialCheckComplete, isAuthenticated, router]);
+  }, [isInitialCheckComplete, isAuthenticated, router, searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,7 +63,6 @@ export default function RegisterPage() {
 
     return null;
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -78,7 +83,9 @@ export default function RegisterPage() {
     });
 
     if (result.success) {
-      router.push('/login?registered=true');
+      const redirectTo = searchParams.get('redirect');
+      const loginUrl = redirectTo ? `/login?registered=true&redirect=${redirectTo}` : '/login?registered=true';
+      router.push(loginUrl);
     } else {
       setError(result.error || 'Помилка реєстрації');
     }
@@ -92,10 +99,10 @@ export default function RegisterPage() {
         {' '}
         <div className='max-w-md w-full space-y-8'>
           <div className='text-center'>
-            <h2 className='text-3xl font-extrabold text-gray-900'>Створення облікового запису</h2>
+            <h2 className='text-3xl font-extrabold text-gray-900'>Створення облікового запису</h2>{' '}
             <p className='mt-2 text-sm text-gray-600'>
               Уже маєте обліковий запис?{' '}
-              <Link href='/login' className='font-medium text-blue-600 hover:text-blue-500 cursor-pointer'>
+              <Link href={`/login${searchParams.get('redirect') ? `?redirect=${searchParams.get('redirect')}` : ''}`} className='font-medium text-blue-600 hover:text-blue-500 cursor-pointer'>
                 Увійдіть
               </Link>
             </p>
@@ -175,7 +182,7 @@ export default function RegisterPage() {
 
             <div>
               <button type='submit' disabled={isSubmitting} className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer'>
-                {isSubmitting ? 'Реєстрація...' : 'Створити обліковий запис'}
+                {isSubmitting ? 'Реєстрація...' : 'Створити обліковий запис'}{' '}
               </button>
             </div>
           </form>
@@ -183,5 +190,13 @@ export default function RegisterPage() {
       </div>
       <Footer />
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
   );
 }

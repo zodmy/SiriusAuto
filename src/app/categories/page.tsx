@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Link from 'next/link';
 import { HiTag, HiChevronRight, HiHome } from 'react-icons/hi';
+import { useBreadcrumbScroll } from '@/lib/hooks/useBreadcrumbScroll';
 
 interface Category {
   id: number;
@@ -20,6 +21,11 @@ interface Category {
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { breadcrumbRef } = useBreadcrumbScroll();
+
+  useEffect(() => {
+    document.title = 'Категорії автозапчастин - Sirius Auto';
+  }, []);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -53,26 +59,30 @@ export default function CategoriesPage() {
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
       <main className='flex-grow'>
+        {' '}
         <div className='bg-white border-b'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-            <nav className='flex items-center space-x-2 text-sm'>
-              {breadcrumbs().map((crumb, index) => (
-                <div key={index} className='flex items-center'>
-                  {index > 0 && <HiChevronRight className='text-gray-400 mx-2' />}
-                  {index === 0 ? <HiHome className='text-gray-400 mr-1' /> : null}
-                  {index === breadcrumbs().length - 1 ? (
-                    <span className='text-gray-900 font-medium'>{crumb.name}</span>
-                  ) : (
-                    <Link href={crumb.href} className='text-blue-600 hover:text-blue-800'>
-                      {crumb.name}
-                    </Link>
-                  )}
+            <div className='relative'>
+              <nav ref={breadcrumbRef} className='breadcrumb-container flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
+                <div className='flex items-center space-x-1 sm:space-x-2 min-w-max'>
+                  {breadcrumbs().map((crumb, index) => (
+                    <div key={index} className='flex items-center'>
+                      {index > 0 && <HiChevronRight className='text-gray-400 mx-1 sm:mx-2 flex-shrink-0' />}
+                      {index === 0 ? <HiHome className='text-gray-400 mr-1 flex-shrink-0' /> : null}
+                      {index === breadcrumbs().length - 1 ? (
+                        <span className='text-gray-900 font-medium whitespace-nowrap'>{crumb.name}</span>
+                      ) : (
+                        <Link href={crumb.href} className='text-blue-600 hover:text-blue-800 whitespace-nowrap'>
+                          {crumb.name}
+                        </Link>
+                      )}
+                    </div>
+                  ))}{' '}
                 </div>
-              ))}
-            </nav>
+              </nav>
+            </div>
           </div>
         </div>
-
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
           <div className='bg-white rounded-lg shadow-sm p-6 mb-8'>
             <div className='text-center'>

@@ -8,7 +8,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
     }
 
     const product = await prisma.product.findUnique({
@@ -17,12 +17,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     });
 
     if (!product) {
-      return NextResponse.json({ error: 'Продукт не знайдено' }, { status: 404 });
+      return NextResponse.json({ error: 'Товар не знайдено' }, { status: 404 });
     }
 
     return NextResponse.json(product.productOptions);
   } catch (error) {
-    console.error('Помилка отримання опцій продукту:', error);
+    console.error('Помилка отримання опцій товару:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
     }
 
     const productExists = await prisma.product.findUnique({
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     });
 
     if (!productExists) {
-      return NextResponse.json({ error: 'Продукт не знайдено' }, { status: 404 });
+      return NextResponse.json({ error: 'Товар не знайдено' }, { status: 404 });
     }
 
     const data = await request.json();
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return NextResponse.json(productOption, { status: 201 });
   } catch (error) {
-    console.error('Помилка створення опції продукту:', error);
+    console.error('Помилка створення опції товару:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }

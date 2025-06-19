@@ -1,13 +1,18 @@
 'use client';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { HiOutlineCog, HiOutlineTag, HiOutlineCube, HiOutlineOfficeBuilding, HiOutlineLogout } from 'react-icons/hi';
+import { HiOutlineCog, HiOutlineTag, HiOutlineCube, HiOutlineOfficeBuilding, HiOutlineLogout, HiOutlineClipboardList, HiOutlineTruck } from 'react-icons/hi';
 import { LuCar } from 'react-icons/lu';
 import { useAdminAuth } from '@/lib/components/AdminAuthProvider';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { isAdmin, isLoading } = useAdminAuth();
+
+  useEffect(() => {
+    document.title = 'Панель адміністратора - Sirius Auto';
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -59,11 +64,17 @@ export default function AdminDashboard() {
             <HiOutlineLogout size={20} />
             Вийти
           </button>
-        </div>
+        </div>{' '}
         <div className='grid grid-cols-1 gap-4 mb-6'>
           {' '}
+          <Link href='/admin/dashboard/supply' className='flex items-center justify-center gap-2 bg-indigo-600 text-white p-4 rounded-lg shadow hover:bg-indigo-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 cursor-pointer'>
+            <HiOutlineTruck size={22} /> Розділ постачання
+          </Link>
           <Link href='/admin/dashboard/manage/car-variations' className='flex items-center justify-center gap-2 bg-blue-600 text-white p-4 rounded-lg shadow hover:bg-blue-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 cursor-pointer'>
             <LuCar size={22} /> Керування автомобілями
+          </Link>
+          <Link href='/admin/dashboard/manage/orders' className='flex items-center justify-center gap-2 bg-orange-600 text-white p-4 rounded-lg shadow hover:bg-orange-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 cursor-pointer'>
+            <HiOutlineClipboardList size={22} /> Керування замовленнями
           </Link>
           <Link href='/admin/dashboard/manage/categories' className='flex items-center justify-center gap-2 bg-green-600 text-white p-4 rounded-lg shadow hover:bg-green-700 transition-colors text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 cursor-pointer'>
             <HiOutlineTag size={22} /> Керування категоріями

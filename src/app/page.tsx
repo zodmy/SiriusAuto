@@ -73,9 +73,13 @@ export default function Home() {
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const [selectedBodyType, setSelectedBodyType] = useState<number | null>(null);
   const [selectedEngine, setSelectedEngine] = useState<number | null>(null);
-
   const [isLoading, setIsLoading] = useState(true);
   const [savedCar, setSavedCar] = useState<SavedCarSelection | null>(null);
+
+  useEffect(() => {
+    document.title = 'Sirius Auto - автозапчастини онлайн - Магазин автозапчастин';
+  }, []);
+
   useEffect(() => {
     const savedCarData = localStorage.getItem('selectedCar');
     if (savedCarData) {
@@ -262,10 +266,11 @@ export default function Home() {
             {savedCar && (
               <div className='mb-8 p-4 bg-green-50 border border-green-200 rounded-lg'>
                 <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
+                  {' '}
                   <div className='text-center sm:text-left'>
                     <p className='text-green-800 font-semibold'>Обраний автомобіль:</p>
                     <p className='text-green-700'>
-                      {savedCar.makeName} {savedCar.modelName} {savedCar.year} ({savedCar.bodyTypeName}, {savedCar.engineName})
+                      {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
                     </p>
                   </div>
                   <button onClick={clearCarSelection} className='px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors text-sm font-medium cursor-pointer'>

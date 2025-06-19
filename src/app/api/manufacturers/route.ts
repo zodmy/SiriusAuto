@@ -7,68 +7,97 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const categoryName = searchParams.get('category');
+    const search = searchParams.get('search');
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const inStock = searchParams.get('inStock');
 
     const carMake = searchParams.get('carMake');
     const carModel = searchParams.get('carModel');
     const carYear = searchParams.get('carYear');
     const carBodyType = searchParams.get('carBodyType');
-    const carEngine = searchParams.get('carEngine'); const showAllProducts = searchParams.get('showAllProducts') === 'true';
+    const carEngine = searchParams.get('carEngine');
+    const showAllProducts = searchParams.get('showAllProducts') === 'true';
+
+    const productFilterConditions: Prisma.ProductWhereInput[] = [];
+
+    if (categoryName) {
+      productFilterConditions.push({
+        category: {
+          name: decodeURIComponent(categoryName)
+        }
+      });
+    }
+
+    if (search) {
+      productFilterConditions.push({
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
+        ]
+      });
+    }
+
+    if (minPrice || maxPrice) {
+      const priceCondition: { gte?: number; lte?: number } = {};
+      if (minPrice) {
+        priceCondition.gte = parseFloat(minPrice);
+      }
+      if (maxPrice) {
+        priceCondition.lte = parseFloat(maxPrice);
+      }
+      productFilterConditions.push({
+        price: priceCondition
+      });
+    }
+
+    if (inStock === 'true') {
+      productFilterConditions.push({
+        stockQuantity: {
+          gt: 0
+        }
+      });
+    }
+
+    if (carMake && carModel && carYear && carBodyType && carEngine && !showAllProducts) {
+      productFilterConditions.push({
+        OR: [
+          {
+            compatibleVehicles: {
+              some: {
+                carMake: { name: carMake },
+                carModel: { name: carModel },
+                carYear: { year: parseInt(carYear) },
+                carBodyType: { name: carBodyType },
+                carEngine: { name: carEngine }
+              }
+            }
+          },
+          {
+            compatibleVehicles: {
+              none: {}
+            }
+          }
+        ]
+      });
+    }
 
     const whereCondition: Prisma.ManufacturerWhereInput = {};
 
-    if (categoryName) {
+    if (productFilterConditions.length > 0) {
       whereCondition.products = {
         some: {
-          category: {
-            name: decodeURIComponent(categoryName)
-          }
+          AND: productFilterConditions
         }
       };
     }
 
-    if (carMake && carModel && carYear && carBodyType && carEngine && !showAllProducts) {
-      const compatibilityCondition = {
-        compatibleVehicles: {
-          some: {
-            carMake: { name: carMake },
-            carModel: { name: carModel },
-            carYear: { year: parseInt(carYear) },
-            carBodyType: { name: carBodyType },
-            carEngine: { name: carEngine }
-          }
-        }
-      }; if (categoryName) {
-        whereCondition.products = {
-          some: {
-            AND: [
-              { category: { name: decodeURIComponent(categoryName) } },
-              compatibilityCondition
-            ]
-          }
-        };
-      } else {
-        whereCondition.products = {
-          some: compatibilityCondition
-        };
+    const manufacturers = await prisma.manufacturer.findMany({
+      where: whereCondition,
+      orderBy: {
+        name: 'asc'
       }
-    }
-
-    let manufacturers;
-
-    if (Object.keys(whereCondition).length > 0) {
-      manufacturers = await prisma.manufacturer.findMany({
-        where: whereCondition,
-        orderBy: {
-          name: 'asc'
-        }
-      });
-    } else {
-      manufacturers = await prisma.manufacturer.findMany({
-        orderBy: {
-          name: 'asc'
-        }
-      });
-    }
+    });
 
     return NextResponse.json(manufacturers, { status: 200 });
   } catch (error) {

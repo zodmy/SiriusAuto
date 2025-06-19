@@ -76,6 +76,10 @@ const ManufacturerSkeleton = () => (
 export default function ManageManufacturersPage() {
   const { isAdmin, isLoading: isVerifyingAuth } = useAdminAuth();
 
+  useEffect(() => {
+    document.title = 'Управління виробниками - Адміністратор - Sirius Auto';
+  }, []);
+
   const normalizeString = useCallback((str: string) => {
     return str
       .normalize('NFD')

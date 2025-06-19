@@ -7,21 +7,27 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     const productId = parseInt(id, 10);
 
     if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Недійсний ID продукту' }, { status: 400 });
-    }
-
-    const product = await prisma.product.findUnique({
-      where: { id: productId },
-      include: { reviews: true },
+      return NextResponse.json({ error: 'Недійсний ID товару' }, { status: 400 });
+    } const reviews = await prisma.review.findMany({
+      where: {
+        productId: productId
+      },
+      include: {
+        user: {
+          select: {
+            firstName: true,
+            lastName: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
     });
 
-    if (!product) {
-      return NextResponse.json({ error: 'Продукт не знайдено' }, { status: 404 });
-    }
-
-    return NextResponse.json(product.reviews);
+    return NextResponse.json(reviews);
   } catch (error) {
-    console.error('Помилка отримання відгуків про продукт:', error);
+    console.error('Помилка отримання відгуків про товар:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }

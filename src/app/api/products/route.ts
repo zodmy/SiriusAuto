@@ -5,66 +5,98 @@ import { Prisma } from '@prisma/client';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url); const categoryName = searchParams.get('category');
+    const { searchParams } = new URL(request.url);
+    const categoryName = searchParams.get('category');
     const search = searchParams.get('search');
     const sort = searchParams.get('sort') || 'name';
     const manufacturers = searchParams.get('manufacturers');
     const minPrice = searchParams.get('minPrice');
     const maxPrice = searchParams.get('maxPrice');
-    const inStock = searchParams.get('inStock');
-
-    const carMake = searchParams.get('carMake');
+    const inStock = searchParams.get('inStock'); const carMake = searchParams.get('carMake');
     const carModel = searchParams.get('carModel');
     const carYear = searchParams.get('carYear');
     const carBodyType = searchParams.get('carBodyType');
     const carEngine = searchParams.get('carEngine');
+    const showAllProducts = searchParams.get('showAllProducts');
 
-    const where: Prisma.ProductWhereInput = {};
+    const baseConditions: Prisma.ProductWhereInput[] = [];
 
     if (categoryName) {
-      where.category = {
-        name: decodeURIComponent(categoryName)
-      };
+      baseConditions.push({
+        category: {
+          name: decodeURIComponent(categoryName)
+        }
+      });
     }
 
     if (search) {
-      where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } }
-      ];
-    } if (manufacturers) {
-      const manufacturerList = manufacturers.split(',').map(m => m.trim());
-      where.manufacturer = {
-        name: {
-          in: manufacturerList
-        }
-      };
+      baseConditions.push({
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { description: { contains: search, mode: 'insensitive' } }
+        ]
+      });
     }
 
-    if (minPrice || maxPrice) {
-      where.price = {};
+    if (manufacturers) {
+      const manufacturerList = manufacturers.split(',').map(m => m.trim());
+      baseConditions.push({
+        manufacturer: {
+          name: {
+            in: manufacturerList
+          }
+        }
+      });
+    } if (minPrice || maxPrice) {
+      const priceCondition: { gte?: number; lte?: number } = {};
       if (minPrice) {
-        where.price.gte = parseFloat(minPrice);
+        priceCondition.gte = parseFloat(minPrice);
       }
       if (maxPrice) {
-        where.price.lte = parseFloat(maxPrice);
+        priceCondition.lte = parseFloat(maxPrice);
       }
-    } if (inStock === 'true') {
-      where.stockQuantity = {
-        gt: 0
-      };
+      baseConditions.push({
+        price: priceCondition
+      });
     }
 
-    if (carMake && carModel && carYear && carBodyType && carEngine) {
-      where.compatibleVehicles = {
-        some: {
-          carMake: { name: carMake },
-          carModel: { name: carModel },
-          carYear: { year: parseInt(carYear) },
-          carBodyType: { name: carBodyType },
-          carEngine: { name: carEngine }
+    if (inStock === 'true') {
+      baseConditions.push({
+        stockQuantity: {
+          gt: 0
         }
-      };
+      });
+    }
+
+    let where: Prisma.ProductWhereInput = {};
+
+    if (baseConditions.length > 0) {
+      where.AND = baseConditions;
+    } if (carMake && carModel && carYear && carBodyType && carEngine && showAllProducts !== 'true') {
+      const carCompatibilityCondition = {
+        OR: [
+          {
+            compatibleVehicles: {
+              some: {
+                carMake: { name: carMake },
+                carModel: { name: carModel },
+                carYear: { year: parseInt(carYear) },
+                carBodyType: { name: carBodyType },
+                carEngine: { name: carEngine }
+              }
+            }
+          },
+          {
+            compatibleVehicles: {
+              none: {}
+            }
+          }
+        ]
+      }; if (where.AND && Array.isArray(where.AND)) {
+        where.AND.push(carCompatibilityCondition);
+      } else {
+        where = carCompatibilityCondition;
+      }
     }
 
     let orderBy: Prisma.ProductOrderByWithRelationInput = {};
@@ -155,7 +187,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json(products);
   } catch (error) {
-    console.error('Помилка отримання продуктів:', error);
+    console.error('Помилка отримання товарів:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }
@@ -191,7 +223,7 @@ export async function POST(request: NextRequest) {
     });
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error('Помилка створення продукту:', error);
+    console.error('Помилка створення товару:', error);
     return NextResponse.json({ error: 'Внутрішня помилка сервера' }, { status: 500 });
   }
 }
