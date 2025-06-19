@@ -1,86 +1,70 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
 import SiriusAutoLogoDynamic from '@/components/SiriusAutoLogoDynamic';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     document.title = 'Адміністратор - Sirius Auto';
   }, []);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch('/api/admin/check-auth', {
-          method: 'GET',
-          credentials: 'include',
-        });
+  const checkAuth = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/check-auth', {
+        method: 'GET',
+        credentials: 'include',
+      });
 
-        if (res.ok) {
-          router.push('/admin/dashboard');
-          return;
-        }
-      } catch (error) {
-        console.log('Помилка перевірки авторизації:', error);
+      if (res.ok) {
+        router.push('/admin/dashboard');
+        return;
       }
-
-      setIsChecking(false);
-    };
-
-    const originalOverflow = document.documentElement.style.overflow;
-    const originalBodyOverflow = document.body.style.overflow;
-    const originalHeight = document.documentElement.style.height;
-    const originalBodyHeight = document.body.style.height;
-    const originalMargin = document.body.style.margin;
-    const originalPadding = document.body.style.padding;
-    const originalMinHeight = document.body.style.minHeight;
-
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.height = '100%';
-    document.body.style.height = '100%';
-    document.body.style.margin = '0';
-    document.body.style.padding = '0';
-
-    if (window.innerWidth <= 640) {
-      document.body.style.minHeight = '-webkit-fill-available';
+    } catch (error) {
+      console.log('Помилка перевірки авторизації:', error);
     }
 
-    checkAuth();
-
-    return () => {
-      document.documentElement.style.overflow = originalOverflow;
-      document.body.style.overflow = originalBodyOverflow;
-      document.documentElement.style.height = originalHeight;
-      document.body.style.height = originalBodyHeight;
-      document.body.style.margin = originalMargin;
-      document.body.style.padding = originalPadding;
-      document.body.style.minHeight = originalMinHeight;
-    };
+    setIsChecking(false);
   }, [router]);
 
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
   if (isChecking) {
     return (
-      <div className='h-[100svh] flex items-center justify-center bg-gray-100'>
-        <div className='text-center'>
+      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100'>
+        <div className='text-center bg-white p-8 rounded-xl shadow-lg border border-gray-200'>
           <SiriusAutoLogoDynamic textColor='#1c5eae' iconColor='#1c5eae' width={180} height={60} className='max-w-full h-auto mb-4' />
-          <p className='text-gray-700'>Завантаження...</p>
+          <div className='flex items-center justify-center gap-2'>
+            <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.3s]'></div>
+            <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce [animation-delay:-0.15s]'></div>
+            <div className='w-2 h-2 bg-blue-600 rounded-full animate-bounce'></div>
+          </div>
+          <p className='text-gray-700 mt-4'>Перевірка авторизації...</p>
         </div>
       </div>
     );
   }
 
-  const handleLogin = async (event?: React.FormEvent<HTMLFormElement>) => {
-    if (event) {
-      event.preventDefault();
-    }
+  const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     setError('');
+    setIsSubmitting(true);
+
+    if (!password.trim()) {
+      setError('Введіть пароль');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch('/api/admin/login', {
         method: 'POST',
@@ -90,38 +74,72 @@ export default function AdminLogin() {
         body: JSON.stringify({ password }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || 'Помилка входу');
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        router.push('/admin/dashboard');
       } else {
-        const data = await res.json();
-        if (data.success) {
-          router.push('/admin/dashboard');
-        } else {
-          setError(data.message || 'Помилка входу');
-        }
+        setError(data.message || 'Невірний пароль');
       }
     } catch (err) {
-      setError('Серверна помилка');
+      setError("Помилка з'єднання з сервером");
       console.error('Помилка логіну:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
   return (
-    <div className='h-[100svh] flex items-center justify-center bg-gray-100 px-4'>
-      <div className='flex flex-col items-center max-w-md w-full'>
-        <div className='mb-6'>
-          <SiriusAutoLogoDynamic textColor='#1c5eae' iconColor='#1c5eae' width={180} height={60} className='max-w-full h-auto' />
+    <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4 py-8'>
+      <div className='w-full max-w-md'>
+        <div className='text-center mb-8'>
+          <SiriusAutoLogoDynamic textColor='#1c5eae' iconColor='#1c5eae' width={200} height={66} className='max-w-full h-auto mx-auto' />
         </div>
-        <form onSubmit={handleLogin} className='bg-white p-6 rounded-xl shadow-lg w-full border border-gray-200'>
-          <h1 className='text-2xl font-bold mb-4 text-center text-gray-900'>Вхід до адмінської панелі</h1>
-          <div className='mb-4'>
-            <input id='password' type='password' value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Введіть ваш пароль' className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-base text-gray-900 bg-white' autoFocus />
+
+        <div className='bg-white rounded-xl shadow-xl border border-gray-200 p-8'>
+          <div className='text-center mb-6'>
+            <div className='w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <HiLockClosed className='w-8 h-8 text-blue-600' aria-hidden='true' />
+            </div>
+            <h1 className='text-2xl font-bold text-gray-900 mb-2'>Адміністративна панель</h1>
+            <p className='text-gray-600'>Введіть пароль для доступу до системи управління</p>
           </div>
-          {error && <div className='text-red-600 mb-3 text-center'>{error}</div>}
-          <button type='submit' className='w-full flex justify-center py-2 px-4 rounded-lg shadow-sm text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 transition-colors cursor-pointer'>
-            Увійти
-          </button>
-        </form>
+
+          <form onSubmit={handleLogin} className='space-y-6'>
+            <div>
+              <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-2'>
+                Пароль адміністратора
+              </label>
+              <div className='relative'>
+                <input id='password' type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Введіть ваш пароль' className='w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-colors' disabled={isSubmitting} autoFocus autoComplete='current-password' aria-describedby={error ? 'password-error' : undefined} />
+                <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors' disabled={isSubmitting} aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}>
+                  {showPassword ? <HiEyeOff className='w-5 h-5' aria-hidden='true' /> : <HiEye className='w-5 h-5' aria-hidden='true' />}
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div id='password-error' className='bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm' role='alert'>
+                {error}
+              </div>
+            )}
+
+            <button type='submit' disabled={isSubmitting || !password.trim()} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200 flex items-center justify-center gap-2'>
+              {isSubmitting ? (
+                <>
+                  <div className='w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                  Вхід...
+                </>
+              ) : (
+                'Увійти до панелі'
+              )}
+            </button>
+          </form>
+        </div>
+
+        <div className='text-center mt-6'>
+          <p className='text-xs text-gray-500'>Доступ тільки для авторизованих адміністраторів</p>
+        </div>
       </div>
     </div>
   );
