@@ -11,11 +11,10 @@ interface PasswordInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
   labelClassName?: string;
 }
 
-const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ label, error, showToggle = true, className = '', labelClassName = '', ...props }, ref) => {
-    const [showPassword, setShowPassword] = useState(false);
+const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(({ label, error, showToggle = true, className = '', labelClassName = '', ...props }, ref) => {
+  const [showPassword, setShowPassword] = useState(false);
 
-    const inputClassName = `
+  const inputClassName = `
       appearance-none block w-full px-3 py-2 ${showToggle ? 'pr-10' : ''} 
       border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
@@ -24,46 +23,29 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       ${className}
     `.trim();
 
-    return (
-      <div>
-        {label && (
-          <label htmlFor={props.id} className={`block text-sm font-medium text-gray-700 mb-1 ${labelClassName}`}>
-            {label}
-          </label>
-        )}
-        <div className="relative">
-          <input
-            ref={ref}
-            type={showPassword ? 'text' : 'password'}
-            className={inputClassName}
-            aria-describedby={error ? `${props.id}-error` : undefined}
-            {...props}
-          />
-          {showToggle && (
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors touch-manipulation"
-              disabled={props.disabled}
-              aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}
-            >
-              {showPassword ? (
-                <HiEyeOff className="w-5 h-5" aria-hidden="true" />
-              ) : (
-                <HiEye className="w-5 h-5" aria-hidden="true" />
-              )}
-            </button>
-          )}
-        </div>
-        {error && (
-          <div id={`${props.id}-error`} className="mt-1 text-sm text-red-600" role="alert">
-            {error}
-          </div>
+  return (
+    <div>
+      {label && (
+        <label htmlFor={props.id} className={`block text-sm font-medium text-gray-700 mb-1 ${labelClassName}`}>
+          {label}
+        </label>
+      )}
+      <div className='relative'>
+        <input ref={ref} type={showPassword ? 'text' : 'password'} className={inputClassName} aria-describedby={error ? `${props.id}-error` : undefined} {...props} />
+        {showToggle && (
+          <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors touch-manipulation' disabled={props.disabled} aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}>
+            {showPassword ? <HiEyeOff className='w-5 h-5' aria-hidden='true' /> : <HiEye className='w-5 h-5' aria-hidden='true' />}
+          </button>
         )}
       </div>
-    );
-  }
-);
+      {error && (
+        <div id={`${props.id}-error`} className='mt-1 text-sm text-red-600' role='alert'>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+});
 
 PasswordInput.displayName = 'PasswordInput';
 

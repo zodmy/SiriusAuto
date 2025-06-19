@@ -2,16 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { HiEye, HiEyeOff, HiLockClosed } from 'react-icons/hi';
+import { HiLockClosed } from 'react-icons/hi';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isChecking, setIsChecking] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -94,28 +94,23 @@ export default function AdminLogin() {
             </div>
             <h1 className='text-2xl font-bold text-gray-900 mb-2'>Адміністративна панель</h1>
             <p className='text-gray-600'>Введіть пароль для доступу до системи управління</p>
-          </div>
+          </div>          <form onSubmit={handleLogin} className='space-y-6'>
+            <PasswordInput
+              id='password'
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder='Введіть ваш пароль'
+              label='Пароль адміністратора'
+              disabled={isSubmitting}
+              autoFocus
+              autoComplete='current-password'
+              error={error}
+              className='w-full px-4 py-3 text-base'
+            />
 
-          <form onSubmit={handleLogin} className='space-y-6'>
-            <div>
-              <label htmlFor='password' className='block text-sm font-medium text-gray-700 mb-2'>
-                Пароль адміністратора
-              </label>
-              <div className='relative'>
-                <input id='password' type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder='Введіть ваш пароль' className='w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white transition-colors' disabled={isSubmitting} autoFocus autoComplete='current-password' aria-describedby={error ? 'password-error' : undefined} />
-                <button type='button' onClick={() => setShowPassword(!showPassword)} className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors' disabled={isSubmitting} aria-label={showPassword ? 'Сховати пароль' : 'Показати пароль'}>
-                  {showPassword ? <HiEyeOff className='w-5 h-5' aria-hidden='true' /> : <HiEye className='w-5 h-5' aria-hidden='true' />}
-                </button>
-              </div>
-            </div>
-            {error && (
-              <div id='password-error' className='bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm' role='alert'>
-                {error}
-              </div>
-            )}{' '}
             <Button type='submit' isLoading={isSubmitting} disabled={!password.trim()} fullWidth size='lg'>
               Увійти до панелі
-            </Button>{' '}
+            </Button>
           </form>
         </div>
       </div>

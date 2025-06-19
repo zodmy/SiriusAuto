@@ -40,30 +40,19 @@ export default function Alert({ type, title, message, className = '', onClose }:
   const IconComponent = styles.icon;
 
   return (
-    <div className={`rounded-lg p-3 sm:p-4 ${styles.container} ${className}`} role="alert">
-      <div className="flex items-start">
-        <div className="flex-shrink-0">
-          <IconComponent className={`w-5 h-5 ${styles.iconColor}`} aria-hidden="true" />
+    <div className={`rounded-lg p-3 sm:p-4 ${styles.container} ${className}`} role='alert'>
+      <div className='flex items-start'>
+        <div className='flex-shrink-0'>
+          <IconComponent className={`w-5 h-5 ${styles.iconColor}`} aria-hidden='true' />
         </div>
-        <div className="ml-3 flex-1">
-          {title && (
-            <h3 className="text-sm font-medium mb-1">
-              {title}
-            </h3>
-          )}
-          <div className="text-sm">
-            {message}
-          </div>
+        <div className='ml-3 flex-1'>
+          {title && <h3 className='text-sm font-medium mb-1'>{title}</h3>}
+          <div className='text-sm'>{message}</div>
         </div>
         {onClose && (
-          <div className="ml-auto pl-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-opacity-20 hover:bg-gray-600 transition-colors ${styles.iconColor}`}
-              aria-label="Закрити повідомлення"
-            >
-              <HiXCircle className="w-5 h-5" aria-hidden="true" />
+          <div className='ml-auto pl-3'>
+            <button type='button' onClick={onClose} className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:bg-opacity-20 hover:bg-gray-600 transition-colors ${styles.iconColor}`} aria-label='Закрити повідомлення'>
+              <HiXCircle className='w-5 h-5' aria-hidden='true' />
             </button>
           </div>
         )}
