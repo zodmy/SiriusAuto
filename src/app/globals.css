@@ -133,22 +133,20 @@ textarea {
   display: none;
 }
 
-@media (max-width: 640px) {
-  .breadcrumb-container {
-    scroll-behavior: smooth;
-  }
+/* Breadcrumb container styles for all devices */
+.breadcrumb-container {
+  scroll-behavior: smooth;
+  text-align: left;
+  direction: ltr;
+}
 
-  .breadcrumb-container::-webkit-scrollbar {
-    display: none;
-  }
+.breadcrumb-container::-webkit-scrollbar {
+  display: none;
+}
 
-  .breadcrumb-container {
-    direction: rtl;
-  }
-
-  .breadcrumb-container > * {
-    direction: ltr;
-  }
+.breadcrumb-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .checkout-scroll::-webkit-scrollbar {

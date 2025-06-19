@@ -4,15 +4,19 @@ import { useEffect, useRef, useCallback } from 'react';
 
 export const useBreadcrumbScroll = () => {
   const breadcrumbRef = useRef<HTMLElement>(null);
-
   const scrollToEnd = useCallback(() => {
-    if (breadcrumbRef.current && window.innerWidth <= 640) {
+    if (breadcrumbRef.current) {
       setTimeout(() => {
         if (breadcrumbRef.current) {
-          breadcrumbRef.current.scrollTo({
-            left: breadcrumbRef.current.scrollWidth,
-            behavior: 'smooth'
-          });
+          const element = breadcrumbRef.current;
+          const hasScroll = element.scrollWidth > element.clientWidth;
+
+          if (hasScroll) {
+            element.scrollTo({
+              left: element.scrollWidth,
+              behavior: 'smooth'
+            });
+          }
         }
       }, 100);
     }
@@ -38,9 +42,8 @@ export const useBreadcrumbScroll = () => {
       window.removeEventListener('load', handleLoad);
     };
   }, [scrollToEnd]);
-
   useEffect(() => {
-    if (breadcrumbRef.current && window.innerWidth <= 640) {
+    if (breadcrumbRef.current) {
       const observer = new MutationObserver(() => {
         scrollToEnd();
       });
