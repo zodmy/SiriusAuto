@@ -37,6 +37,14 @@ interface Order {
   status: string;
   orderItems: OrderItem[];
   trackingNumber?: string | null;
+  customerFirstName: string;
+  customerLastName: string;
+  customerEmail: string;
+  customerPhone: string;
+  deliveryMethod: string;
+  novaPoshtaCity?: string | null;
+  novaPoshtaBranch?: string | null;
+  paymentMethod: string;
 }
 
 export default function ProfilePage() {
@@ -540,7 +548,8 @@ export default function ProfilePage() {
             <div className='px-6 py-4 border-b border-gray-200'>
               {' '}
               <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>                <div className='flex space-x-3'>
+                <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>{' '}
+                <div className='flex space-x-3'>
                   {!isEditing && (
                     <>
                       <button onClick={() => setIsEditing(true)} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
@@ -747,15 +756,35 @@ export default function ProfilePage() {
                           <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getOrderStatusColor(order.status)}`}>
                             {getOrderStatusIcon(order.status)}
                             {getOrderStatusText(order.status)}
-                          </span>
-                          {order.status === 'SHIPPED' && order.trackingNumber && (
+                          </span>{' '}
+                          {order.trackingNumber && (
                             <div className='mt-2 text-right'>
                               <span className='text-xs text-gray-500 block'>Номер накладної:</span>
                               <span className='font-mono text-purple-700 bg-purple-50 py-1 px-2 rounded-md text-sm'>{order.trackingNumber}</span>
                             </div>
                           )}
-                        </div>
+                        </div>{' '}
                       </div>{' '}
+                      {/* Інформація про замовлення */}
+                      <div className='border-t border-b border-gray-200 py-4 mb-4'>
+                        <div className='flex flex-row flex-wrap gap-3 sm:gap-6'>
+                          <div className='flex-1 min-w-[140px] max-w-[300px]'>
+                            <h4 className='text-sm font-medium text-gray-700 mb-2'>Дані</h4>
+                            <p className='text-sm text-gray-900 truncate'>
+                              {order.customerFirstName} {order.customerLastName}
+                            </p>
+                            <p className='text-sm text-gray-600 truncate'>{order.customerEmail}</p>
+                            <p className='text-sm text-gray-600'>{order.customerPhone}</p>
+                          </div>
+                          <div className='flex-1 min-w-[140px] max-w-[300px]'>
+                            <h4 className='text-sm font-medium text-gray-700 mb-2'>Доставка</h4>
+                            <p className='text-sm text-gray-900'>{order.deliveryMethod === 'pickup' ? 'Самовивіз' : order.deliveryMethod === 'nova_poshta' ? 'Нова Пошта' : order.deliveryMethod === 'novaposhta' ? 'Нова Пошта' : order.deliveryMethod}</p>
+                            {order.novaPoshtaCity && <p className='text-sm text-gray-600'>Місто: {order.novaPoshtaCity}</p>}
+                            {order.novaPoshtaBranch && <p className='text-sm text-gray-600'>Відділення: {order.novaPoshtaBranch}</p>}
+                            <p className='text-sm text-gray-600'>Оплата: {order.paymentMethod === 'CASH' ? 'Готівка' : 'Картка'}</p>
+                          </div>
+                        </div>
+                      </div>
                       <div className='grid gap-4 mb-4'>
                         {order.orderItems.map((item) => (
                           <div key={item.id} className='flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 bg-gray-50 rounded-lg'>

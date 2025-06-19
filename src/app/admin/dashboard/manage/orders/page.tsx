@@ -115,7 +115,6 @@ export default function OrdersManagementPage() {
       setError('Помилка оновлення статусу замовлення');
     }
   };
-
   const handleStatusChange = (orderId: number, newStatus: string) => {
     if (newStatus === 'SHIPPED') {
       const order = orders.find((o) => o.id === orderId);
@@ -124,7 +123,10 @@ export default function OrdersManagementPage() {
         setTrackingNumber(order.trackingNumber || '');
       }
     } else {
-      updateOrderStatus(orderId, newStatus);
+      // Зберігаємо поточний номер ТТН при зміні статусу
+      const order = orders.find((o) => o.id === orderId);
+      const currentTrackingNumber = order?.trackingNumber || null;
+      updateOrderStatus(orderId, newStatus, currentTrackingNumber);
     }
     setOpenStatusDropdown(null);
   };
