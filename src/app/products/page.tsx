@@ -516,13 +516,14 @@ function ProductsPageContent() {
                               <HiTag className='w-8 h-8' />
                             </div>
                           )}
-                        </div>
+                        </div>{' '}
                         <div className={`${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : 'flex-1 flex flex-col'}`}>
                           {' '}
                           <div className='mb-2'>
-                            <h3 className={`font-semibold text-gray-900 line-clamp-2 ${viewMode === 'list' ? 'text-lg mb-1' : 'text-base mb-2'}`}>{product.name}</h3> <div className='flex items-center gap-2 mb-1'>{product.manufacturer && <p className='text-xs text-gray-500'>{product.manufacturer.name}</p>}</div>
+                            <h3 className={`font-semibold text-gray-900 ${viewMode === 'list' ? 'text-lg mb-1 md:line-clamp-2' : 'text-base mb-2 line-clamp-2'}`}>{product.name}</h3> <div className='flex items-center gap-2 mb-1'>{product.manufacturer && <p className='text-xs text-gray-500'>{product.manufacturer.name}</p>}</div>
                           </div>
-                          {product.description && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow'>{product.description}</p>}
+                          {product.description && viewMode === 'grid' && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow'>{product.description}</p>}
+                          {product.description && viewMode === 'list' && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow hidden md:block'>{product.description}</p>}
                           <div className='mt-auto'>
                             {viewMode === 'list' ? (
                               <div>
@@ -561,10 +562,10 @@ function ProductsPageContent() {
                               </button>
                             )}
                           </div>
-                        </div>
+                        </div>{' '}
                         {viewMode === 'list' && (
-                          <div className='flex-shrink-0 flex items-center gap-3'>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>{' '}
+                          <div className='flex-shrink-0 flex flex-col items-center gap-2 md:gap-3 md:flex-row'>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
                             <button
                               disabled={product.stockQuantity === 0}
                               onClick={(e) => {
