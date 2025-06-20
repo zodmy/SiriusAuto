@@ -268,7 +268,7 @@ export default function Home() {
                 <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
                   {' '}
                   <div className='text-center sm:text-left'>
-                    <p className='text-green-800 font-semibold'>Обраний автомобіль:</p>
+                    <p className='text-green-800 font-semibold'>Вибраний автомобіль:</p>
                     <p className='text-green-700'>
                       {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
                     </p>

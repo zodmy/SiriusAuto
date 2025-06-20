@@ -7,15 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { HiTrash, HiMinus, HiPlus } from 'react-icons/hi';
-import {
-  Header,
-  Footer,
-  Container,
-  Card,
-  Grid,
-  Heading,
-  Alert
-} from '@/components';
+import { Header, Footer, Container, Card, Grid, Heading, Alert } from '@/components';
 
 interface CustomerInfo {
   firstName: string;
@@ -198,7 +190,8 @@ export default function CheckoutPage() {
         }),
       });
 
-      const data = await response.json();      if (response.ok) {
+      const data = await response.json();
+      if (response.ok) {
         const orderId = data.orderId;
 
         clearCart();
@@ -372,14 +365,18 @@ export default function CheckoutPage() {
     <div className='min-h-screen bg-gray-100 flex flex-col'>
       <Header />
       <main className='flex-1'>
-        <Container maxWidth="7xl" className="py-8">
-          <Heading level={1} size="xl" className="mb-8">Оформлення замовлення</Heading>
+        <Container maxWidth='7xl' className='py-8'>
+          <Heading level={1} size='xl' className='mb-8'>
+            Оформлення замовлення
+          </Heading>
 
-          <Grid cols={{ default: 1, lg: 2 }} gap="lg">
+          <Grid cols={{ default: 1, lg: 2 }} gap='lg'>
             <Card>
-              <Heading level={2} size="md" className="mb-6">Контактна інформація</Heading>
+              <Heading level={2} size='md' className='mb-6'>
+                Контактна інформація
+              </Heading>
 
-              {error && <Alert type="error" message={error} className="mb-4" />}
+              {error && <Alert type='error' message={error} className='mb-4' />}
 
               <form onSubmit={handleSubmit} className='space-y-4'>
                 {' '}
@@ -476,13 +473,17 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </div>{' '}
-                <button type='submit' disabled={isSubmitting} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-md font-medium cursor-pointer disabled:cursor-not-allowed'>                  {isSubmitting ? (paymentInfo.method === 'CASH' ? 'Оформлення замовлення...' : 'Перенаправлення на оплату...') : paymentInfo.method === 'CASH' ? 'Оформити замовлення' : 'Оплатити замовлення'}
+                <button type='submit' disabled={isSubmitting} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-md font-medium cursor-pointer disabled:cursor-not-allowed'>
+                  {' '}
+                  {isSubmitting ? (paymentInfo.method === 'CASH' ? 'Оформлення замовлення...' : 'Перенаправлення на оплату...') : paymentInfo.method === 'CASH' ? 'Оформити замовлення' : 'Оплатити замовлення'}
                 </button>
               </form>
             </Card>
-            
+
             <Card className='flex flex-col max-h-[70vh] min-h-[500px]'>
-              <Heading level={2} size="md" className="mb-6 flex-shrink-0">Ваше замовлення</Heading>
+              <Heading level={2} size='md' className='mb-6 flex-shrink-0'>
+                Ваше замовлення
+              </Heading>
               <div className='flex-1 overflow-y-auto mb-4 pr-2 checkout-scroll'>
                 <div className='space-y-4'>
                   {items.map((item) => (
@@ -526,7 +527,7 @@ export default function CheckoutPage() {
               <div className='border-t pt-4 flex-shrink-0'>
                 <div className='space-y-2'>
                   <div className='flex justify-between items-center text-lg font-semibold'>
-                    <span>Загальна сума:</span>                    <span>₴{getTotalPrice().toFixed(2)}</span>
+                    <span>Загальна сума:</span> <span>₴{getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
               </div>

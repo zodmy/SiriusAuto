@@ -5,27 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/components/AuthProvider';
-import { HiCheckCircle, HiXCircle, HiEye, HiEyeOff, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle, HiStar } from 'react-icons/hi';
-import {
-  Header,
-  Footer,
-  Container,
-  Card,
-  Grid,
-  Heading,
-  Text,
-  Button,
-  LoadingSpinner,
-  FormField,
-  PasswordInput,
-  Alert,
-  Badge,
-  Modal,
-  OrderCard,
-  StatusBadge,
-  StarRating,
-  EmptyState
-} from '@/components';
+import { Header, Footer, Card, Heading, Button, Text, Alert, LoadingSpinner, FormField, PasswordInput, StarRating, EmptyState, Skeleton, Grid, Modal, StatusWithIcon } from '@/components';
 
 interface ProfileData {
   id: number;
@@ -82,11 +62,6 @@ export default function ProfilePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
   const [selectedProduct, setSelectedProduct] = useState<{ productId: number; orderId: number; productName: string } | null>(null);
   const [reviewForm, setReviewForm] = useState({
     productId: 0,
@@ -244,16 +219,6 @@ export default function ProfilePage() {
     }
   };
 
-  const renderStars = (rating: number, interactive: boolean = false) => {
-    return (
-      <div className='flex space-x-1'>
-        {[1, 2, 3, 4, 5].map((star) => (
-          <HiStar key={star} className={`h-5 w-5 ${star <= rating ? 'text-yellow-400' : 'text-gray-300'} ${interactive ? 'cursor-pointer hover:text-yellow-500' : ''}`} onClick={interactive ? () => setReviewForm((prev) => ({ ...prev, rating: star })) : undefined} />
-        ))}
-      </div>
-    );
-  };
-
   useEffect(() => {
     if (authReady && isAuthenticated) {
       fetchProfile();
@@ -261,13 +226,12 @@ export default function ProfilePage() {
       fetchReviewableItems();
     }
   }, [authReady, isAuthenticated, fetchProfile, fetchOrders, fetchReviewableItems]);
-
   if (!authReady) {
     return (
       <div className='flex flex-col min-h-screen'>
         <Header />
         <main className='flex-grow flex items-center justify-center'>
-          <div className='text-xl'>Перевірка автентифікації...</div>
+          <LoadingSpinner size='lg' text='Перевірка автентифікації...' />
         </main>
         <Footer />
       </div>
@@ -279,7 +243,7 @@ export default function ProfilePage() {
       <div className='flex flex-col min-h-screen'>
         <Header />
         <main className='flex-grow flex items-center justify-center'>
-          <div className='text-xl'>Перенаправлення на сторінку входу...</div>
+          <LoadingSpinner size='lg' text='Перенаправлення на сторінку входу...' />
         </main>
         <Footer />
       </div>
@@ -291,7 +255,7 @@ export default function ProfilePage() {
       <div className='flex flex-col min-h-screen'>
         <Header />
         <main className='flex-grow flex items-center justify-center'>
-          <div className='text-xl'>Завантаження даних профілю...</div>
+          <LoadingSpinner size='lg' text='Завантаження даних профілю...' />
         </main>
         <Footer />
       </div>
@@ -392,78 +356,6 @@ export default function ProfilePage() {
       setIsSubmitting(false);
     }
   };
-  const getOrderStatusIcon = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'PENDING':
-        return <HiOutlineClock className='h-4 w-4' />;
-      case 'PAID':
-        return <HiOutlineCheckCircle className='h-4 w-4' />;
-      case 'CONFIRMED':
-        return <HiOutlineCheckCircle className='h-4 w-4' />;
-      case 'PROCESSING':
-        return <HiOutlineClock className='h-4 w-4' />;
-      case 'SHIPPED':
-        return <HiOutlineTruck className='h-4 w-4' />;
-      case 'DELIVERED':
-        return <HiOutlineCheckCircle className='h-4 w-4' />;
-      case 'COMPLETED':
-        return <HiOutlineCheckCircle className='h-4 w-4' />;
-      case 'CANCELLED':
-        return <HiOutlineExclamationCircle className='h-4 w-4' />;
-      default:
-        return <HiOutlineClock className='h-4 w-4' />;
-    }
-  };
-  const getOrderStatusColor = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'PENDING':
-        return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'PAID':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'CONFIRMED':
-        return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'PROCESSING':
-        return 'bg-indigo-50 text-indigo-700 border-indigo-200';
-      case 'SHIPPED':
-        return 'bg-purple-50 text-purple-700 border-purple-200';
-      case 'DELIVERED':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'COMPLETED':
-        return 'bg-green-50 text-green-700 border-green-200';
-      case 'CANCELLED':
-        return 'bg-red-50 text-red-700 border-red-200';
-      default:
-        return 'bg-gray-50 text-gray-700 border-gray-200';
-    }
-  };
-  const getOrderStatusText = (status: string) => {
-    switch (status.toUpperCase()) {
-      case 'PENDING':
-        return 'Очікує';
-      case 'PAID':
-        return 'Оплачено';
-      case 'CONFIRMED':
-        return 'Підтверджено';
-      case 'PROCESSING':
-        return 'Обробляється';
-      case 'SHIPPED':
-        return 'Відправлено';
-      case 'DELIVERED':
-        return 'Доставлено';
-      case 'COMPLETED':
-        return 'Виконано';
-      case 'CANCELLED':
-        return 'Скасовано';
-      default:
-        return status;
-    }
-  };
-  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  };
 
   const handleDeleteAccount = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -540,148 +432,80 @@ export default function ProfilePage() {
         <Footer />
       </div>
     );
-  }  return (
+  }
+  return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
-      <Header />
+      <Header />{' '}
       <main className='flex-grow py-12'>
-        <Container maxWidth="2xl">
+        <div className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='space-y-8'>
             {/* Header */}
             <Card>
               <div className='flex justify-between items-center'>
-                <Heading level={1} size="lg">Особистий кабінет</Heading>
+                <Heading level={1} size='lg'>
+                  Особистий кабінет
+                </Heading>{' '}
                 <Button
-                  variant="danger"
+                  variant='danger'
                   onClick={async () => {
                     await logout();
                   }}
+                  className='cursor-pointer'
                 >
                   Вийти
                 </Button>
               </div>
-            </Card>
-
+            </Card>{' '}
             {/* Profile Info */}
             <Card>
               <div className='border-b border-gray-200 pb-4 mb-6'>
+                {' '}
                 <div className='flex justify-between items-center'>
-                  <Heading level={2} size="md">Особиста інформація</Heading>
-                <div className='flex space-x-3'>
-                  {!isEditing && (
-                    <>
-                      <button onClick={() => setIsEditing(true)} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
+                  <Heading level={2} size='md'>
+                    Особиста інформація
+                  </Heading>
+                  <div className='flex space-x-3'>
+                    {' '}
+                    {!isEditing && (
+                      <Button variant='primary' size='sm' onClick={() => setIsEditing(true)} className='cursor-pointer'>
                         Редагувати
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className='p-6'>
-              {successMessage && (
-                <div className='rounded-md bg-green-50 p-4 mb-6'>
-                  <div className='flex'>
-                    <div className='flex-shrink-0'>
-                      <HiCheckCircle className='h-5 w-5 text-green-400' />
-                    </div>
-                    <div className='ml-3'>
-                      <div className='text-sm text-green-800'>{successMessage}</div>
-                    </div>
+                      </Button>
+                    )}
                   </div>
                 </div>
-              )}
-
-              {error && (
-                <div className='rounded-md bg-red-50 p-4 mb-6'>
-                  <div className='flex'>
-                    <div className='flex-shrink-0'>
-                      <HiXCircle className='h-5 w-5 text-red-400' />
-                    </div>
-                    <div className='ml-3'>
-                      <p className='text-sm text-red-800'>{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+              </div>{' '}
+              {successMessage && <Alert type='success' message={successMessage} className='mb-6' />}
+              {error && <Alert type='error' message={error} className='mb-6' />}{' '}
               {isEditing ? (
                 <form onSubmit={handleSubmit} className='space-y-6'>
-                  <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
-                    <div>
-                      <label htmlFor='firstName' className='block text-sm font-medium text-gray-700'>
-                        {"Ім'я"} <span className='text-red-500'>*</span>
-                      </label>
-                      <div className='mt-1'>
-                        <input id='firstName' name='firstName' type='text' required value={formData.firstName} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label htmlFor='lastName' className='block text-sm font-medium text-gray-700'>
-                        Прізвище
-                      </label>
-                      <div className='mt-1'>
-                        <input id='lastName' name='lastName' type='text' value={formData.lastName} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
-                      </div>
-                    </div>
-                  </div>{' '}
-                  <div>
-                    <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
-                      Email адреса
-                    </label>
-                    <div className='mt-1'>
-                      <input id='email' name='email' type='email' required value={formData.email} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
-                    </div>
-                  </div>
+                  <Grid cols={{ default: 1, sm: 2 }} gap='md'>
+                    <FormField label="Ім'я" name='firstName' type='text' required value={formData.firstName} onChange={handleInputChange} />
+                    <FormField label='Прізвище' name='lastName' type='text' value={formData.lastName} onChange={handleInputChange} />
+                  </Grid>
+                  <FormField label='Email адреса' name='email' type='email' required value={formData.email} onChange={handleInputChange} />{' '}
                   <div className='border-t border-gray-200 pt-6'>
-                    <h3 className='text-lg font-medium text-gray-900 mb-4'>Зміна пароля</h3>
-                    <p className='text-sm text-gray-600 mb-4'>Залиште поля порожніми, якщо не хочете змінювати пароль</p>
+                    <Heading level={3} size='md' className='mb-4'>
+                      Зміна пароля
+                    </Heading>
+                    <Text size='sm' color='muted' className='mb-4'>
+                      Залиште поля порожніми, якщо не хочете змінювати пароль
+                    </Text>
 
                     <div className='space-y-4'>
-                      <div>
-                        <label htmlFor='currentPassword' className='block text-sm font-medium text-gray-700'>
-                          Поточний пароль
-                        </label>
-                        <div className='mt-1 relative'>
-                          <input id='currentPassword' name='currentPassword' type={showPasswords.current ? 'text' : 'password'} value={formData.currentPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
-                          <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => togglePasswordVisibility('current')}>
-                            {showPasswords.current ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor='newPassword' className='block text-sm font-medium text-gray-700'>
-                          Новий пароль
-                        </label>
-                        <div className='mt-1 relative'>
-                          <input id='newPassword' name='newPassword' type={showPasswords.new ? 'text' : 'password'} value={formData.newPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' placeholder='Мін. 6 символів' />
-                          <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => togglePasswordVisibility('new')}>
-                            {showPasswords.new ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor='confirmNewPassword' className='block text-sm font-medium text-gray-700'>
-                          Підтвердіть новий пароль
-                        </label>
-                        <div className='mt-1 relative'>
-                          <input id='confirmNewPassword' name='confirmNewPassword' type={showPasswords.confirm ? 'text' : 'password'} value={formData.confirmNewPassword} onChange={handleInputChange} className='appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm' />
-                          <button type='button' className='absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer' onClick={() => togglePasswordVisibility('confirm')}>
-                            {showPasswords.confirm ? <HiEyeOff className='h-5 w-5 text-gray-400' /> : <HiEye className='h-5 w-5 text-gray-400' />}
-                          </button>
-                        </div>
-                      </div>
+                      <PasswordInput label='Поточний пароль' name='currentPassword' value={formData.currentPassword} onChange={handleInputChange} />
+                      <PasswordInput label='Новий пароль' name='newPassword' value={formData.newPassword} onChange={handleInputChange} placeholder='Мін. 6 символів' />
+                      <PasswordInput label='Підтвердіть новий пароль' name='confirmNewPassword' value={formData.confirmNewPassword} onChange={handleInputChange} />
                     </div>
                   </div>{' '}
                   <div className='flex justify-end space-x-3'>
-                    <button type='button' onClick={openDeleteModal} className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'>
+                    {' '}
+                    <Button type='button' variant='danger' size='sm' onClick={openDeleteModal} className='cursor-pointer'>
                       Видалити обліковий запис
-                    </button>
-                    <button
+                    </Button>{' '}
+                    <Button
                       type='button'
+                      variant='secondary'
+                      size='sm'
                       onClick={() => {
                         setIsEditing(false);
                         setFormData({
@@ -695,63 +519,54 @@ export default function ProfilePage() {
                         setError('');
                         setSuccessMessage('');
                       }}
-                      className='bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'
+                      className='cursor-pointer'
                     >
                       Скасувати
-                    </button>
-                    <button type='submit' disabled={isSubmitting} className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer'>
+                    </Button>{' '}
+                    <Button type='submit' variant='primary' size='sm' disabled={isSubmitting} className='cursor-pointer'>
                       {isSubmitting ? 'Збереження...' : 'Зберегти зміни'}
-                    </button>
+                    </Button>
                   </div>
                 </form>
               ) : (
                 <div className='space-y-6'>
-                  <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
+                  <Grid cols={{ default: 1, sm: 2 }} gap='md'>
+                    {' '}
                     <div>
-                      <dt className='text-sm font-medium text-gray-500'>{"Ім'я"}</dt>
-                      <dd className='mt-1 text-sm text-gray-900'>{profileData.firstName}</dd>
+                      <Text size='sm' weight='medium' color='muted' className='mb-1'>
+                        Ім&apos;я
+                      </Text>
+                      <Text size='sm'>{profileData.firstName}</Text>
                     </div>
                     <div>
-                      <dt className='text-sm font-medium text-gray-500'>Прізвище</dt>
-                      <dd className='mt-1 text-sm text-gray-900'>{profileData.lastName || 'Не вказано'}</dd>
+                      <Text size='sm' weight='medium' color='muted' className='mb-1'>
+                        Прізвище
+                      </Text>
+                      <Text size='sm'>{profileData.lastName || 'Не вказано'}</Text>
                     </div>
-                  </div>{' '}
+                  </Grid>
                   <div>
-                    <dt className='text-sm font-medium text-gray-500'>Email адреса</dt>
-                    <dd className='mt-1 text-sm text-gray-900'>{profileData.email}</dd>
+                    <Text size='sm' weight='medium' color='muted' className='mb-1'>
+                      Email адреса
+                    </Text>
+                    <Text size='sm'>{profileData.email}</Text>
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-
-          <div className='bg-white shadow rounded-lg'>
-            <div className='px-6 py-4 border-b border-gray-200'>
-              <h2 className='text-xl font-bold text-gray-900'>Мої замовлення</h2>
-            </div>
-            <div className='p-6'>
+            </Card>{' '}
+            {/* Orders Section */}
+            <Card>
+              <Heading level={2} size='md' className='border-b border-gray-200 pb-4 mb-6'>
+                Мої замовлення
+              </Heading>
               {ordersLoading ? (
                 <div className='space-y-4'>
                   {[...Array(3)].map((_, index) => (
-                    <div key={index} className='border border-gray-200 rounded-lg p-4'>
-                      <div className='animate-pulse'>
-                        <div className='h-4 bg-gray-200 rounded w-1/4 mb-2'></div>
-                        <div className='h-3 bg-gray-200 rounded w-1/3 mb-2'></div>
-                        <div className='h-3 bg-gray-200 rounded w-1/6'></div>
-                      </div>
-                    </div>
+                    <Skeleton key={index} className='h-32' />
                   ))}
                 </div>
               ) : orders.length === 0 ? (
-                <div className='text-center py-8'>
-                  <div className='text-gray-500'>
-                    <svg className='w-12 h-12 mx-auto mb-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z' />
-                    </svg>
-                    <p className='text-lg font-medium'>Замовлень поки немає</p>
-                    <p className='text-sm text-gray-400 mt-1'>Коли ви зробите своє перше замовлення, воно з&apos;явиться тут</p>
-                  </div>
-                </div>
+                <EmptyState title='Замовлень поки немає' description="Коли ви зробите своє перше замовлення, воно з'явиться тут" icon='📦' />
               ) : (
                 <div className='space-y-4'>
                   {orders.map((order) => (
@@ -768,16 +583,17 @@ export default function ProfilePage() {
                               minute: '2-digit',
                             })}
                           </p>
-                        </div>
+                        </div>{' '}
                         <div className='flex flex-col items-end'>
-                          <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${getOrderStatusColor(order.status)}`}>
-                            {getOrderStatusIcon(order.status)}
-                            {getOrderStatusText(order.status)}
-                          </span>{' '}
+                          <StatusWithIcon status={order.status} />
                           {order.trackingNumber && (
                             <div className='mt-2 text-right'>
-                              <span className='text-xs text-gray-500 block'>Номер накладної:</span>
-                              <span className='font-mono text-purple-700 bg-purple-50 py-1 px-2 rounded-md text-sm'>{order.trackingNumber}</span>
+                              <Text size='xs' color='muted' className='block'>
+                                Номер накладної:
+                              </Text>
+                              <Text size='sm' className='font-mono text-purple-700 bg-purple-50 py-1 px-2 rounded-md inline-block'>
+                                {order.trackingNumber}
+                              </Text>
                             </div>
                           )}
                         </div>{' '}
@@ -803,6 +619,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className='grid gap-4 mb-4'>
+                        {' '}
                         {order.orderItems.map((item) => (
                           <div key={item.id} className='flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 bg-gray-50 rounded-lg'>
                             <div className='flex items-center space-x-4 flex-1 min-w-0'>
@@ -820,115 +637,96 @@ export default function ProfilePage() {
                                   <h4 className='text-sm font-medium text-gray-900 break-words hover:text-blue-600 transition-colors'>{item.product.name}</h4>
                                 </Link>
                                 <p className='text-sm text-gray-500'>Кількість: {item.quantity}</p>
-                                <p className='text-sm font-medium text-gray-900'>{parseFloat(item.price).toFixed(2)} ₴</p>
+                                <p className='text-sm font-medium text-gray-900 sm:hidden'>{parseFloat(item.price).toFixed(2)} ₴</p>
                               </div>
                             </div>
-                            <div className='flex items-center justify-between sm:justify-end space-x-3 flex-shrink-0'>
+                            <div className='flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 flex-shrink-0'>
                               {order.status === 'COMPLETED' && reviewableItems.has(`${item.product.id}-${order.id}`) && (
-                                <button onClick={() => openReviewModal(item.product.id, order.id, item.product.name)} className='bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium cursor-pointer whitespace-nowrap'>
+                                <button onClick={() => openReviewModal(item.product.id, order.id, item.product.name)} className='bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-xs font-medium cursor-pointer whitespace-nowrap order-2 sm:order-1'>
                                   Залишити відгук
                                 </button>
                               )}
-                              <div className='text-right'>
-                                <p className='text-sm font-bold text-gray-900'>{(parseFloat(item.price) * item.quantity).toFixed(2)} ₴</p>
+                              <div className='text-right order-1 sm:order-2'>
+                                <p className='text-sm font-bold text-gray-900 hidden sm:block'>{(parseFloat(item.price) * item.quantity).toFixed(2)} ₴</p>
+                                <p className='text-sm font-bold text-gray-900 sm:hidden'>{(parseFloat(item.price) * item.quantity).toFixed(2)} ₴</p>
                               </div>
                             </div>
                           </div>
                         ))}
                       </div>
                       <div className='border-t pt-3 flex justify-between items-center'>
-                        <span className='text-sm text-gray-500'>Загальна сума:</span>
-                        <span className='font-bold text-lg text-gray-900'>{parseFloat(order.totalPrice).toFixed(2)} ₴</span>
+                        <span className='text-sm text-gray-500'>Загальна сума:</span> <span className='font-bold text-lg text-gray-900'>{parseFloat(order.totalPrice).toFixed(2)} ₴</span>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </div>{' '}
+            </Card>{' '}
           </div>
         </div>
-      </div>{' '}
-      {selectedProduct && (
-        <div className='fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50'>
-          <div className='bg-white rounded-lg max-w-md w-full p-6 shadow-2xl border border-gray-200'>
-            <h3 className='text-lg font-semibold text-gray-900 mb-4'>Відгук на товар</h3>
-            <p className='text-gray-600 mb-4'>{selectedProduct.productName}</p>
+      </main>
+      {/* Review Modal */}
+      <Modal isOpen={!!selectedProduct} onClose={closeReviewModal} title='Відгук на товар' size='md'>
+        {selectedProduct && (
+          <div className='space-y-4'>
+            <Text size='sm' color='muted' className='mb-4'>
+              {selectedProduct.productName}
+            </Text>
 
-            {reviewSuccess && (
-              <div className='bg-green-50 border border-green-200 rounded-md p-3 mb-4'>
-                <p className='text-green-800'>{reviewSuccess}</p>
-              </div>
-            )}
+            {reviewSuccess && <Alert type='success' message={reviewSuccess} className='mb-4' />}
 
-            {reviewError && (
-              <div className='bg-red-50 border border-red-200 rounded-md p-3 mb-4'>
-                <p className='text-red-800'>{reviewError}</p>
-              </div>
-            )}
+            {reviewError && <Alert type='error' message={reviewError} className='mb-4' />}
 
             <form onSubmit={handleSubmitReview} className='space-y-4'>
               <div>
-                <label className='block text-sm font-medium text-gray-700 mb-2'>Оцінка</label>
-                {renderStars(reviewForm.rating, true)}
+                <Text size='sm' weight='medium' className='mb-2'>
+                  Оцінка
+                </Text>
+                <StarRating rating={reviewForm.rating} interactive onChange={(rating: number) => setReviewForm((prev) => ({ ...prev, rating }))} />
               </div>
-
               <div>
-                <label htmlFor='comment' className='block text-sm font-medium text-gray-700 mb-2'>
+                <Text size='sm' weight='medium' className='mb-2'>
                   Коментар (необов&apos;язково)
-                </label>
+                </Text>
                 <textarea id='comment' rows={4} value={reviewForm.comment} onChange={(e) => setReviewForm((prev) => ({ ...prev, comment: e.target.value }))} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500' placeholder='Поділіться своїм досвідом використання товару...' />
-              </div>
-
+              </div>{' '}
               <div className='flex space-x-3'>
-                <button type='submit' disabled={submittingReview} className='flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer'>
+                <Button type='submit' variant='primary' disabled={submittingReview} className='flex-1 cursor-pointer'>
                   {submittingReview ? 'Додавання...' : 'Додати відгук'}
-                </button>
-                <button type='button' onClick={closeReviewModal} className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium cursor-pointer'>
+                </Button>
+                <Button type='button' variant='secondary' onClick={closeReviewModal} className='cursor-pointer'>
                   Скасувати
-                </button>
+                </Button>
               </div>
             </form>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
       {/* Модальне вікно видалення облікового запису */}
-      {showDeleteModal && (
-        <div className='fixed inset-0 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg max-w-md w-full mx-4 p-6 shadow-2xl border border-gray-200 ring-1 ring-gray-300'>
-            <div className='mb-4'>
-              <h3 className='text-lg font-semibold text-red-900 mb-2'>Видалення облікового запису</h3>
-              <p className='text-gray-600 mb-4'>Ця дія незворотна. Всі ваші дані, замовлення та відгуки будуть видалені назавжди.</p>
-              <div className='bg-red-50 border border-red-200 rounded-md p-3 mb-4'>
-                <p className='text-red-800 text-sm font-medium'>⚠️ Увага: Після видалення облікового запису ви не зможете його відновити!</p>
-              </div>
-            </div>
-
-            {deleteError && (
-              <div className='bg-red-50 border border-red-200 rounded-md p-3 mb-4'>
-                <p className='text-red-800'>{deleteError}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleDeleteAccount} className='space-y-4'>
-              <div>
-                <label htmlFor='deletePassword' className='block text-sm font-medium text-gray-700 mb-2'>
-                  Введіть ваш пароль для підтвердження
-                </label>
-                <input id='deletePassword' type='password' value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} className='w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500' placeholder='Введіть ваш пароль' required />
-              </div>
-
-              <div className='flex space-x-3'>
-                <button type='submit' disabled={isDeleting || !deletePassword} className='flex-1 bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium cursor-pointer'>
-                  {isDeleting ? 'Видалення...' : 'Підтвердити видалення'}
-                </button>
-                <button type='button' onClick={closeDeleteModal} disabled={isDeleting} className='px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
-                  Скасувати
-                </button>
-              </div>
-            </form>
+      <Modal isOpen={showDeleteModal} onClose={closeDeleteModal} title='Видалення облікового запису' size='md'>
+        <div className='space-y-4'>
+          <div>
+            <Text size='sm' color='muted' className='mb-4'>
+              Ця дія незворотна. Всі ваші дані, замовлення та відгуки будуть видалені назавжди.
+            </Text>
+            <Alert type='warning' message='⚠️ Увага: Після видалення облікового запису ви не зможете його відновити!' className='mb-4' />
           </div>
+
+          {deleteError && <Alert type='error' message={deleteError} className='mb-4' />}
+
+          <form onSubmit={handleDeleteAccount} className='space-y-4'>
+            <FormField label='Введіть ваш пароль для підтвердження' name='deletePassword' type='password' value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder='Введіть ваш пароль' required />{' '}
+            <div className='flex space-x-3'>
+              <Button type='submit' variant='danger' disabled={isDeleting || !deletePassword} className='flex-1 cursor-pointer'>
+                {isDeleting ? 'Видалення...' : 'Підтвердити видалення'}
+              </Button>
+              <Button type='button' variant='secondary' onClick={closeDeleteModal} disabled={isDeleting} className='cursor-pointer'>
+                Скасувати
+              </Button>
+            </div>
+          </form>
         </div>
-      )}
+      </Modal>
       <Footer />
     </div>
   );

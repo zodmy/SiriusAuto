@@ -96,18 +96,16 @@ export function StarRating({ rating, maxRating = 5, size = 'sm', showValue = fal
             </button>
           );
         })}
-      </div>
-
+      </div>{' '}
       {/* Rating value */}
       {showValue && (
-        <Text size={config.text} weight='medium'>
+        <Text size={config.text === 'base' ? 'md' : config.text} weight='medium'>
           {rating.toFixed(1)}
         </Text>
       )}
-
       {/* Review count */}
       {showCount && count !== undefined && (
-        <Text size={config.text} color='muted'>
+        <Text size={config.text === 'base' ? 'md' : config.text} color='muted'>
           ({count.toLocaleString()})
         </Text>
       )}

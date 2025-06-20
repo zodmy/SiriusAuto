@@ -4,23 +4,10 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiFilter } from 'react-icons/hi';
+import { FaCar } from 'react-icons/fa';
 import { useCart } from '@/lib/hooks/useCart';
 import { useBreadcrumbScroll } from '@/lib/hooks/useBreadcrumbScroll';
-import {
-  Header,
-  Footer,
-  Container,
-  Card,
-  Grid,
-  Heading,
-  Text,
-  Button,
-  LoadingSpinner,
-  EmptyState,
-  ProductCard,
-  Alert,
-  CartNotification
-} from '@/components';
+import { Header, Footer, Container, Card, Grid, Heading, Text, Button, LoadingSpinner, EmptyState, ProductCard, CartNotification } from '@/components';
 
 interface Category {
   id: number;
@@ -318,7 +305,7 @@ function ProductsPageContent() {
       <Header />
       <main className='flex-grow'>
         <div className='bg-white border-b'>
-          <Container maxWidth="7xl">
+          <Container maxWidth='7xl'>
             <div className='py-4'>
               <div className='relative'>
                 <nav ref={breadcrumbRef} className='breadcrumb-container flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
@@ -340,50 +327,51 @@ function ProductsPageContent() {
                 </nav>
               </div>
             </div>
-          </Container>
-        </div>        {savedCar && (
-          <Alert 
-            type="success" 
-            title="Вибраний автомобіль"
-            message={`${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}`}
-          />
-        )}        <Container maxWidth="7xl" className="py-8">
+          </Container>{' '}
+        </div>{' '}
+        {savedCar && (
+          <div className='bg-green-50 border-b border-green-200'>
+            <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
+              <div className='flex items-center space-x-3'>
+                {' '}
+                <FaCar className='text-green-600' />{' '}
+                <span className='text-sm text-green-800'>
+                  <strong>Вибраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        <Container maxWidth='7xl' className='py-8'>
           {shouldShowSubcategories() ? (
             <div>
-              <Card className="text-center py-2 mb-6">
-                <Heading level={1} className="mb-2">
+              <Card className='text-center py-2 mb-6'>
+                <Heading level={1} className='mb-2'>
                   {currentCategory ? currentCategory.name : 'Категорії товарів'}
-                </Heading>                {currentCategory?.description && (
-                  <Text color="muted">{currentCategory.description}</Text>
-                )}
+                </Heading>{' '}
+                {currentCategory?.description && <Text color='muted'>{currentCategory.description}</Text>}
               </Card>
-              
-              <Grid cols={{ default: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
+
+              <Grid cols={{ default: 1, sm: 2, lg: 3, xl: 4 }} gap='md'>
                 {getSubcategories().map((subcategory) => (
-                  <Link 
-                    key={subcategory.id} 
-                    href={`/categories/${encodeURIComponent(subcategory.name)}`} 
-                    className='bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group'
-                  >
+                  <Link key={subcategory.id} href={`/categories/${encodeURIComponent(subcategory.name)}`} className='bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group'>
                     <div className='p-6 text-center'>
                       <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300'>
                         <HiTag className='w-8 h-8 text-white' />
                       </div>
-                      <h3 className='font-semibold text-gray-900 text-lg mb-2 group-hover:text-blue-600 transition-colors'>
-                        {subcategory.name}
-                      </h3>
-                      {subcategory.description && (
-                        <p className='text-sm text-gray-600 line-clamp-2'>{subcategory.description}</p>
-                      )}
+                      <h3 className='font-semibold text-gray-900 text-lg mb-2 group-hover:text-blue-600 transition-colors'>{subcategory.name}</h3>
+                      {subcategory.description && <p className='text-sm text-gray-600 line-clamp-2'>{subcategory.description}</p>}
                     </div>
                   </Link>
                 ))}
               </Grid>
             </div>
           ) : (
-            <div className='flex flex-col lg:flex-row gap-8'>              <aside className='lg:w-64'>
-                <Card className="sticky top-8">
-                  <Heading level={3} size="sm" className="mb-4 flex items-center gap-2">
+            <div className='flex flex-col lg:flex-row gap-8'>
+              {' '}
+              <aside className='lg:w-64'>
+                <Card className='sticky top-8'>
+                  <Heading level={3} size='sm' className='mb-4 flex items-center gap-2'>
                     <HiFilter className='text-blue-600' />
                     Фільтри
                   </Heading>
@@ -441,20 +429,24 @@ function ProductsPageContent() {
                         setInStockOnly(false);
                         setShowAllProducts(false);
                       }}
-                      className='w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer'                    >
+                      className='w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer'
+                    >
                       Скинути фільтри
                     </button>
                   </div>
                 </Card>
-              </aside>              <div className='flex-1'>
-                <Card className="mb-6">
+              </aside>{' '}
+              <div className='flex-1'>
+                <Card className='mb-6'>
                   <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6'>
                     <div>
-                      <Heading level={1} size="lg">
+                      <Heading level={1} size='lg'>
                         {currentCategory ? currentCategory.name : 'Всі товари'}
                       </Heading>
                       {currentCategory?.description && (
-                        <Text color="muted" className="mt-1">{currentCategory.description}</Text>
+                        <Text color='muted' className='mt-1'>
+                          {currentCategory.description}
+                        </Text>
                       )}
                     </div>
                     <div className='flex items-center gap-2'>
@@ -481,53 +473,53 @@ function ProductsPageContent() {
                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className='px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'>
                       <option value='name'>За назвою</option>
                       <option value='price_asc'>За ціною (зростання)</option>
-                      <option value='price_desc'>За ціною (спадання)</option>                      <option value='newest'>Спочатку нові</option>
+                      <option value='price_desc'>За ціною (спадання)</option> <option value='newest'>Спочатку нові</option>
                     </select>
                   </div>
                 </Card>
 
                 {isLoading ? (
-                  <Card className="text-center p-8">
-                    <LoadingSpinner size="lg" className="mx-auto mb-4" />
-                    <Text color="muted">Завантаження...</Text>
-                  </Card>                ) : products.length === 0 ? (                  <EmptyState
-                    type="search"
-                    title="Товарів не знайдено"
-                    description={
-                      debouncedSearchQuery 
-                        ? `За запитом "${debouncedSearchQuery}" нічого не знайдено`
-                        : savedCar && !showAllProducts 
-                          ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}`
-                          : 'В цій категорії поки немає товарів'
+                  <Card className='text-center p-8'>
+                    <LoadingSpinner size='lg' className='mx-auto mb-4' />
+                    <Text color='muted'>Завантаження...</Text>
+                  </Card>
+                ) : products.length === 0 ? (
+                  <EmptyState
+                    type='search'
+                    title='Товарів не знайдено'
+                    description={debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}` : 'В цій категорії поки немає товарів'}
+                    action={
+                      debouncedSearchQuery ? (
+                        <Button
+                          variant='outline'
+                          onClick={() => {
+                            setSearchQuery('');
+                            setDebouncedSearchQuery('');
+                            const params = new URLSearchParams();
+                            if (categoryName) {
+                              params.append('category', categoryName);
+                            }
+                            const queryString = params.toString();
+                            router.push(`/products${queryString ? `?${queryString}` : ''}`);
+                          }}
+                        >
+                          Очистити пошук
+                        </Button>
+                      ) : undefined
                     }
-                    action={debouncedSearchQuery ? (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setDebouncedSearchQuery('');
-                          const params = new URLSearchParams();
-                          if (categoryName) {
-                            params.append('category', categoryName);
-                          }
-                          const queryString = params.toString();
-                          router.push(`/products${queryString ? `?${queryString}` : ''}`);
-                        }}
-                      >
-                        Очистити пошук
-                      </Button>
-                    ) : undefined}
-                  />                ) : (
-                  <Grid 
-                    cols={{ 
-                      default: viewMode === 'grid' ? 1 : 1, 
-                      sm: viewMode === 'grid' ? 2 : 1, 
-                      lg: viewMode === 'grid' ? 3 : 1, 
-                      xl: viewMode === 'grid' ? 4 : 1 
-                    }} 
+                  />
+                ) : (
+                  <Grid
+                    cols={{
+                      default: viewMode === 'grid' ? 1 : 1,
+                      sm: viewMode === 'grid' ? 2 : 1,
+                      lg: viewMode === 'grid' ? 3 : 1,
+                      xl: viewMode === 'grid' ? 4 : 1,
+                    }}
                     gap={viewMode === 'grid' ? 'md' : 'sm'}
                     className={viewMode === 'list' ? 'space-y-4' : ''}
                   >
+                    {' '}
                     {products.map((product) => (
                       <ProductCard
                         key={product.id}
@@ -538,6 +530,7 @@ function ProductsPageContent() {
                         description={product.description}
                         category={product.manufacturer?.name}
                         inStock={product.stockQuantity > 0}
+                        layout={viewMode}
                         onAddToCart={() => {
                           addItem({
                             id: product.id,
@@ -548,13 +541,14 @@ function ProductsPageContent() {
                           });
                           setNotificationProductName(product.name);
                           setShowNotification(true);
-                        }}                      />
+                        }}
+                      />
                     ))}
                   </Grid>
                 )}
               </div>
             </div>
-          )} 
+          )}
         </Container>
       </main>
       <Footer />
@@ -570,8 +564,8 @@ function ProductsPageLoading() {
       <Header />
       <main className='flex-grow flex items-center justify-center'>
         <div className='text-center'>
-          <LoadingSpinner size="lg" className="mx-auto mb-4" />
-          <Text color="muted">Завантаження...</Text>
+          <LoadingSpinner size='lg' className='mx-auto mb-4' />
+          <Text color='muted'>Завантаження...</Text>
         </div>
       </main>
       <Footer />

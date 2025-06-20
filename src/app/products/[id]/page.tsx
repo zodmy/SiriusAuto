@@ -278,7 +278,7 @@ function ProductPageContent() {
               <div className='flex items-center gap-3'>
                 <FaCar className={`${isCompatible === true ? 'text-green-600' : isCompatible === false ? 'text-red-600' : 'text-blue-600'}`} />{' '}
                 <span className={`font-medium ${isCompatible === true ? 'text-green-800' : isCompatible === false ? 'text-red-800' : 'text-blue-800'}`}>
-                  Обраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
+                  Вибраний автомобіль: {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
                 </span>
                 {isCompatible === true && <HiCheck className='w-5 h-5 text-green-600' />}
                 {isCompatible === false && <HiX className='w-5 h-5 text-red-600' />}

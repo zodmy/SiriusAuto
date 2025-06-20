@@ -28,23 +28,9 @@ const sizeConfig = {
   xl: { price: 'xl' as const, original: 'lg' as const, discount: 'md' as const },
 };
 
-export function PriceDisplay({
-  price,
-  originalPrice,
-  currency = '₴',
-  discount,
-  size = 'md',
-  showDiscount = true,
-  discountType = 'percentage',
-  className = '',
-  layout = 'horizontal',
-  showCurrency = true,
-  locale = 'uk-UA',
-  prefix,
-  suffix,
-}: PriceDisplayProps) {
+export function PriceDisplay({ price, originalPrice, currency = '₴', discount, size = 'md', showDiscount = true, discountType = 'percentage', className = '', layout = 'horizontal', showCurrency = true, locale = 'uk-UA', prefix, suffix }: PriceDisplayProps) {
   const config = sizeConfig[size];
-  
+
   const formatPrice = (value: number | string) => {
     const numValue = typeof value === 'string' ? parseFloat(value) : value;
     return new Intl.NumberFormat(locale, {
@@ -55,7 +41,7 @@ export function PriceDisplay({
 
   const finalPrice = typeof price === 'string' ? parseFloat(price) : price;
   const finalOriginalPrice = originalPrice ? (typeof originalPrice === 'string' ? parseFloat(originalPrice) : originalPrice) : null;
-  
+
   // Calculate discount if not provided
   let calculatedDiscount = discount;
   if (!calculatedDiscount && finalOriginalPrice && finalOriginalPrice > finalPrice) {
@@ -72,35 +58,26 @@ export function PriceDisplay({
   return (
     <div className={`flex ${isVertical ? 'flex-col items-start' : 'items-baseline'} gap-2 ${className}`}>
       {prefix}
-      
+
       <div className={`flex ${isVertical ? 'flex-col items-start' : 'items-baseline'} gap-2`}>
         {/* Current price */}
-        <Text 
-          size={config.price} 
-          weight="bold"
-          className={hasDiscount ? 'text-red-600' : undefined}
-        >
-          {formatPrice(finalPrice)}{showCurrency && ` ${currency}`}
+        <Text size={config.price === 'base' ? 'md' : (config.price as 'xs' | 'sm' | 'md' | 'lg' | 'xl')} weight='bold' className={hasDiscount ? 'text-red-600' : undefined}>
+          {formatPrice(finalPrice)}
+          {showCurrency && ` ${currency}`}
         </Text>
 
         {/* Original price (if discounted) */}
         {hasDiscount && finalOriginalPrice && (
-          <Text 
-            size={config.original} 
-            color="muted" 
-            className="line-through"
-          >
-            {formatPrice(finalOriginalPrice)}{showCurrency && ` ${currency}`}
+          <Text size={config.original === 'base' ? 'md' : (config.original as 'xs' | 'sm' | 'md' | 'lg' | 'xl')} color='muted' className='line-through'>
+            {formatPrice(finalOriginalPrice)}
+            {showCurrency && ` ${currency}`}
           </Text>
         )}
 
         {/* Discount badge */}
         {hasDiscount && showDiscount && calculatedDiscount && (
-          <Badge variant="error" size="sm">
-            {discountType === 'percentage' 
-              ? `-${calculatedDiscount}%` 
-              : `-${formatPrice(calculatedDiscount)} ${currency}`
-            }
+          <Badge variant='error' size='sm'>
+            {discountType === 'percentage' ? `-${calculatedDiscount}%` : `-${formatPrice(calculatedDiscount)} ${currency}`}
           </Badge>
         )}
       </div>
@@ -111,41 +88,13 @@ export function PriceDisplay({
 }
 
 // Simplified price display for basic use cases
-export function SimplePrice({
-  price,
-  currency = '₴',
-  size = 'md',
-  className = '',
-}: Pick<PriceDisplayProps, 'price' | 'currency' | 'size' | 'className'>) {
-  return (
-    <PriceDisplay
-      price={price}
-      currency={currency}
-      size={size}
-      className={className}
-      showDiscount={false}
-    />
-  );
+export function SimplePrice({ price, currency = '₴', size = 'md', className = '' }: Pick<PriceDisplayProps, 'price' | 'currency' | 'size' | 'className'>) {
+  return <PriceDisplay price={price} currency={currency} size={size} className={className} showDiscount={false} />;
 }
 
 // Price with discount for sales
-export function SalePrice({
-  price,
-  originalPrice,
-  currency = '₴',
-  size = 'md',
-  className = '',
-}: Pick<PriceDisplayProps, 'price' | 'originalPrice' | 'currency' | 'size' | 'className'>) {
-  return (
-    <PriceDisplay
-      price={price}
-      originalPrice={originalPrice}
-      currency={currency}
-      size={size}
-      className={className}
-      showDiscount={true}
-    />
-  );
+export function SalePrice({ price, originalPrice, currency = '₴', size = 'md', className = '' }: Pick<PriceDisplayProps, 'price' | 'originalPrice' | 'currency' | 'size' | 'className'>) {
+  return <PriceDisplay price={price} originalPrice={originalPrice} currency={currency} size={size} className={className} showDiscount={true} />;
 }
 
 export default PriceDisplay;

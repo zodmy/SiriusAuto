@@ -17,6 +17,7 @@ export { default as PriceDisplay } from './PriceDisplay';
 export { default as Skeleton } from './Skeleton';
 export { default as StarRating } from './StarRating';
 export { default as StatusBadge } from './StatusBadge';
+export { StatusWithIcon } from './StatusBadge';
 export { default as Text } from './Text';
 
 // Layout Components
