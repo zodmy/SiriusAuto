@@ -132,6 +132,83 @@ export class LiqPayService {
       return null;
     }
   }
+
+  /**
+   * Генерує HTML форму для оплати (аналог cnb_form з SDK)
+   */
+  generatePaymentForm(orderData: {
+    orderId: number;
+    amount: number;
+    description: string;
+    resultUrl: string;
+    serverUrl: string;
+    language?: string;
+  }): string {
+    const { data, signature } = this.generatePaymentData(orderData);
+
+    const language = orderData.language || 'uk';
+
+    return `
+      <form method="post" action="https://www.liqpay.ua/api/3/checkout" accept-charset="utf-8">
+        <input type="hidden" name="data" value="${data}" />
+        <input type="hidden" name="signature" value="${signature}" />
+        <input type="image" src="//static.liqpay.ua/buttons/p1${language}.radius.png" name="btn_text" />
+      </form>
+    `;
+  }
+
+  /**
+   * Генерує URL для редиректу на LiqPay
+   */
+  generatePaymentUrl(orderData: {
+    orderId: number;
+    amount: number;
+    description: string;
+    resultUrl: string;
+    serverUrl: string;
+  }): string {
+    const { data, signature } = this.generatePaymentData(orderData);
+
+    const params = new URLSearchParams({
+      data,
+      signature,
+    });
+
+    return `https://www.liqpay.ua/api/3/checkout?${params.toString()}`;
+  }
+
+  /**
+   * Отримує детальну інформацію про статус платежу
+   */
+  getPaymentStatusInfo(status: string): {
+    isSuccess: boolean;
+    isFailure: boolean;
+    isPending: boolean;
+    description: string;
+  } {
+    const statusMap: Record<string, { isSuccess: boolean; isFailure: boolean; isPending: boolean; description: string }> = {
+      success: { isSuccess: true, isFailure: false, isPending: false, description: 'Платіж успішно завершено' },
+      sandbox: { isSuccess: true, isFailure: false, isPending: false, description: 'Тестовий платіж успішно завершено' },
+      failure: { isSuccess: false, isFailure: true, isPending: false, description: 'Платіж відхилено' },
+      error: { isSuccess: false, isFailure: true, isPending: false, description: 'Помилка під час обробки платежу' },
+      reversed: { isSuccess: false, isFailure: true, isPending: false, description: 'Платіж скасовано' },
+      subscribed: { isSuccess: true, isFailure: false, isPending: false, description: 'Підписка активована' },
+      unsubscribed: { isSuccess: false, isFailure: true, isPending: false, description: 'Підписка деактивована' },
+      '3ds_verify': { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування 3D-Secure верифікації' },
+      captcha_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування введення капчі' },
+      cvv_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування введення CVV' },
+      ivr_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування IVR верифікації' },
+      otp_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування OTP верифікації' },
+      password_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування введення пароля' },
+      phone_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування верифікації телефону' },
+      pin_verify: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування введення PIN' },
+      processing: { isSuccess: false, isFailure: false, isPending: true, description: 'Платіж обробляється' },
+      wait_qr: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування сканування QR-коду' },
+      wait_sender: { isSuccess: false, isFailure: false, isPending: true, description: 'Очікування відправника' },
+    };
+
+    return statusMap[status] || { isSuccess: false, isFailure: true, isPending: false, description: 'Невідомий статус платежу' };
+  }
 }
 
 export const liqPayService = new LiqPayService();

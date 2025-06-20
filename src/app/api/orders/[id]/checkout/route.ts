@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import LiqPay from 'liqpay-sdk-nodejs';
+import { liqPayService } from '@/lib/liqpay';
 import jwt from 'jsonwebtoken';
 
 interface JwtPayload {
@@ -79,40 +79,19 @@ export async function POST(
         { error: 'Замовлення не може бути оплачено в поточному статусі' },
         { status: 400 }
       );
-    }// Отримуємо домен для URL-ів
+    }    // Отримуємо домен для URL-ів
     const host = request.headers.get('host') || 'localhost:3000';
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const baseUrl = `${protocol}://${host}`;
 
-    const liqpay = new LiqPay(process.env.LIQPAY_PUBLIC_KEY!, process.env.LIQPAY_PRIVATE_KEY!);
-    const formHtml = liqpay.cnb_form({
-      action: 'pay',
+    // Генеруємо дані для оплати через власний сервіс
+    const paymentData = liqPayService.generatePaymentData({
+      orderId: order.id,
       amount: parseFloat(order.totalPrice.toString()),
-      currency: 'UAH',
       description: `Оплата за замовлення №${order.id}`,
-      order_id: order.id.toString(),
-      version: '3',
-      result_url: `${baseUrl}/payment-status?order=${order.id}`,
-      server_url: `${baseUrl}/api/liqpay-callback`,
-      language: 'uk',
-      sandbox: 1,
+      resultUrl: `${baseUrl}/payment-status?order=${order.id}`,
+      serverUrl: `${baseUrl}/api/liqpay-callback`,
     });
-
-    const dataMatch = formHtml.match(/name="data" value="([^"]+)"/);
-    const signatureMatch = formHtml.match(/name="signature" value="([^"]+)"/);
-
-    if (!dataMatch || !signatureMatch) {
-      console.error("Could not parse data/signature from LiqPay HTML form", formHtml);
-      return NextResponse.json(
-        { error: 'Не вдалося згенерувати дані для оплати' },
-        { status: 500 }
-      );
-    }
-
-    const paymentData = {
-      data: dataMatch[1],
-      signature: signatureMatch[1],
-    };
 
     return NextResponse.json(paymentData);
   } catch (error) {

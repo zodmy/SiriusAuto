@@ -21,7 +21,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Відсутні обов\'язкові параметри' },
         { status: 400 }
-      );    }
+      );
+    }
 
     if (!liqPayService.verifySignature(data, signature)) {
       console.error('LiqPay callback: Invalid signature');
@@ -59,7 +60,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Недійсний ID замовлення' },
         { status: 400 }
-      );    }
+      );
+    }
 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -79,9 +81,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Сума оплати не відповідає замовленню' },
         { status: 400 }
-      );    }
-
-    if (liqPayService.isSuccessfulPayment(paymentStatus)) {
+      );
+    } if (liqPayService.isSuccessfulPayment(paymentStatus)) {
       await prisma.order.update({
         where: { id: orderId },
         data: {
@@ -92,7 +93,8 @@ export async function POST(request: NextRequest) {
 
       console.log(`Order ${orderId} marked as PAID (payment ${paymentId})`);
     } else {
-      console.log(`Payment for order ${orderId} failed with status: ${paymentStatus}`);
+      const statusInfo = liqPayService.getPaymentStatusInfo(paymentStatus);
+      console.log(`Payment for order ${orderId} failed with status: ${paymentStatus} - ${statusInfo.description}`);
     }
 
     return new NextResponse('OK', { status: 200 });
