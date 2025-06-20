@@ -5,10 +5,17 @@ import { useCart } from '@/lib/hooks/useCart';
 import { useAuth } from '@/lib/components/AuthProvider';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import Image from 'next/image';
 import { HiTrash, HiMinus, HiPlus } from 'react-icons/hi';
+import {
+  Header,
+  Footer,
+  Container,
+  Card,
+  Grid,
+  Heading,
+  Alert
+} from '@/components';
 
 interface CustomerInfo {
   firstName: string;
@@ -361,19 +368,18 @@ export default function CheckoutPage() {
       </div>
     );
   }
-
   return (
     <div className='min-h-screen bg-gray-100 flex flex-col'>
       <Header />
-      <main className='flex-1 container mx-auto px-4 py-8'>
-        <div className='max-w-6xl mx-auto'>
-          <h1 className='text-3xl font-bold text-gray-900 mb-8'>Оформлення замовлення</h1>
+      <main className='flex-1'>
+        <Container maxWidth="7xl" className="py-8">
+          <Heading level={1} size="xl" className="mb-8">Оформлення замовлення</Heading>
 
-          <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
-            <div className='bg-white rounded-lg shadow-md p-6'>
-              <h2 className='text-xl font-semibold mb-6'>Контактна інформація</h2>
+          <Grid cols={{ default: 1, lg: 2 }} gap="lg">
+            <Card>
+              <Heading level={2} size="md" className="mb-6">Контактна інформація</Heading>
 
-              {error && <div className='bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4'>{error}</div>}
+              {error && <Alert type="error" message={error} className="mb-4" />}
 
               <form onSubmit={handleSubmit} className='space-y-4'>
                 {' '}
@@ -470,14 +476,13 @@ export default function CheckoutPage() {
                     </div>
                   )}
                 </div>{' '}
-                <button type='submit' disabled={isSubmitting} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-md font-medium cursor-pointer disabled:cursor-not-allowed'>
-                  {' '}
-                  {isSubmitting ? (paymentInfo.method === 'CASH' ? 'Оформлення замовлення...' : 'Перенаправлення на оплату...') : paymentInfo.method === 'CASH' ? 'Оформити замовлення' : 'Оплатити замовлення'}
+                <button type='submit' disabled={isSubmitting} className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-3 px-4 rounded-md font-medium cursor-pointer disabled:cursor-not-allowed'>                  {isSubmitting ? (paymentInfo.method === 'CASH' ? 'Оформлення замовлення...' : 'Перенаправлення на оплату...') : paymentInfo.method === 'CASH' ? 'Оформити замовлення' : 'Оплатити замовлення'}
                 </button>
               </form>
-            </div>{' '}
-            <div className='bg-white rounded-lg shadow-md p-6 flex flex-col max-h-[70vh] min-h-[500px]'>
-              <h2 className='text-xl font-semibold mb-6 flex-shrink-0'>Ваше замовлення</h2>
+            </Card>
+            
+            <Card className='flex flex-col max-h-[70vh] min-h-[500px]'>
+              <Heading level={2} size="md" className="mb-6 flex-shrink-0">Ваше замовлення</Heading>
               <div className='flex-1 overflow-y-auto mb-4 pr-2 checkout-scroll'>
                 <div className='space-y-4'>
                   {items.map((item) => (
@@ -521,14 +526,13 @@ export default function CheckoutPage() {
               <div className='border-t pt-4 flex-shrink-0'>
                 <div className='space-y-2'>
                   <div className='flex justify-between items-center text-lg font-semibold'>
-                    <span>Загальна сума:</span>
-                    <span>₴{getTotalPrice().toFixed(2)}</span>
+                    <span>Загальна сума:</span>                    <span>₴{getTotalPrice().toFixed(2)}</span>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            </Card>
+          </Grid>
+        </Container>
       </main>
       <Footer />
     </div>

@@ -2,15 +2,25 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import Link from 'next/link';
-import Image from 'next/image';
-import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiShoppingCart, HiFilter } from 'react-icons/hi';
-import { FaCar } from 'react-icons/fa';
+import { HiTag, HiSearch, HiChevronRight, HiHome, HiViewGrid, HiViewList, HiFilter } from 'react-icons/hi';
 import { useCart } from '@/lib/hooks/useCart';
 import { useBreadcrumbScroll } from '@/lib/hooks/useBreadcrumbScroll';
-import CartNotification from '@/components/CartNotification';
+import {
+  Header,
+  Footer,
+  Container,
+  Card,
+  Grid,
+  Heading,
+  Text,
+  Button,
+  LoadingSpinner,
+  EmptyState,
+  ProductCard,
+  Alert,
+  CartNotification
+} from '@/components';
 
 interface Category {
   id: number;
@@ -303,79 +313,80 @@ function ProductsPageContent() {
     const queryString = params.toString();
     router.push(`/products${queryString ? `?${queryString}` : ''}`);
   };
-
   return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
       <main className='flex-grow'>
         <div className='bg-white border-b'>
-          {' '}
-          <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4'>
-            <div className='relative'>
-              <nav ref={breadcrumbRef} className='breadcrumb-container flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
-                <div className='flex items-center space-x-1 sm:space-x-2 min-w-max'>
-                  {breadcrumbs().map((crumb, index) => (
-                    <div key={index} className='flex items-center'>
-                      {index > 0 && <HiChevronRight className='text-gray-400 mx-1 sm:mx-2 flex-shrink-0' />}
-                      {index === 0 ? <HiHome className='text-gray-400 mr-1 flex-shrink-0' /> : null}
-                      {index === breadcrumbs().length - 1 ? (
-                        <span className='text-gray-900 font-medium whitespace-nowrap'>{crumb.name}</span>
-                      ) : (
-                        <Link href={crumb.href} className='text-blue-600 hover:text-blue-800 whitespace-nowrap'>
-                          {crumb.name}
-                        </Link>
-                      )}
-                    </div>
-                  ))}{' '}
-                </div>
-              </nav>
-            </div>
-          </div>
-        </div>{' '}
-        {savedCar && (
-          <div className='bg-green-50 border-b border-green-200'>
-            <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3'>
-              <div className='flex items-center space-x-3'>
-                <FaCar className='text-green-600' />{' '}
-                <span className='text-sm text-green-800'>
-                  <strong>Вибраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
-                </span>
+          <Container maxWidth="7xl">
+            <div className='py-4'>
+              <div className='relative'>
+                <nav ref={breadcrumbRef} className='breadcrumb-container flex items-center space-x-1 sm:space-x-2 text-sm overflow-x-auto scrollbar-hide'>
+                  <div className='flex items-center space-x-1 sm:space-x-2 min-w-max'>
+                    {breadcrumbs().map((crumb, index) => (
+                      <div key={index} className='flex items-center'>
+                        {index > 0 && <HiChevronRight className='text-gray-400 mx-1 sm:mx-2 flex-shrink-0' />}
+                        {index === 0 ? <HiHome className='text-gray-400 mr-1 flex-shrink-0' /> : null}
+                        {index === breadcrumbs().length - 1 ? (
+                          <span className='text-gray-900 font-medium whitespace-nowrap'>{crumb.name}</span>
+                        ) : (
+                          <Link href={crumb.href} className='text-blue-600 hover:text-blue-800 whitespace-nowrap'>
+                            {crumb.name}
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </nav>
               </div>
             </div>
-          </div>
-        )}
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          </Container>
+        </div>        {savedCar && (
+          <Alert 
+            type="success" 
+            title="Вибраний автомобіль"
+            message={`${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}`}
+          />
+        )}        <Container maxWidth="7xl" className="py-8">
           {shouldShowSubcategories() ? (
             <div>
-              {' '}
-              <div className='bg-white rounded-lg shadow-sm p-4 mb-6'>
-                <div className='text-center py-2'>
-                  <h1 className='text-2xl font-bold text-gray-900 mb-2'>{currentCategory ? currentCategory.name : 'Категорії товарів'}</h1>
-                  {currentCategory?.description && <p className='text-gray-600'>{currentCategory.description}</p>}
-                </div>
-              </div>
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              <Card className="text-center py-2 mb-6">
+                <Heading level={1} className="mb-2">
+                  {currentCategory ? currentCategory.name : 'Категорії товарів'}
+                </Heading>                {currentCategory?.description && (
+                  <Text color="muted">{currentCategory.description}</Text>
+                )}
+              </Card>
+              
+              <Grid cols={{ default: 1, sm: 2, lg: 3, xl: 4 }} gap="md">
                 {getSubcategories().map((subcategory) => (
-                  <Link key={subcategory.id} href={`/categories/${encodeURIComponent(subcategory.name)}`} className='bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group'>
+                  <Link 
+                    key={subcategory.id} 
+                    href={`/categories/${encodeURIComponent(subcategory.name)}`} 
+                    className='bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group'
+                  >
                     <div className='p-6 text-center'>
                       <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300'>
                         <HiTag className='w-8 h-8 text-white' />
                       </div>
-                      <h3 className='font-semibold text-gray-900 text-lg mb-2 group-hover:text-blue-600 transition-colors'>{subcategory.name}</h3>
-                      {subcategory.description && <p className='text-sm text-gray-600 line-clamp-2'>{subcategory.description}</p>}
+                      <h3 className='font-semibold text-gray-900 text-lg mb-2 group-hover:text-blue-600 transition-colors'>
+                        {subcategory.name}
+                      </h3>
+                      {subcategory.description && (
+                        <p className='text-sm text-gray-600 line-clamp-2'>{subcategory.description}</p>
+                      )}
                     </div>
                   </Link>
                 ))}
-              </div>
+              </Grid>
             </div>
           ) : (
-            <div className='flex flex-col lg:flex-row gap-8'>
-              <aside className='lg:w-64'>
-                <div className='bg-white rounded-lg shadow-sm p-6 sticky top-8'>
-                  <h3 className='text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2'>
+            <div className='flex flex-col lg:flex-row gap-8'>              <aside className='lg:w-64'>
+                <Card className="sticky top-8">
+                  <Heading level={3} size="sm" className="mb-4 flex items-center gap-2">
                     <HiFilter className='text-blue-600' />
                     Фільтри
-                  </h3>{' '}
+                  </Heading>
                   <div className='space-y-6'>
                     <div>
                       <label className='flex items-center gap-2 cursor-pointer'>
@@ -430,22 +441,21 @@ function ProductsPageContent() {
                         setInStockOnly(false);
                         setShowAllProducts(false);
                       }}
-                      className='w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer'
-                    >
+                      className='w-full px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer'                    >
                       Скинути фільтри
                     </button>
                   </div>
-                </div>
-              </aside>
-
-              <div className='flex-1'>
-                <div className='bg-white rounded-lg shadow-sm p-6 mb-6'>
-                  {' '}
+                </Card>
+              </aside>              <div className='flex-1'>
+                <Card className="mb-6">
                   <div className='flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6'>
-                    {' '}
                     <div>
-                      <h1 className='text-2xl font-bold text-gray-900'>{currentCategory ? currentCategory.name : 'Всі товари'}</h1>
-                      {currentCategory?.description && <p className='text-gray-600 mt-1'>{currentCategory.description}</p>}
+                      <Heading level={1} size="lg">
+                        {currentCategory ? currentCategory.name : 'Всі товари'}
+                      </Heading>
+                      {currentCategory?.description && (
+                        <Text color="muted" className="mt-1">{currentCategory.description}</Text>
+                      )}
                     </div>
                     <div className='flex items-center gap-2'>
                       <button onClick={() => setViewMode('grid')} className={`p-2 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
@@ -471,23 +481,28 @@ function ProductsPageContent() {
                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className='px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'>
                       <option value='name'>За назвою</option>
                       <option value='price_asc'>За ціною (зростання)</option>
-                      <option value='price_desc'>За ціною (спадання)</option>
-                      <option value='newest'>Спочатку нові</option>
+                      <option value='price_desc'>За ціною (спадання)</option>                      <option value='newest'>Спочатку нові</option>
                     </select>
                   </div>
-                </div>
+                </Card>
 
                 {isLoading ? (
-                  <div className='bg-white rounded-lg shadow-sm p-8 text-center'>
-                    <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-                    <p className='text-gray-600'>Завантаження...</p>
-                  </div>
-                ) : products.length === 0 ? (
-                  <div className='bg-white rounded-lg shadow-sm p-8 text-center'>
-                    <HiTag className='w-16 h-16 text-gray-300 mx-auto mb-4' />
-                    <h3 className='text-lg font-medium text-gray-900 mb-2'>Товарів не знайдено</h3> <p className='text-gray-600 mb-4'>{debouncedSearchQuery ? `За запитом "${debouncedSearchQuery}" нічого не знайдено` : savedCar && !showAllProducts ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}` : 'В цій категорії поки немає товарів'}</p>
-                    {debouncedSearchQuery && (
-                      <button
+                  <Card className="text-center p-8">
+                    <LoadingSpinner size="lg" className="mx-auto mb-4" />
+                    <Text color="muted">Завантаження...</Text>
+                  </Card>                ) : products.length === 0 ? (                  <EmptyState
+                    type="search"
+                    title="Товарів не знайдено"
+                    description={
+                      debouncedSearchQuery 
+                        ? `За запитом "${debouncedSearchQuery}" нічого не знайдено`
+                        : savedCar && !showAllProducts 
+                          ? `Немає товарів, сумісних з вашим автомобілем ${savedCar.makeName} ${savedCar.modelName} ${savedCar.year} ${savedCar.bodyTypeName} ${savedCar.engineName}`
+                          : 'В цій категорії поки немає товарів'
+                    }
+                    action={debouncedSearchQuery ? (
+                      <Button
+                        variant="outline"
                         onClick={() => {
                           setSearchQuery('');
                           setDebouncedSearchQuery('');
@@ -498,105 +513,49 @@ function ProductsPageContent() {
                           const queryString = params.toString();
                           router.push(`/products${queryString ? `?${queryString}` : ''}`);
                         }}
-                        className='text-blue-600 hover:text-blue-800 font-medium mr-4'
                       >
-                        Очистити пошук{' '}
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}`}>
+                        Очистити пошук
+                      </Button>
+                    ) : undefined}
+                  />                ) : (
+                  <Grid 
+                    cols={{ 
+                      default: viewMode === 'grid' ? 1 : 1, 
+                      sm: viewMode === 'grid' ? 2 : 1, 
+                      lg: viewMode === 'grid' ? 3 : 1, 
+                      xl: viewMode === 'grid' ? 4 : 1 
+                    }} 
+                    gap={viewMode === 'grid' ? 'md' : 'sm'}
+                    className={viewMode === 'list' ? 'space-y-4' : ''}
+                  >
                     {products.map((product) => (
-                      <div key={product.id} onClick={() => router.push(`/products/${product.id}`)} className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer ${viewMode === 'list' ? 'flex items-stretch gap-4 p-4' : 'p-4 flex flex-col h-full'}`}>
-                        <div className={`${viewMode === 'list' ? 'w-24 h-24 flex-shrink-0' : 'w-full h-48 mb-4'} relative bg-white rounded-md overflow-hidden border border-gray-200`}>
-                          {product.imageUrl ? (
-                            <Image src={product.imageUrl} alt={product.name} fill className='object-contain' />
-                          ) : (
-                            <div className='w-full h-full flex items-center justify-center text-gray-400'>
-                              <HiTag className='w-8 h-8' />
-                            </div>
-                          )}
-                        </div>{' '}
-                        <div className={`${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : 'flex-1 flex flex-col'}`}>
-                          {' '}
-                          <div className='mb-2'>
-                            <h3 className={`font-semibold text-gray-900 ${viewMode === 'list' ? 'text-lg mb-1 md:line-clamp-2' : 'text-base mb-2 line-clamp-2'}`}>{product.name}</h3> <div className='flex items-center gap-2 mb-1'>{product.manufacturer && <p className='text-xs text-gray-500'>{product.manufacturer.name}</p>}</div>
-                          </div>
-                          {product.description && viewMode === 'grid' && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow'>{product.description}</p>}
-                          {product.description && viewMode === 'list' && <p className='text-gray-600 text-sm mb-3 line-clamp-2 flex-grow hidden md:block'>{product.description}</p>}
-                          <div className='mt-auto'>
-                            {viewMode === 'list' ? (
-                              <div>
-                                <p className='text-lg font-bold text-blue-600'>₴{Number(product.price).toFixed(2)}</p>
-                              </div>
-                            ) : (
-                              <div className='flex items-center justify-between mb-3'>
-                                <div>
-                                  <p className='text-lg font-bold text-blue-600'>₴{Number(product.price).toFixed(2)}</p>
-                                </div>
-                                <div>
-                                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
-                                </div>
-                              </div>
-                            )}{' '}
-                            {viewMode === 'grid' && (
-                              <button
-                                disabled={product.stockQuantity === 0}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (product.stockQuantity > 0) {
-                                    addItem({
-                                      id: product.id,
-                                      name: product.name,
-                                      price: product.price,
-                                      image: product.imageUrl,
-                                      stockQuantity: product.stockQuantity,
-                                    });
-                                    setNotificationProductName(product.name);
-                                    setShowNotification(true);
-                                  }
-                                }}
-                                className='w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-md transition-colors disabled:cursor-not-allowed cursor-pointer'
-                              >
-                                {product.stockQuantity > 0 ? 'Додати до кошику' : 'Немає в наявності'}
-                              </button>
-                            )}
-                          </div>
-                        </div>{' '}
-                        {viewMode === 'list' && (
-                          <div className='flex-shrink-0 flex flex-col items-center gap-2 md:gap-3 md:flex-row'>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${product.stockQuantity > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.stockQuantity > 0 ? 'В наявності' : 'Немає'}</span>
-                            <button
-                              disabled={product.stockQuantity === 0}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (product.stockQuantity > 0) {
-                                  addItem({
-                                    id: product.id,
-                                    name: product.name,
-                                    price: product.price,
-                                    image: product.imageUrl,
-                                    stockQuantity: product.stockQuantity,
-                                  });
-                                  setNotificationProductName(product.name);
-                                  setShowNotification(true);
-                                }
-                              }}
-                              className='p-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors disabled:cursor-not-allowed cursor-pointer'
-                              title={product.stockQuantity > 0 ? 'Додати до кошику' : 'Немає в наявності'}
-                            >
-                              <HiShoppingCart className='w-5 h-5' />
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <ProductCard
+                        key={product.id}
+                        id={product.id}
+                        name={product.name}
+                        price={product.price}
+                        imageUrl={product.imageUrl}
+                        description={product.description}
+                        category={product.manufacturer?.name}
+                        inStock={product.stockQuantity > 0}
+                        onAddToCart={() => {
+                          addItem({
+                            id: product.id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.imageUrl,
+                            stockQuantity: product.stockQuantity,
+                          });
+                          setNotificationProductName(product.name);
+                          setShowNotification(true);
+                        }}                      />
                     ))}
-                  </div>
+                  </Grid>
                 )}
               </div>
             </div>
-          )}{' '}
-        </div>
+          )} 
+        </Container>
       </main>
       <Footer />
 
@@ -611,8 +570,8 @@ function ProductsPageLoading() {
       <Header />
       <main className='flex-grow flex items-center justify-center'>
         <div className='text-center'>
-          <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4'></div>
-          <p className='text-gray-600'>Завантаження...</p>{' '}
+          <LoadingSpinner size="lg" className="mx-auto mb-4" />
+          <Text color="muted">Завантаження...</Text>
         </div>
       </main>
       <Footer />

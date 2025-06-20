@@ -2,12 +2,30 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import Image from 'next/image';
 import { useAuth } from '@/lib/components/AuthProvider';
 import { HiCheckCircle, HiXCircle, HiEye, HiEyeOff, HiOutlineCheckCircle, HiOutlineClock, HiOutlineTruck, HiOutlineExclamationCircle, HiStar } from 'react-icons/hi';
+import {
+  Header,
+  Footer,
+  Container,
+  Card,
+  Grid,
+  Heading,
+  Text,
+  Button,
+  LoadingSpinner,
+  FormField,
+  PasswordInput,
+  Alert,
+  Badge,
+  Modal,
+  OrderCard,
+  StatusBadge,
+  StarRating,
+  EmptyState
+} from '@/components';
 
 interface ProfileData {
   id: number;
@@ -522,33 +540,32 @@ export default function ProfilePage() {
         <Footer />
       </div>
     );
-  }
-  return (
+  }  return (
     <div className='flex flex-col min-h-screen bg-gray-50'>
       <Header />
-      <div className='flex-grow py-12 px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-4xl mx-auto space-y-8'>
-          <div className='bg-white shadow rounded-lg'>
-            <div className='px-6 py-4 border-b border-gray-200'>
+      <main className='flex-grow py-12'>
+        <Container maxWidth="2xl">
+          <div className='space-y-8'>
+            {/* Header */}
+            <Card>
               <div className='flex justify-between items-center'>
-                <h1 className='text-2xl font-bold text-gray-900'>Особистий кабінет</h1>
-                <button
+                <Heading level={1} size="lg">Особистий кабінет</Heading>
+                <Button
+                  variant="danger"
                   onClick={async () => {
                     await logout();
                   }}
-                  className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer'
                 >
                   Вийти
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
+            </Card>
 
-          <div className='bg-white shadow rounded-lg'>
-            <div className='px-6 py-4 border-b border-gray-200'>
-              {' '}
-              <div className='flex justify-between items-center'>
-                <h2 className='text-xl font-bold text-gray-900'>Особиста інформація</h2>{' '}
+            {/* Profile Info */}
+            <Card>
+              <div className='border-b border-gray-200 pb-4 mb-6'>
+                <div className='flex justify-between items-center'>
+                  <Heading level={2} size="md">Особиста інформація</Heading>
                 <div className='flex space-x-3'>
                   {!isEditing && (
                     <>
