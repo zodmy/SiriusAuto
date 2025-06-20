@@ -27,6 +27,7 @@ interface Product {
   price: number;
   imageUrl?: string;
   stockQuantity: number;
+  averageRating?: number;
   manufacturer?: {
     id: number;
     name: string;
@@ -336,7 +337,7 @@ function ProductsPageContent() {
                 {' '}
                 <FaCar className='text-green-600' />{' '}
                 <span className='text-sm text-green-800'>
-                  <strong>Вибраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
+                  <strong>Обраний автомобіль:</strong> {savedCar.makeName} {savedCar.modelName} {savedCar.year} {savedCar.bodyTypeName} {savedCar.engineName}
                 </span>
               </div>
             </div>
@@ -469,19 +470,22 @@ function ProductsPageContent() {
                           </div>
                         )}
                       </div>
-                    </form>
+                    </form>{' '}
                     <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className='px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500'>
                       <option value='name'>За назвою</option>
-                      <option value='price_asc'>За ціною (зростання)</option>
-                      <option value='price_desc'>За ціною (спадання)</option> <option value='newest'>Спочатку нові</option>
+                      <option value='price_asc'>Спочатку дорожчі</option>
+                      <option value='price_desc'>Спочатку дешевші</option>
+                      <option value='rating_desc'>За рейтингом</option>
+                      <option value='newest'>Спочатку нові</option>
                     </select>
                   </div>
-                </Card>
-
+                </Card>{' '}
                 {isLoading ? (
                   <Card className='text-center p-8'>
                     <LoadingSpinner size='lg' className='mx-auto mb-4' />
-                    <Text color='muted'>Завантаження...</Text>
+                    <Text color='muted' align='center'>
+                      Завантаження...
+                    </Text>
                   </Card>
                 ) : products.length === 0 ? (
                   <EmptyState
@@ -529,6 +533,7 @@ function ProductsPageContent() {
                         imageUrl={product.imageUrl}
                         description={product.description}
                         category={product.manufacturer?.name}
+                        rating={product.averageRating}
                         inStock={product.stockQuantity > 0}
                         layout={viewMode}
                         onAddToCart={() => {

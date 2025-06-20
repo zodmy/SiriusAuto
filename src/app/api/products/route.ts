@@ -97,9 +97,7 @@ export async function GET(request: NextRequest) {
       } else {
         where = carCompatibilityCondition;
       }
-    }
-
-    let orderBy: Prisma.ProductOrderByWithRelationInput = {};
+    } let orderBy: Prisma.ProductOrderByWithRelationInput = {};
     switch (sort) {
       case 'price_asc':
         orderBy = { price: 'asc' };
@@ -109,6 +107,12 @@ export async function GET(request: NextRequest) {
         break;
       case 'newest':
         orderBy = { createdAt: 'desc' };
+        break;
+      case 'rating_desc':
+        orderBy = { averageRating: 'desc' };
+        break;
+      case 'rating_asc':
+        orderBy = { averageRating: 'asc' };
         break;
       default:
         orderBy = { name: 'asc' };

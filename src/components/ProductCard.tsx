@@ -45,14 +45,15 @@ export function ProductCard({ id, name, price, imageUrl, description, category, 
         // List layout
         <div className='flex gap-4 p-4'>
           {/* Image */}
-          <div className='w-24 h-24 flex-shrink-0 relative overflow-hidden rounded-lg bg-gray-100'>
+          <div className='w-24 h-24 flex-shrink-0 relative overflow-hidden rounded-lg bg-white'>
+            {' '}
             {imageUrl ? (
               <Link href={productHref}>
-                <Image src={imageUrl} alt={name} width={96} height={96} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' />
+                <Image src={imageUrl} alt={name} width={96} height={96} className='w-full h-full object-contain group-hover:scale-105 transition-transform duration-200' />
               </Link>
             ) : (
               <Link href={productHref}>
-                <div className='w-full h-full flex items-center justify-center bg-gray-100 group-hover:bg-gray-200 transition-colors'>
+                <div className='w-full h-full flex items-center justify-center bg-white group-hover:bg-gray-50 transition-colors'>
                   <Text color='muted' size='xs'>
                     Немає фото
                   </Text>
@@ -97,7 +98,7 @@ export function ProductCard({ id, name, price, imageUrl, description, category, 
                   </Text>
                 )}
                 {/* Rating */}
-                {rating && <StarRating rating={rating} size='xs' showCount={reviewCount !== undefined} count={reviewCount} readonly />}
+                {rating && rating > 0 && <StarRating rating={rating} size='xs' showValue={false} showCount={reviewCount !== undefined} count={reviewCount} readonly />}
               </div>
 
               {/* Price and Actions */}
@@ -131,14 +132,15 @@ export function ProductCard({ id, name, price, imageUrl, description, category, 
         <>
           <div className='relative'>
             {/* Image */}
-            <div className='aspect-square relative overflow-hidden rounded-t-lg bg-gray-100'>
+            <div className='aspect-square relative overflow-hidden rounded-t-lg bg-white'>
+              {' '}
               {imageUrl ? (
                 <Link href={productHref}>
-                  <Image src={imageUrl} alt={name} width={400} height={400} className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-200' sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw' />
+                  <Image src={imageUrl} alt={name} width={400} height={400} className='w-full h-full object-contain group-hover:scale-105 transition-transform duration-200' sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw' />
                 </Link>
               ) : (
                 <Link href={productHref}>
-                  <div className='w-full h-full flex items-center justify-center bg-gray-100 group-hover:bg-gray-200 transition-colors'>
+                  <div className='w-full h-full flex items-center justify-center bg-white group-hover:bg-gray-50 transition-colors'>
                     <Text color='muted' size='sm'>
                       Немає фото
                     </Text>
@@ -182,7 +184,7 @@ export function ProductCard({ id, name, price, imageUrl, description, category, 
               </Text>
             )}
             {/* Rating */}
-            {rating && <StarRating rating={rating} size='xs' showCount={reviewCount !== undefined} count={reviewCount} readonly />}
+            {rating && rating > 0 && <StarRating rating={rating} size='xs' showValue={false} showCount={reviewCount !== undefined} count={reviewCount} readonly />}
             {/* Price */}
             <div className='flex items-baseline gap-2'>
               <Text size='lg' weight='bold'>

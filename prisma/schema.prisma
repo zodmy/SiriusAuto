@@ -50,7 +50,7 @@ model Product {
   baseProduct        Product?        @relation("BaseProductToVariants", fields: [baseProductId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   variants           Product[]       @relation("BaseProductToVariants")
   reviews            Review[]
-  averageRating      Float?          @default(0.0)
+  averageRating      Float?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
